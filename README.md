@@ -1,7 +1,7 @@
 # Verify News
 
 ## Overview
-Fake News Verifier is a React-based web application that checks the authenticity of news articlesc or headlines using web search and AI-powered analysis. The app integrates DuckDuckGo for web searches and Gemini LLM for AI-based fact-checking.
+Fake News Verifier is a React-based web application that checks the authenticity of news articles or headlines using web search and AI-powered analysis. The app integrates DuckDuckGo for web searches and Gemini LLM for AI-based fact-checking.
 
 ## Features
 - Accepts **text** input for verification.
