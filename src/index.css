@@ -1,0 +1,127 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221 83% 53%;
+
+    --radius: 1rem;
+
+    --truth: 142 72% 45%;
+    --truth-foreground: 0 0% 100%;
+
+    --falsehood: 358 70% 54%;
+    --falsehood-foreground: 0 0% 100%;
+
+    --neutral: 220 14% 56%;
+    --neutral-foreground: 0 0% 100%;
+  }
+
+  * {
+    @apply border-border;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+  }
+
+  ::selection {
+    @apply bg-primary/10 text-primary;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/60 backdrop-blur-md border border-white/80 shadow-glass rounded-2xl transition-shadow duration-300 ease-out-expo;
+  }
+  
+  .glass-card:hover {
+    @apply shadow-glass-hover;
+  }
+
+  .glass-input {
+    @apply bg-white/50 backdrop-blur-sm border border-white/80 shadow-subtle rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary/30 outline-none transition-all duration-300;
+  }
+
+  .glass-button {
+    @apply bg-primary text-primary-foreground rounded-xl px-6 py-3 shadow-subtle hover:shadow-card-hover transition-all duration-300 ease-out-expo hover:bg-primary/90 active:scale-[0.98];
+  }
+  
+  .loading-shimmer {
+    @apply bg-gradient-to-r from-transparent via-white/30 to-transparent bg-[length:200%_100%] animate-loading-shimmer;
+  }
+}
+
+.news-content {
+  max-height: 500px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+}
+
+.news-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.news-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.news-content::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+}
+
+/* Transitions between pages */
+.page-transition-enter {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 400ms, transform 400ms;
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: scale(0.98);
+  transition: opacity 400ms, transform 400ms;
+}
