@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { ShieldCheck, Mail, Lock, LogIn, Github, Twitter } from 'lucide-react';
@@ -8,45 +9,149 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { login, signup, socialLogin, currentUser } = useAuth();
+  const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Redirect if already logged in
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/');
+    }
+  }, [currentUser, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast({
+        title: "Missing information",
+        description: "Please enter both email and password.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
-    // Simulate login process
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await login(email, password);
       toast({
-        title: "Login functionality coming soon",
-        description: "This feature is still in development. Please check back later.",
+        title: "Login successful",
+        description: "Welcome back to VerifyNews!"
       });
-    }, 1500);
+      navigate('/');
+    } catch (error: any) {
+      let message = "Login failed. Please check your credentials.";
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        message = "Invalid email or password. Please try again.";
+      } else if (error.code === 'auth/too-many-requests') {
+        message = "Too many unsuccessful login attempts. Please try again later.";
+      }
+      
+      toast({
+        title: "Login failed",
+        description: message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password || !confirmPassword) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      toast({
+        title: "Passwords don't match",
+        description: "Please make sure your passwords match.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (password.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password should be at least 6 characters long.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
-    // Simulate signup process
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await signup(email, password);
       toast({
-        title: "Sign up functionality coming soon",
-        description: "This feature is still in development. Please check back later.",
+        title: "Account created successfully",
+        description: "Welcome to VerifyNews!"
       });
-    }, 1500);
+      navigate('/');
+    } catch (error: any) {
+      let message = "Failed to create account.";
+      
+      if (error.code === 'auth/email-already-in-use') {
+        message = "This email is already registered. Try logging in instead.";
+      } else if (error.code === 'auth/invalid-email') {
+        message = "Please enter a valid email address.";
+      } else if (error.code === 'auth/weak-password') {
+        message = "Your password is too weak. Please use a stronger password.";
+      }
+      
+      toast({
+        title: "Sign up failed",
+        description: message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSocialLogin = (provider: string) => {
+  const handleSocialLogin = async (provider: 'google' | 'github' | 'twitter') => {
+    setIsLoading(true);
+    
+    try {
+      await socialLogin(provider);
+      toast({
+        title: "Login successful",
+        description: `Welcome to VerifyNews!`
+      });
+      navigate('/');
+    } catch (error: any) {
+      console.error(`${provider} login error:`, error);
+      toast({
+        title: `${provider} login failed`,
+        description: "There was an error logging in with your social account.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = () => {
     toast({
-      title: `${provider} login coming soon`,
-      description: "Social login features are still in development.",
+      title: "Password reset",
+      description: "Password reset functionality will be implemented soon."
     });
   };
 
@@ -95,9 +200,13 @@ const Login = () => {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="password">Password</Label>
-                      <a href="#" className="text-xs text-primary hover:underline">
+                      <button 
+                        type="button" 
+                        onClick={handleForgotPassword}
+                        className="text-xs text-primary hover:underline"
+                      >
                         Forgot password?
-                      </a>
+                      </button>
                     </div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-foreground/40" />
@@ -140,6 +249,8 @@ const Login = () => {
                         type="email" 
                         placeholder="your@email.com" 
                         className="pl-10"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         required
                       />
                     </div>
@@ -154,6 +265,8 @@ const Login = () => {
                         type="password" 
                         placeholder="••••••••" 
                         className="pl-10"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         required
                       />
                     </div>
@@ -168,6 +281,8 @@ const Login = () => {
                         type="password" 
                         placeholder="••••••••" 
                         className="pl-10"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
                         required
                       />
                     </div>
@@ -206,7 +321,8 @@ const Login = () => {
                 <Button 
                   variant="outline" 
                   className="w-full" 
-                  onClick={() => handleSocialLogin('Google')}
+                  onClick={() => handleSocialLogin('google')}
+                  disabled={isLoading}
                 >
                   <svg
                     className="mr-2 h-4 w-4"
@@ -236,7 +352,8 @@ const Login = () => {
                 <Button 
                   variant="outline" 
                   className="w-full" 
-                  onClick={() => handleSocialLogin('GitHub')}
+                  onClick={() => handleSocialLogin('github')}
+                  disabled={isLoading}
                 >
                   <Github className="mr-2 h-4 w-4" />
                   GitHub
@@ -245,7 +362,8 @@ const Login = () => {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => handleSocialLogin('Twitter')}
+                  onClick={() => handleSocialLogin('twitter')}
+                  disabled={isLoading}
                 >
                   <Twitter className="mr-2 h-4 w-4" />
                   Twitter

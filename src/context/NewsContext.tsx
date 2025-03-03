@@ -1,5 +1,8 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { doc, updateDoc, arrayUnion, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../config/firebase';
+import { useAuth } from './AuthContext';
 
 export type VerificationStatus = 'idle' | 'verifying' | 'verified' | 'error';
 export type NewsVeracity = 'true' | 'false' | 'unverified' | 'partially-true';
@@ -26,19 +29,13 @@ interface NewsContextType {
   resetState: () => void;
 }
 
-const initialVerificationResult: VerificationResult = {
-  veracity: 'unverified',
-  confidence: 0,
-  explanation: '',
-  sources: [],
-};
-
 const NewsContext = createContext<NewsContextType | undefined>(undefined);
 
 export const NewsProvider = ({ children }: { children: ReactNode }) => {
   const [newsContent, setNewsContent] = useState<string>('');
   const [status, setStatus] = useState<VerificationStatus>('idle');
   const [result, setResult] = useState<VerificationResult | null>(null);
+  const { currentUser } = useAuth();
 
   // This would eventually connect to a real API
   const verifyNews = async () => {
@@ -72,6 +69,31 @@ export const NewsProvider = ({ children }: { children: ReactNode }) => {
 
       setResult(mockResults);
       setStatus('verified');
+
+      // Save to Firestore
+      try {
+        // If user is logged in, save to their history
+        if (currentUser) {
+          // Add to user's verification history
+          await updateDoc(doc(db, 'users', currentUser.uid), {
+            verificationHistory: arrayUnion({
+              content: newsContent,
+              result: mockResults,
+              timestamp: new Date().toISOString()
+            })
+          });
+        }
+        
+        // Also save to general verifications collection
+        await addDoc(collection(db, 'verifications'), {
+          content: newsContent,
+          result: mockResults,
+          userId: currentUser?.uid || 'anonymous',
+          timestamp: serverTimestamp()
+        });
+      } catch (error) {
+        console.error('Error saving verification to Firestore:', error);
+      }
     } catch (error) {
       console.error('Error verifying news:', error);
       setStatus('error');
