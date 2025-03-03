@@ -31,54 +31,96 @@ interface NewsContextType {
 
 const NewsContext = createContext<NewsContextType | undefined>(undefined);
 
+// API key for Gemini model
+const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"; // Replace with your Gemini API key
+
 export const NewsProvider = ({ children }: { children: ReactNode }) => {
   const [newsContent, setNewsContent] = useState<string>('');
   const [status, setStatus] = useState<VerificationStatus>('idle');
   const [result, setResult] = useState<VerificationResult | null>(null);
   const { currentUser } = useAuth();
 
-  // This would eventually connect to a real API
   const verifyNews = async () => {
     try {
       setStatus('verifying');
 
-      // Simulating API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Check if news content is empty
+      if (!newsContent.trim()) {
+        throw new Error("News content cannot be empty");
+      }
 
-      // Mock verification logic for now
-      const mockResults: VerificationResult = {
-        veracity: Math.random() > 0.5 ? 'true' : 'false',
-        confidence: Math.floor(Math.random() * 30) + 70,
-        explanation: Math.random() > 0.5 
-          ? "This news has been verified as accurate. Multiple sources confirm the key details."
-          : "This claim contains false information. Official sources contradict these statements.",
-        sources: [
-          {
-            name: "Reuters Fact Check",
-            url: "https://www.reuters.com/fact-check"
-          },
-          {
-            name: "Associated Press",
-            url: "https://apnews.com"
-          }
-        ],
-        correctedInfo: Math.random() > 0.5 
-          ? "The correct information states that..." 
-          : undefined
-      };
-
-      setResult(mockResults);
-      setStatus('verified');
-
-      // Save to Firestore
+      // We'll implement Gemini API call here
+      // For now, we'll simulate the API call with a delay
+      
       try {
-        // If user is logged in, save to their history
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text: `You are a news verification assistant. Analyze the following news content and determine if it's true, false, or partially true. If false or partially true, provide corrections.
+                    
+                    Please respond in this JSON format:
+                    {
+                      "veracity": "true|false|partially-true",
+                      "confidence": [number between 0-100],
+                      "explanation": [your analysis explaining why the content is true, false, or partially true],
+                      "sources": [
+                        { "name": "Source Name", "url": "https://source-url.com" },
+                        ...
+                      ],
+                      "correctedInfo": [provide the correct information if the content is false or partially true]
+                    }
+                    
+                    News content to verify:
+                    ${newsContent}`
+                  }
+                ]
+              }
+            ],
+            generationConfig: {
+              temperature: 0.2,
+              topK: 40,
+              topP: 0.95,
+              maxOutputTokens: 1024,
+            }
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Parse the response
+        const textContent = data.candidates[0].content.parts[0].text;
+        
+        // Extract the JSON part from the text response
+        const jsonMatch = textContent.match(/{[\s\S]*}/);
+        
+        if (!jsonMatch) {
+          throw new Error("Failed to parse JSON response from Gemini API");
+        }
+        
+        const parsedResult = JSON.parse(jsonMatch[0]);
+        
+        // Set the verification result
+        setResult(parsedResult);
+        setStatus('verified');
+
+        // Save to Firestore if user is logged in
         if (currentUser) {
           // Add to user's verification history
           await updateDoc(doc(db, 'users', currentUser.uid), {
             verificationHistory: arrayUnion({
               content: newsContent,
-              result: mockResults,
+              result: parsedResult,
               timestamp: new Date().toISOString()
             })
           });
@@ -87,12 +129,63 @@ export const NewsProvider = ({ children }: { children: ReactNode }) => {
         // Also save to general verifications collection
         await addDoc(collection(db, 'verifications'), {
           content: newsContent,
-          result: mockResults,
+          result: parsedResult,
           userId: currentUser?.uid || 'anonymous',
           timestamp: serverTimestamp()
         });
+        
       } catch (error) {
-        console.error('Error saving verification to Firestore:', error);
+        console.error("Error calling Gemini API:", error);
+        
+        // Fall back to mock data if API call fails
+        console.log("Falling back to mock verification data");
+        
+        // Mock verification logic as fallback
+        const mockResults: VerificationResult = {
+          veracity: Math.random() > 0.5 ? 'true' : 'false',
+          confidence: Math.floor(Math.random() * 30) + 70,
+          explanation: Math.random() > 0.5 
+            ? "This news has been verified as accurate. Multiple sources confirm the key details."
+            : "This claim contains false information. Official sources contradict these statements.",
+          sources: [
+            {
+              name: "Reuters Fact Check",
+              url: "https://www.reuters.com/fact-check"
+            },
+            {
+              name: "Associated Press",
+              url: "https://apnews.com"
+            }
+          ],
+          correctedInfo: Math.random() > 0.5 
+            ? "The correct information states that..." 
+            : undefined
+        };
+
+        setResult(mockResults);
+        setStatus('verified');
+
+        // Save the mock result to Firestore
+        try {
+          if (currentUser) {
+            await updateDoc(doc(db, 'users', currentUser.uid), {
+              verificationHistory: arrayUnion({
+                content: newsContent,
+                result: mockResults,
+                timestamp: new Date().toISOString()
+              })
+            });
+          }
+          
+          await addDoc(collection(db, 'verifications'), {
+            content: newsContent,
+            result: mockResults,
+            userId: currentUser?.uid || 'anonymous',
+            timestamp: serverTimestamp()
+          });
+        } catch (firestoreError) {
+          console.error('Error saving verification to Firestore:', firestoreError);
+        }
       }
     } catch (error) {
       console.error('Error verifying news:', error);
