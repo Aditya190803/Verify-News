@@ -4,13 +4,15 @@ import { useNews } from '@/context/NewsContext';
 import { cn } from '@/lib/utils';
 import { Check, X, AlertTriangle, ExternalLink, Copy, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from "@/hooks/use-toast";
 
 interface VerificationResultProps {
   className?: string;
 }
 
 const VerificationResult = ({ className }: VerificationResultProps) => {
-  const { result, status, resetState } = useNews();
+  const { result, status, resetState, newsContent } = useNews();
+  const { toast } = useToast();
 
   if (status !== 'verified' || !result) return null;
 
@@ -53,6 +55,15 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
     }
   };
 
+  const handleCopyResults = () => {
+    navigator.clipboard.writeText(`Verification Result: ${getStatusText()}\n\n${result.explanation}\n\nSources: ${result.sources.map(s => s.name).join(', ')}`);
+    toast({
+      title: "Copied to clipboard",
+      description: "Verification results have been copied to your clipboard",
+      duration: 3000,
+    });
+  };
+
   return (
     <div className={cn('w-full animate-scale-in', className)}>
       <div className="glass-card p-8 mx-auto max-w-2xl overflow-hidden">
@@ -74,6 +85,14 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
         </div>
         
         <div className="space-y-6">
+          {/* Original News Content */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-foreground/80">Original Content</h3>
+            <div className="p-4 rounded-xl bg-foreground/5 border border-foreground/10">
+              <p className="text-foreground text-base leading-relaxed">{newsContent}</p>
+            </div>
+          </div>
+          
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-foreground/80">Analysis</h3>
             <p className="text-foreground text-base leading-relaxed">{result.explanation}</p>
@@ -91,22 +110,26 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-foreground/80">Sources</h3>
             <div className="space-y-2">
-              {result.sources.map((source, index) => (
-                <a 
-                  key={index}
-                  href={source.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between p-3 rounded-lg bg-foreground/5 hover:bg-foreground/10 transition-colors duration-200 group"
-                >
-                  <span className="text-foreground">{source.name}</span>
-                  <ExternalLink className="h-4 w-4 text-foreground/40 group-hover:text-foreground/80 transition-colors duration-200" />
-                </a>
-              ))}
+              {result.sources && result.sources.length > 0 ? (
+                result.sources.map((source, index) => (
+                  <a 
+                    key={index}
+                    href={source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-3 rounded-lg bg-foreground/5 hover:bg-foreground/10 transition-colors duration-200 group"
+                  >
+                    <span className="text-foreground">{source.name}</span>
+                    <ExternalLink className="h-4 w-4 text-foreground/40 group-hover:text-foreground/80 transition-colors duration-200" />
+                  </a>
+                ))
+              ) : (
+                <p className="text-foreground/60 text-sm italic">No sources available</p>
+              )}
             </div>
           </div>
           
-          <div className="flex space-x-4 pt-2">
+          <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-2">
             <Button 
               onClick={resetState}
               variant="outline"
@@ -118,11 +141,7 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
             <Button 
               variant="default"
               className="flex-1 glass-button"
-              onClick={() => {
-                // Copy to clipboard functionality would go here
-                navigator.clipboard.writeText(`Verification Result: ${getStatusText()}\n\n${result.explanation}\n\nSources: ${result.sources.map(s => s.name).join(', ')}`);
-                // Show toast notification
-              }}
+              onClick={handleCopyResults}
             >
               <Copy className="h-4 w-4 mr-2" />
               Copy Results
