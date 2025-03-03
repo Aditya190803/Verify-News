@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { ShieldCheck, LogIn, Menu, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { ThemeToggle } from './ThemeToggle';
 
 interface HeaderProps {
   className?: string;
@@ -32,13 +33,16 @@ const Header = ({ className }: HeaderProps) => {
         </Link>
         
         {/* Mobile menu button */}
-        <button 
-          onClick={toggleMobileMenu}
-          className="lg:hidden p-2 rounded-lg hover:bg-foreground/5 transition-colors duration-200"
-          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div className="lg:hidden flex items-center gap-2">
+          <ThemeToggle />
+          <button 
+            onClick={toggleMobileMenu}
+            className="p-2 rounded-lg hover:bg-foreground/5 transition-colors duration-200"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
         
         {/* Desktop navigation */}
         <nav className="hidden lg:flex items-center space-x-1">
@@ -64,6 +68,7 @@ const Header = ({ className }: HeaderProps) => {
           >
             How It Works
           </Link>
+          <ThemeToggle className="mx-1" />
           <Link 
             to="/login" 
             className="ml-2 px-4 py-2 text-sm rounded-lg bg-foreground/5 hover:bg-foreground/10 transition-colors duration-200 flex items-center gap-1.5"
@@ -119,6 +124,10 @@ const Header = ({ className }: HeaderProps) => {
               >
                 How It Works
               </Link>
+              <div className="flex items-center px-4 py-3">
+                <span className="text-lg mr-2">Theme:</span>
+                <ThemeToggle />
+              </div>
               <Link 
                 to="/login" 
                 className="px-4 py-3 text-lg rounded-lg bg-foreground/5 hover:bg-foreground/10 transition-colors duration-200 flex items-center gap-2"

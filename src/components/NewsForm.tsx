@@ -27,7 +27,7 @@ const NewsForm = ({ className }: NewsFormProps) => {
 
   return (
     <div className={cn('w-full animate-fade-in', className)} style={{ animationDelay: '100ms' }}>
-      <div className="glass-card p-8 mx-auto max-w-2xl">
+      <div className="glass-card dark:bg-gray-800/60 dark:border-gray-700/50 p-8 mx-auto max-w-2xl">
         <div className="mb-6">
           <div className="inline-flex items-center px-3 py-1 mb-2 text-xs font-medium rounded-full bg-primary/10 text-primary">
             <FileText className="h-3.5 w-3.5 mr-1" />
@@ -45,7 +45,7 @@ const NewsForm = ({ className }: NewsFormProps) => {
               value={newsContent}
               onChange={(e) => setNewsContent(e.target.value)}
               placeholder="Paste news content here to verify..."
-              className="glass-input w-full min-h-[180px] resize-none"
+              className="glass-input dark:bg-gray-700/50 dark:border-gray-600/50 w-full min-h-[180px] resize-none"
               disabled={status === 'verifying'}
             />
             
@@ -60,7 +60,7 @@ const NewsForm = ({ className }: NewsFormProps) => {
               <Button 
                 type="submit"
                 disabled={status === 'verifying'} 
-                className="glass-button w-full"
+                className="glass-button dark:bg-primary/90 dark:hover:bg-primary/80 w-full"
               >
                 {status === 'verifying' ? (
                   <span className="flex items-center">
