@@ -26,11 +26,58 @@ export const searchDuckDuckGo = async (query: string) => {
 };
 
 /**
+ * Score the relevance of a news article based on keywords and content
+ * @param article The article to score
+ * @param query The search query
+ * @returns A relevance score (higher is more relevant)
+ */
+const scoreArticleRelevance = (article: any, query: string) => {
+  const queryTerms = query.toLowerCase().split(' ');
+  let score = 0;
+  
+  // Score based on title match
+  const title = article.title?.toLowerCase() || '';
+  queryTerms.forEach(term => {
+    if (title.includes(term)) score += 5;
+  });
+  
+  // Score based on content match
+  const snippet = article.snippet?.toLowerCase() || '';
+  queryTerms.forEach(term => {
+    if (snippet.includes(term)) score += 3;
+  });
+  
+  // Bonus for having a URL
+  if (article.url) score += 2;
+  
+  // Bonus for known reputable sources
+  const reputableDomains = [
+    'reuters.com', 'apnews.com', 'bbc.com', 'bbc.co.uk', 'nytimes.com', 
+    'washingtonpost.com', 'theguardian.com', 'npr.org', 'wsj.com', 
+    'bloomberg.com', 'cnn.com', 'nbcnews.com', 'abcnews.go.com', 'cbsnews.com'
+  ];
+  
+  if (article.url) {
+    try {
+      const domain = new URL(article.url).hostname;
+      if (reputableDomains.some(d => domain.includes(d))) {
+        score += 10;
+      }
+    } catch (e) {
+      // Invalid URL, don't add bonus
+    }
+  }
+  
+  return score;
+};
+
+/**
  * Extract relevant news articles from DuckDuckGo search results
  * @param results The DuckDuckGo search results
- * @returns An array of news articles
+ * @param query The original search query
+ * @returns An array of news articles sorted by relevance
  */
-export const extractNewsFromSearch = (results: any) => {
+export const extractNewsFromSearch = (results: any, query: string) => {
   const articles = [];
   
   // Extract news from the "RelatedTopics" section
@@ -55,5 +102,8 @@ export const extractNewsFromSearch = (results: any) => {
     });
   }
   
-  return articles;
+  // Sort articles by relevance score
+  return articles
+    .sort((a, b) => scoreArticleRelevance(b, query) - scoreArticleRelevance(a, query))
+    .slice(0, 10); // Limit to top 10 most relevant results
 };

@@ -2,8 +2,9 @@
 import React from 'react';
 import { useNews } from '@/context/NewsContext';
 import { cn } from '@/lib/utils';
-import { ExternalLink, CheckCircle } from 'lucide-react';
+import { ExternalLink, CheckCircle, Link as LinkIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface NewsArticlesProps {
   className?: string;
@@ -25,6 +26,16 @@ const NewsArticles = ({ className }: NewsArticlesProps) => {
   const selectArticle = (article: typeof articles[0]) => {
     setSelectedArticle(article);
     setNewsContent(article.snippet);
+  };
+
+  // Extract domain from URL for display
+  const extractDomain = (url: string) => {
+    try {
+      const domain = new URL(url).hostname;
+      return domain.replace('www.', '');
+    } catch (e) {
+      return 'Unknown source';
+    }
   };
 
   return (
@@ -52,7 +63,17 @@ const NewsArticles = ({ className }: NewsArticlesProps) => {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h3 className="font-medium text-foreground">{article.title}</h3>
-                  <p className="mt-1 text-sm text-foreground/70 line-clamp-2">{article.snippet}</p>
+                  
+                  {article.url && (
+                    <div className="flex items-center mt-1 mb-2">
+                      <LinkIcon className="h-3 w-3 text-primary/70 mr-1" />
+                      <Badge variant="outline" className="text-xs bg-primary/5 hover:bg-primary/10">
+                        {extractDomain(article.url)}
+                      </Badge>
+                    </div>
+                  )}
+                  
+                  <p className="text-sm text-foreground/70 line-clamp-2">{article.snippet}</p>
                   
                   {article.url && (
                     <a 
@@ -62,7 +83,7 @@ const NewsArticles = ({ className }: NewsArticlesProps) => {
                       className="inline-flex items-center mt-2 text-xs text-primary hover:text-primary/80"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      View original source <ExternalLink className="ml-1 h-3 w-3" />
+                      View source <ExternalLink className="ml-1 h-3 w-3" />
                     </a>
                   )}
                 </div>
