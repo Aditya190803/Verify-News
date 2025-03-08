@@ -1,12 +1,16 @@
+
 import React from 'react';
 import Header from '@/components/Header';
 import NewsForm from '@/components/NewsForm';
+import NewsSearch from '@/components/NewsSearch';
+import NewsArticles from '@/components/NewsArticles';
 import VerificationResult from '@/components/VerificationResult';
-import { NewsProvider, useNews } from '@/context/NewsContext';
+import { useNews } from '@/context/NewsContext';
 import { Shield, ShieldAlert, FileText, Image, Mic, Video } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const VerificationContent = () => {
-  const { status } = useNews();
+  const { status, articles } = useNews();
   
   return (
     <div className="w-full max-w-6xl mx-auto px-4 flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
@@ -28,7 +32,19 @@ const VerificationContent = () => {
             </p>
           </div>
           
-          <NewsForm />
+          {articles.length > 0 ? (
+            <NewsArticles />
+          ) : (
+            <>
+              <NewsSearch />
+              
+              <div className="my-8 text-center text-foreground/60">
+                <p>- OR -</p>
+              </div>
+              
+              <NewsForm />
+            </>
+          )}
           
           <div className="mt-16 w-full max-w-2xl">
             <div className="text-center mb-6">
@@ -74,22 +90,18 @@ const VerificationContent = () => {
 
 const Index = () => {
   return (
-    <NewsProvider>
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 py-8">
-          <VerificationContent />
-        </main>
-        <footer className="py-6 border-t border-foreground/5">
-          <div className="container max-w-6xl mx-auto px-4 text-center text-sm text-foreground/40">
-            VerifyNews &copy; {new Date().getFullYear()} — A tool for truth in the digital age
-          </div>
-        </footer>
-      </div>
-    </NewsProvider>
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1 py-8">
+        <VerificationContent />
+      </main>
+      <footer className="py-6 border-t border-foreground/5">
+        <div className="container max-w-6xl mx-auto px-4 text-center text-sm text-foreground/40">
+          VerifyNews &copy; {new Date().getFullYear()} — A tool for truth in the digital age
+        </div>
+      </footer>
+    </div>
   );
 };
-
-const cn = (...classes: (string | undefined | null | false | 0)[]) => classes.filter(Boolean).join(' ');
 
 export default Index;

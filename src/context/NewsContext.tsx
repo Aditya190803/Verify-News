@@ -3,9 +3,16 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { doc, updateDoc, arrayUnion, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
+import { searchDuckDuckGo, extractNewsFromSearch } from '../utils/searchUtils';
 
-export type VerificationStatus = 'idle' | 'verifying' | 'verified' | 'error';
+export type VerificationStatus = 'idle' | 'searching' | 'verifying' | 'verified' | 'error';
 export type NewsVeracity = 'true' | 'false' | 'unverified' | 'partially-true';
+
+interface NewsArticle {
+  title: string;
+  snippet: string;
+  url: string;
+}
 
 interface VerificationResult {
   veracity: NewsVeracity;
@@ -19,12 +26,19 @@ interface VerificationResult {
 }
 
 interface NewsContextType {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
   newsContent: string;
   setNewsContent: (content: string) => void;
   status: VerificationStatus;
   setStatus: (status: VerificationStatus) => void;
   result: VerificationResult | null;
   setResult: (result: VerificationResult | null) => void;
+  articles: NewsArticle[];
+  setArticles: (articles: NewsArticle[]) => void;
+  selectedArticle: NewsArticle | null;
+  setSelectedArticle: (article: NewsArticle | null) => void;
+  searchNews: (query: string) => Promise<void>;
   verifyNews: () => Promise<void>;
   resetState: () => void;
 }
@@ -35,10 +49,41 @@ const NewsContext = createContext<NewsContextType | undefined>(undefined);
 const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"; // Replace with your Gemini API key
 
 export const NewsProvider = ({ children }: { children: ReactNode }) => {
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [newsContent, setNewsContent] = useState<string>('');
   const [status, setStatus] = useState<VerificationStatus>('idle');
   const [result, setResult] = useState<VerificationResult | null>(null);
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
   const { currentUser } = useAuth();
+
+  const searchNews = async (query: string) => {
+    try {
+      setStatus('searching');
+      setSearchQuery(query);
+      
+      // Search DuckDuckGo
+      const searchResults = await searchDuckDuckGo(query);
+      
+      // Extract news articles
+      const extractedArticles = extractNewsFromSearch(searchResults);
+      
+      if (extractedArticles.length === 0) {
+        throw new Error("No news articles found for this query");
+      }
+      
+      setArticles(extractedArticles);
+      
+      // Select the first article by default
+      setSelectedArticle(extractedArticles[0]);
+      setNewsContent(extractedArticles[0].snippet);
+      
+      setStatus('idle');
+    } catch (error) {
+      console.error('Error searching news:', error);
+      setStatus('error');
+    }
+  };
 
   const verifyNews = async () => {
     try {
@@ -49,9 +94,7 @@ export const NewsProvider = ({ children }: { children: ReactNode }) => {
         throw new Error("News content cannot be empty");
       }
 
-      // We'll implement Gemini API call here
-      // For now, we'll simulate the API call with a delay
-      
+      // Use Gemini API to verify the news
       try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
           method: 'POST',
@@ -78,7 +121,12 @@ export const NewsProvider = ({ children }: { children: ReactNode }) => {
                     }
                     
                     News content to verify:
-                    ${newsContent}`
+                    ${newsContent}
+                    
+                    Additional context:
+                    This news was found in a search for "${searchQuery}".
+                    ${selectedArticle ? `Original source: ${selectedArticle.url}` : ''}
+                    `
                   }
                 ]
               }
@@ -119,7 +167,9 @@ export const NewsProvider = ({ children }: { children: ReactNode }) => {
           // Add to user's verification history
           await updateDoc(doc(db, 'users', currentUser.uid), {
             verificationHistory: arrayUnion({
+              query: searchQuery,
               content: newsContent,
+              articleUrl: selectedArticle?.url || '',
               result: parsedResult,
               timestamp: new Date().toISOString()
             })
@@ -128,7 +178,9 @@ export const NewsProvider = ({ children }: { children: ReactNode }) => {
         
         // Also save to general verifications collection
         await addDoc(collection(db, 'verifications'), {
+          query: searchQuery,
           content: newsContent,
+          articleUrl: selectedArticle?.url || '',
           result: parsedResult,
           userId: currentUser?.uid || 'anonymous',
           timestamp: serverTimestamp()
@@ -170,7 +222,9 @@ export const NewsProvider = ({ children }: { children: ReactNode }) => {
           if (currentUser) {
             await updateDoc(doc(db, 'users', currentUser.uid), {
               verificationHistory: arrayUnion({
+                query: searchQuery,
                 content: newsContent,
+                articleUrl: selectedArticle?.url || '',
                 result: mockResults,
                 timestamp: new Date().toISOString()
               })
@@ -178,7 +232,9 @@ export const NewsProvider = ({ children }: { children: ReactNode }) => {
           }
           
           await addDoc(collection(db, 'verifications'), {
+            query: searchQuery,
             content: newsContent,
+            articleUrl: selectedArticle?.url || '',
             result: mockResults,
             userId: currentUser?.uid || 'anonymous',
             timestamp: serverTimestamp()
@@ -194,20 +250,30 @@ export const NewsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const resetState = () => {
+    setSearchQuery('');
     setNewsContent('');
     setResult(null);
     setStatus('idle');
+    setArticles([]);
+    setSelectedArticle(null);
   };
 
   return (
     <NewsContext.Provider
       value={{
+        searchQuery,
+        setSearchQuery,
         newsContent,
         setNewsContent,
         status,
         setStatus,
         result,
         setResult,
+        articles,
+        setArticles,
+        selectedArticle,
+        setSelectedArticle,
+        searchNews,
         verifyNews,
         resetState,
       }}
