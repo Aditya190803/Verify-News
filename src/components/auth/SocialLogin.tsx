@@ -9,7 +9,6 @@ const SocialLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { socialLogin } = useAuth();
   const { toast } = useToast();
-
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     
@@ -21,9 +20,23 @@ const SocialLogin = () => {
       });
     } catch (error: any) {
       console.error('Google login error:', error);
+      
+      let errorMessage = "There was an error logging in with your Google account.";
+      
+      // Handle specific Firebase errors
+      if (error.code === 'auth/popup-blocked') {
+        errorMessage = "Popup was blocked. Please allow popups for this site and try again.";
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = "Login was cancelled. Please try again.";
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = "Network error. Please check your connection and try again.";
+      } else if (error.message?.includes('offline')) {
+        errorMessage = "You appear to be offline. Please check your internet connection.";
+      }
+      
       toast({
         title: "Google login failed",
-        description: "There was an error logging in with your Google account.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

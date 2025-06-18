@@ -15,15 +15,14 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
   const { toast } = useToast();
 
   if (status !== 'verified' || !result) return null;
-
   const getStatusIcon = () => {
     switch (result.veracity) {
       case 'true':
-        return <Check className="h-6 w-6 text-truth" />;
+        return <Check className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-truth" />;
       case 'false':
-        return <X className="h-6 w-6 text-falsehood" />;
+        return <X className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-falsehood" />;
       case 'partially-true':
-        return <AlertTriangle className="h-6 w-6 text-amber-500" />;
+        return <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-amber-500" />;
       default:
         return null;
     }
@@ -63,39 +62,38 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
       duration: 3000,
     });
   };
-
   return (
     <div className={cn('w-full animate-scale-in', className)}>
-      <div className="glass-card p-8 mx-auto max-w-2xl overflow-hidden">
-        <div className="flex items-center mb-6">
-          <div className={cn("flex items-center justify-center p-2 rounded-full", 
+      <div className="glass-card p-4 sm:p-6 lg:p-8 mx-auto max-w-2xl overflow-hidden">
+        <div className="flex items-center mb-4 sm:mb-6">
+          <div className={cn("flex items-center justify-center p-1.5 sm:p-2 rounded-full", 
             result.veracity === 'true' ? "bg-truth/10" : 
             result.veracity === 'false' ? "bg-falsehood/10" : 
             "bg-amber-500/10"
           )}>
             {getStatusIcon()}
           </div>
-          <div className="ml-4">
-            <div className={cn("inline-flex items-center px-3 py-1 text-xs font-medium rounded-full", getStatusColor())}>
+          <div className="ml-3 sm:ml-4 flex-1 min-w-0">
+            <div className={cn("inline-flex items-center px-2.5 sm:px-3 py-1 text-xs font-medium rounded-full", getStatusColor())}>
               {getStatusText()}
               <span className="ml-1 text-xs opacity-70">{result.confidence}% confidence</span>
             </div>
-            <h2 className="text-xl font-medium text-foreground mt-1">Verification Complete</h2>
+            <h2 className="text-lg sm:text-xl font-medium text-foreground mt-1">Verification Complete</h2>
           </div>
         </div>
         
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Original News Content */}
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-foreground/80">Original Content</h3>
-            <div className="p-4 rounded-xl bg-foreground/5 border border-foreground/10">
-              <p className="text-foreground text-base leading-relaxed">{newsContent}</p>
+            <h3 className="text-xs sm:text-sm font-medium text-foreground/80">Original Content</h3>
+            <div className="p-3 sm:p-4 rounded-xl bg-foreground/5 border border-foreground/10">
+              <p className="text-foreground text-sm sm:text-base leading-relaxed">{newsContent}</p>
             </div>
           </div>
           
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-foreground/80">Analysis</h3>
-            <p className="text-foreground text-base leading-relaxed">{result.explanation}</p>
+            <h3 className="text-xs sm:text-sm font-medium text-foreground/80">Analysis</h3>
+            <p className="text-foreground text-sm sm:text-base leading-relaxed">{result.explanation}</p>
           </div>
           
           {result.correctedInfo && (
