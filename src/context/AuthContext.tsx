@@ -36,18 +36,17 @@ export const useAuth = (): AuthContextType => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
   // Create user document in Firestore
   const createUserDocument = async (user: User) => {
     if (!user || !db) return;
 
-    const userRef = doc(db, 'users', user.uid);
-    const snapshot = await getDoc(userRef);
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      const snapshot = await getDoc(userRef);
 
-    if (!snapshot.exists()) {
-      const { email, displayName, photoURL } = user;
-      
-      try {
+      if (!snapshot.exists()) {
+        const { email, displayName, photoURL } = user;
+        
         await setDoc(userRef, {
           email,
           displayName: displayName || email?.split('@')[0],
@@ -55,11 +54,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           createdAt: serverTimestamp(),
           verificationHistory: []
         });
-      } catch (error) {
-        console.error('Error creating user document:', error);
       }
+    } catch (error) {
+      console.error('Error creating user document:', error);
+      // Don't throw - user auth can still work without the document
     }
   };
+
   // Sign up with email and password
   const signup = async (email: string, password: string): Promise<User> => {
     if (!auth) throw new Error('Authentication not available');
@@ -79,7 +80,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = (): Promise<void> => {
     if (!auth) throw new Error('Authentication not available');
     return signOut(auth);
-  };  // Social login (Google only)
+  };
+
+  // Social login (Google only)
   const socialLogin = async (providerName: 'google'): Promise<User> => {
     if (!auth) throw new Error('Authentication not available');
     
@@ -88,9 +91,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    await createUserDocument(result.user);
-    return result.user;
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+    
+    try {
+      const result = await signInWithPopup(auth, provider);
+      await createUserDocument(result.user);
+      return result.user;
+    } catch (error: any) {
+      // Add more specific error handling
+      if (error.code === 'auth/popup-blocked') {
+        throw new Error('Popup blocked. Please allow popups and try again.');
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error('Login cancelled by user.');
+      } else if (error.code === 'auth/network-request-failed') {
+        throw new Error('Network error. Please check your connection.');
+      }
+      throw error;
+    }
   };
 
   // Reset password

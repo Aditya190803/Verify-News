@@ -1,9 +1,16 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { searchDuckDuckGo, extractNewsFromSearch } from '../utils/searchUtils';
 import { verifyNewsWithGemini, getMockVerificationResult } from '../utils/geminiApi';
-import { saveVerificationToUserHistory, saveVerificationToCollection } from '../services/firebaseService';
+import { 
+  saveVerificationToUserHistory, 
+  saveVerificationToCollection, 
+  saveSearchToHistory, 
+  saveVerificationToHistory 
+} from '../services/firebaseService';
+import { refreshSearchHistoryGlobally } from '../components/SearchHistory';
 import { NewsArticle, VerificationResult, VerificationStatus } from '@/types/news';
 
 export const useNewsState = () => {
@@ -14,7 +21,7 @@ export const useNewsState = () => {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
   const { currentUser } = useAuth();
-
+  const navigate = useNavigate();
   const searchNews = async (query: string) => {
     try {
       setStatus('searching');
@@ -35,6 +42,12 @@ export const useNewsState = () => {
       // Select the first article by default
       setSelectedArticle(extractedArticles[0]);
       setNewsContent(extractedArticles[0].snippet);
+        // Save search to history if user is logged in
+      if (currentUser) {
+        await saveSearchToHistory(currentUser.uid, query, extractedArticles[0]);
+        // Refresh the search history UI
+        refreshSearchHistoryGlobally();
+      }
       
       setStatus('idle');
     } catch (error) {
@@ -72,12 +85,17 @@ export const useNewsState = () => {
               url: selectedArticle.url
             });
           }
-        }
-        
-        // Set the verification result
+        }        // Set the verification result
         setResult(parsedResult);
         setStatus('verified');
-
+        
+        // Determine verification type
+        const isUrl = newsContent.trim().match(/^https?:\/\/.+/);
+        const verificationType = isUrl ? 'url' : 'text';
+        
+        // Navigate to results page
+        navigate(`/results?q=${encodeURIComponent(searchQuery || newsContent)}&type=${verificationType}`);
+        
         // Save to Firebase
         if (currentUser) {
           await saveVerificationToUserHistory(
@@ -87,6 +105,16 @@ export const useNewsState = () => {
             parsedResult,
             selectedArticle
           );
+            // Also save to search history
+          await saveVerificationToHistory(
+            currentUser.uid,
+            searchQuery,
+            newsContent,
+            parsedResult,
+            selectedArticle
+          );
+          // Refresh the search history UI
+          refreshSearchHistoryGlobally();
         }
         
         await saveVerificationToCollection(
@@ -104,10 +132,15 @@ export const useNewsState = () => {
         console.log("Falling back to mock verification data");
         
         // Mock verification logic as fallback
-        const mockResults = getMockVerificationResult(selectedArticle?.url);
-
-        setResult(mockResults);
+        const mockResults = getMockVerificationResult(selectedArticle?.url);        setResult(mockResults);
         setStatus('verified');
+        
+        // Determine verification type
+        const isUrl = newsContent.trim().match(/^https?:\/\/.+/);
+        const verificationType = isUrl ? 'url' : 'text';
+        
+        // Navigate to results page
+        navigate(`/results?q=${encodeURIComponent(searchQuery || newsContent)}&type=${verificationType}`);
 
         // Save the mock result to Firebase
         try {
