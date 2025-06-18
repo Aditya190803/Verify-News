@@ -8,8 +8,7 @@ import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
-  GithubAuthProvider,
-  TwitterAuthProvider
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth, db } from '../config/firebase';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
@@ -20,7 +19,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<User>;
   signup: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
-  socialLogin: (provider: 'google' | 'github' | 'twitter') => Promise<User>;
+  socialLogin: (provider: 'google') => Promise<User>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Create user document in Firestore
   const createUserDocument = async (user: User) => {
-    if (!user) return;
+    if (!user || !db) return;
 
     const userRef = doc(db, 'users', user.uid);
     const snapshot = await getDoc(userRef);
@@ -60,9 +60,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
   };
-
   // Sign up with email and password
   const signup = async (email: string, password: string): Promise<User> => {
+    if (!auth) throw new Error('Authentication not available');
     const result = await createUserWithEmailAndPassword(auth, email, password);
     await createUserDocument(result.user);
     return result.user;
@@ -70,39 +70,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Login with email and password
   const login = async (email: string, password: string): Promise<User> => {
+    if (!auth) throw new Error('Authentication not available');
     const result = await signInWithEmailAndPassword(auth, email, password);
     return result.user;
   };
 
   // Logout
   const logout = (): Promise<void> => {
+    if (!auth) throw new Error('Authentication not available');
     return signOut(auth);
-  };
-
-  // Social login
-  const socialLogin = async (providerName: 'google' | 'github' | 'twitter'): Promise<User> => {
-    let provider;
+  };  // Social login (Google only)
+  const socialLogin = async (providerName: 'google'): Promise<User> => {
+    if (!auth) throw new Error('Authentication not available');
     
-    switch (providerName) {
-      case 'google':
-        provider = new GoogleAuthProvider();
-        break;
-      case 'github':
-        provider = new GithubAuthProvider();
-        break;
-      case 'twitter':
-        provider = new TwitterAuthProvider();
-        break;
-      default:
-        throw new Error(`Unsupported provider: ${providerName}`);
+    if (providerName !== 'google') {
+      throw new Error(`Unsupported provider: ${providerName}`);
     }
     
+    const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     await createUserDocument(result.user);
     return result.user;
   };
 
+  // Reset password
+  const resetPassword = async (email: string): Promise<void> => {
+    if (!auth) throw new Error('Authentication not available');
+    await sendPasswordResetEmail(auth, email);
+  };
+
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+    
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       setLoading(false);
@@ -110,7 +112,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return unsubscribe;
   }, []);
-
   const value = {
     currentUser,
     loading,
@@ -118,6 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signup,
     logout,
     socialLogin,
+    resetPassword,
   };
 
   return (

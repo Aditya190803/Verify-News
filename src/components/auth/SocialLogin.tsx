@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { Twitter, Github } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/context/AuthContext';
@@ -11,20 +10,20 @@ const SocialLogin = () => {
   const { socialLogin } = useAuth();
   const { toast } = useToast();
 
-  const handleSocialLogin = async (provider: 'google' | 'github' | 'twitter') => {
+  const handleGoogleLogin = async () => {
     setIsLoading(true);
     
     try {
-      await socialLogin(provider);
+      await socialLogin('google');
       toast({
         title: "Login successful",
-        description: `Welcome to VerifyNews!`
+        description: "Welcome to VerifyNews!"
       });
     } catch (error: any) {
-      console.error(`${provider} login error:`, error);
+      console.error('Google login error:', error);
       toast({
-        title: `${provider} login failed`,
-        description: "There was an error logging in with your social account.",
+        title: "Google login failed",
+        description: "There was an error logging in with your Google account.",
         variant: "destructive"
       });
     } finally {
@@ -45,11 +44,11 @@ const SocialLogin = () => {
         </div>
       </div>
 
-      <div className="mt-4 flex gap-3">
+      <div className="mt-4">
         <Button 
           variant="outline" 
           className="w-full" 
-          onClick={() => handleSocialLogin('google')}
+          onClick={handleGoogleLogin}
           disabled={isLoading}
         >
           <svg
@@ -74,27 +73,7 @@ const SocialLogin = () => {
               fill="#E74133"
             />
           </svg>
-          Google
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          className="w-full" 
-          onClick={() => handleSocialLogin('github')}
-          disabled={isLoading}
-        >
-          <Github className="mr-2 h-4 w-4" />
-          GitHub
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          className="w-full"
-          onClick={() => handleSocialLogin('twitter')}
-          disabled={isLoading}
-        >
-          <Twitter className="mr-2 h-4 w-4" />
-          Twitter
+          {isLoading ? "Signing in..." : "Continue with Google"}
         </Button>
       </div>
     </div>

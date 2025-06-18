@@ -16,14 +16,32 @@ type LoginFormProps = {
 
 const LoginForm = ({ email, setEmail, password, setPassword }: LoginFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, resetPassword } = useAuth();
   const { toast } = useToast();
   
-  const handleForgotPassword = () => {
-    toast({
-      title: "Password reset",
-      description: "Password reset functionality will be implemented soon."
-    });
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await resetPassword(email);
+      toast({
+        title: "Password reset email sent",
+        description: "Check your email for password reset instructions."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Password reset failed",
+        description: "Unable to send password reset email. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
