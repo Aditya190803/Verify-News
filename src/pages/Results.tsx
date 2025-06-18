@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import VerificationResult from '@/components/VerificationResult';
@@ -6,25 +6,43 @@ import SearchHistory from '@/components/SearchHistory';
 import { useNews } from '@/context/NewsContext';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Home } from 'lucide-react';
+import { ArrowLeft, Home, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { History } from 'lucide-react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 const Results = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();  const { result, status } = useNews();
+  const navigate = useNavigate();  
+  const { result, status, searchNews, verifyNews, setNewsContent } = useNews();
   const { currentUser } = useAuth();
   const isMobile = useIsMobile();
+  const [showSearchHistory, setShowSearchHistory] = useLocalStorage('showSearchHistory', true);
   
   const query = searchParams.get('q');
   const type = searchParams.get('type');
-  useEffect(() => {
-    // If no query or result, redirect to home
-    if (!query || (!result && status !== 'verifying')) {
+
+  const toggleSearchHistory = () => {
+    setShowSearchHistory(!showSearchHistory);
+  };  useEffect(() => {
+    // If we have a query but no result and we're not already processing, trigger search/verification
+    if (query && !result && status === 'idle') {
+      if (type === 'url') {
+        // For URL verification, set the content and verify
+        setNewsContent(query);
+        verifyNews();
+      } else {
+        // For search queries, search for news
+        searchNews(query);
+      }
+    }
+  }, [query, type, result, status, searchNews, verifyNews, setNewsContent]);useEffect(() => {
+    // If no query, redirect to home
+    if (!query) {
       navigate('/', { replace: true });
     }
-  }, [query, result, status, navigate]);
+  }, [query, navigate]);
 
   const handleBackToSearch = () => {
     navigate('/', { replace: true });
@@ -41,11 +59,45 @@ const Results = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      
-      <div className="flex-1 flex">        {/* Desktop Sidebar */}
+        <div className="flex-1 flex">        
+        {/* Desktop Sidebar */}
         {currentUser && !isMobile && (
-          <div className="w-64 border-r border-foreground/10 bg-background/50 backdrop-blur-sm">
-            <SearchHistory />
+          <div className="relative">
+            {showSearchHistory ? (
+              <div className="w-64 border-r border-foreground/10 bg-background/50 backdrop-blur-sm">
+                <SearchHistory 
+                  onClose={() => setShowSearchHistory(false)}
+                  showCloseButton={true}
+                />
+              </div>            ) : (
+              <div className="w-16 border-r border-border bg-card backdrop-blur-sm min-h-screen flex flex-col items-center py-4 shadow-sm">
+                <Button
+                  onClick={toggleSearchHistory}
+                  variant="ghost"
+                  size="sm"
+                  className="h-10 w-10 p-0 mb-3 hover:bg-accent hover:scale-105 rounded-lg transition-all duration-200 border border-transparent hover:border-border"
+                  title="Show Search History"
+                >
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </Button>
+                
+                <div className="flex-1 flex flex-col items-center justify-center gap-2">
+                  <Clock className="h-5 w-5 text-primary/60 mb-2" />
+                  <div className="text-[10px] text-muted-foreground/80 font-medium tracking-wider text-center leading-tight">
+                    <div>SEARCH</div>
+                    <div>HISTORY</div>
+                  </div>
+                </div>
+                
+                <div 
+                  className="w-8 h-8 rounded-lg bg-primary/5 border border-primary/20 flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 transition-all duration-200 cursor-pointer"
+                  title="Show Search History"
+                  onClick={toggleSearchHistory}
+                >
+                  <ChevronRight className="h-3 w-3 text-primary/70" />
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -64,9 +116,7 @@ const Results = () => {
                   <ArrowLeft className="h-4 w-4" />
                   <span className="hidden sm:inline">Back to Search</span>
                   <span className="sm:hidden">Back</span>
-                </Button>
-                
-                {currentUser && isMobile && (
+                </Button>                {currentUser && isMobile && (
                   <Drawer>
                     <DrawerTrigger asChild>
                       <Button variant="outline" size="sm" className="flex items-center gap-2">
@@ -76,7 +126,7 @@ const Results = () => {
                     </DrawerTrigger>
                     <DrawerContent className="max-h-[80vh]">
                       <div className="p-4">
-                        <SearchHistory />
+                        <SearchHistory showCloseButton={false} />
                       </div>
                     </DrawerContent>
                   </Drawer>

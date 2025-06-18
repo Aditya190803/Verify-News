@@ -336,11 +336,16 @@ html {
     user-select: none;
   }
   
-  input, textarea, [contenteditable] {
-    -webkit-user-select: text;
+  input, textarea, [contenteditable] {    -webkit-user-select: text;
     -khtml-user-select: text;
     -moz-user-select: text;
     -ms-user-select: text;
     user-select: text;
+  }
+  .writing-mode-vertical {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    letter-spacing: 0.1em;
   }
 }

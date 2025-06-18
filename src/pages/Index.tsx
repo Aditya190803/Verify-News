@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/Header';
 import NewsForm from '@/components/NewsForm';
 import NewsSearch from '@/components/NewsSearch';
@@ -7,8 +7,10 @@ import NewsArticles from '@/components/NewsArticles';
 import SearchHistory from '@/components/SearchHistory';
 import { useNews } from '@/context/NewsContext';
 import { useAuth } from '@/context/AuthContext';
-import { Shield, FileText, Image, Mic, Video } from 'lucide-react';
+import { Shield, FileText, Image, Mic, Video, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 // Error boundary component
 const ErrorBoundary = ({ children, fallback }: { children: React.ReactNode; fallback: React.ReactNode }) => {
@@ -99,15 +101,51 @@ const VerificationContent = () => {
 
 const Index = () => {
   const { currentUser } = useAuth();
+  const [showSearchHistory, setShowSearchHistory] = useLocalStorage('showSearchHistory', true);
+
+  const toggleSearchHistory = () => {
+    setShowSearchHistory(!showSearchHistory);
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 flex flex-col lg:flex-row">
+      <main className="flex-1 flex flex-col lg:flex-row relative">
         {/* Desktop sidebar - hidden on mobile */}
         {currentUser && (
-          <div className="hidden lg:block">
-            <SearchHistory />
+          <div className="hidden lg:block relative">
+            {showSearchHistory ? (
+              <SearchHistory 
+                onClose={() => setShowSearchHistory(false)}
+                showCloseButton={true}
+              />            ) : (              <div className="w-16 border-r border-border bg-card backdrop-blur-sm min-h-screen flex flex-col items-center py-4 shadow-sm">
+                <Button
+                  onClick={toggleSearchHistory}
+                  variant="ghost"
+                  size="sm"
+                  className="h-10 w-10 p-0 mb-3 hover:bg-accent hover:scale-105 rounded-lg transition-all duration-200 border border-transparent hover:border-border"
+                  title="Show Search History"
+                >
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </Button>
+                
+                <div className="flex-1 flex flex-col items-center justify-center gap-2">
+                  <Clock className="h-5 w-5 text-primary/60 mb-2" />
+                  <div className="text-[10px] text-muted-foreground/80 font-medium tracking-wider text-center leading-tight">
+                    <div>SEARCH</div>
+                    <div>HISTORY</div>
+                  </div>
+                </div>
+                
+                <div 
+                  className="w-8 h-8 rounded-lg bg-primary/5 border border-primary/20 flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 transition-all duration-200 cursor-pointer"
+                  title="Show Search History"
+                  onClick={toggleSearchHistory}
+                >
+                  <ChevronRight className="h-3 w-3 text-primary/70" />
+                </div>
+              </div>
+            )}
           </div>
         )}
         
