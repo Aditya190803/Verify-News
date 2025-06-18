@@ -3,13 +3,15 @@ import { useAuth } from '@/context/AuthContext';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { SearchHistoryItem } from '@/services/firebaseService';
 import { useNews } from '@/context/NewsContext';
-import { Clock, Search, FileCheck, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import { Clock, Search, FileCheck, ExternalLink, ChevronDown, ChevronUp, X, Minimize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface SearchHistoryProps {
   className?: string;
+  onClose?: () => void;
+  showCloseButton?: boolean;
 }
 
 // Create a global refresh function that can be called from anywhere
@@ -21,7 +23,7 @@ export const refreshSearchHistoryGlobally = () => {
   }
 };
 
-const SearchHistory = ({ className }: SearchHistoryProps) => {
+const SearchHistory = ({ className, onClose, showCloseButton = false }: SearchHistoryProps) => {
   const { currentUser } = useAuth();
   const { searchNews } = useNews();
   const { history, loading, refreshHistory } = useSearchHistory();
@@ -66,6 +68,18 @@ const SearchHistory = ({ className }: SearchHistoryProps) => {
   };  if (!currentUser) {
     return (
       <div className={cn('w-full lg:w-80 p-4 sm:p-6 border-r border-border bg-card/50 min-h-screen', className)}>
+        {showCloseButton && onClose && (
+          <div className="flex justify-end mb-4">
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
         <div className="text-center">
           <Clock className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
           <h3 className="text-base sm:text-lg font-medium mb-2">Search History</h3>
@@ -76,9 +90,9 @@ const SearchHistory = ({ className }: SearchHistoryProps) => {
       </div>
     );
   }
-
   return (
-    <div className={cn('w-full lg:w-80 p-4 sm:p-6 border-r border-border bg-card/50 min-h-screen', className)}>      <div className="flex items-center justify-between mb-4 sm:mb-6">
+    <div className={cn('w-full lg:w-80 p-4 sm:p-6 border-r border-border bg-card/50 min-h-screen', className)}>      
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         <h3 className="text-base sm:text-lg font-medium flex items-center gap-2">
           <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           Search History
@@ -88,17 +102,29 @@ const SearchHistory = ({ className }: SearchHistoryProps) => {
             </span>
           )}
         </h3>
-        {history.length > 0 && (
-          <Button
-            onClick={refreshHistory}
-            variant="ghost"
-            size="sm"
-            className="text-xs"
-            disabled={loading}
-          >
-            Refresh
-          </Button>
-        )}
+        <div className="flex items-center gap-1">
+          {history.length > 0 && (
+            <Button
+              onClick={refreshHistory}
+              variant="ghost"
+              size="sm"
+              className="text-xs"
+              disabled={loading}
+            >
+              Refresh
+            </Button>
+          )}          {showCloseButton && onClose && (
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive transition-colors"
+              title="Close Search History"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {loading ? (

@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNews } from '@/context/NewsContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { AlertCircle, FileText, SearchX } from 'lucide-react';
+import { AlertCircle, FileText, SearchX, Link, Type } from 'lucide-react';
 
 interface NewsFormProps {
   className?: string;
@@ -13,9 +13,14 @@ interface NewsFormProps {
 const NewsForm = ({ className }: NewsFormProps) => {
   const { newsContent, setNewsContent, verifyNews, status, setSearchQuery } = useNews();
   const [error, setError] = useState('');
+  const [isUrl, setIsUrl] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Check if content is a URL whenever it changes
+  useEffect(() => {
+    const urlRegex = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
+    setIsUrl(urlRegex.test(newsContent.trim()));
+  }, [newsContent]);const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!newsContent.trim()) {
@@ -24,40 +29,60 @@ const NewsForm = ({ className }: NewsFormProps) => {
     }
     
     setError('');
+      // Determine if content is a URL with improved regex
+    const urlRegex = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
+    const isUrl = urlRegex.test(newsContent.trim());
     
-    // Determine if content is a URL
-    const isUrl = newsContent.trim().match(/^https?:\/\/.+/);
-    const verificationType = isUrl ? 'url' : 'text';
-    
-    // Set search query for results page
+    // Set search query for results page - use the content itself if it's a URL
     setSearchQuery(newsContent.trim());
     
-    // Start verification
-    await verifyNews();
+    // For URLs, navigate directly to results page and let it handle the verification
+    if (isUrl) {
+      navigate(`/results?q=${encodeURIComponent(newsContent.trim())}&type=url`);
+    } else {
+      // For text content, verify first then navigate
+      await verifyNews();
+    }
   };
   return (
     <div className={cn('w-full animate-fade-in', className)} style={{ animationDelay: '100ms' }}>
       <div className="glass-card dark:bg-gray-800/60 dark:border-gray-700/50 p-4 sm:p-6 lg:p-8 mx-auto max-w-2xl">
-        <div className="mb-4 sm:mb-6">
-          <div className="inline-flex items-center px-2.5 sm:px-3 py-1 mb-2 text-xs font-medium rounded-full bg-primary/10 text-primary">
-            <FileText className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
-            Text Input
-          </div>
-          <h2 className="text-lg sm:text-xl font-medium text-foreground">Verify news content</h2>
+        <div className="mb-4 sm:mb-6">          <div className="inline-flex items-center px-2.5 sm:px-3 py-1 mb-2 text-xs font-medium rounded-full bg-primary/10 text-primary">
+            {isUrl ? (
+              <>
+                <Link className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
+                URL Input
+              </>
+            ) : (
+              <>
+                <FileText className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
+                Text Input
+              </>
+            )}
+          </div><h2 className="text-lg sm:text-xl font-medium text-foreground">Verify news content</h2>
           <p className="mt-1 text-xs sm:text-sm text-foreground/60">
-            Paste an article, headline, or statement to verify its accuracy using Gemini AI
+            Paste a news article URL, headline, or text content to verify its accuracy using Gemini AI
           </p>
         </div>
         
         <form onSubmit={handleSubmit}>
-          <div className="space-y-3 sm:space-y-4">
-            <textarea
+          <div className="space-y-3 sm:space-y-4">            <textarea
               value={newsContent}
               onChange={(e) => setNewsContent(e.target.value)}
-              placeholder="Paste news content here to verify..."
-              className="glass-input dark:bg-gray-700/50 dark:border-gray-600/50 w-full min-h-[120px] sm:min-h-[180px] resize-none text-sm sm:text-base"
+              placeholder="Paste a news article URL (https://...) or news content here to verify..."
+              className={cn(
+                "glass-input dark:bg-gray-700/50 dark:border-gray-600/50 w-full min-h-[120px] sm:min-h-[180px] resize-none text-sm sm:text-base transition-colors",
+                isUrl && "border-primary/50 bg-primary/5"
+              )}
               disabled={status === 'verifying'}
             />
+            
+            {isUrl && newsContent.trim() && (
+              <div className="flex items-center space-x-2 text-xs sm:text-sm text-primary animate-fade-in">
+                <Link className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span>URL detected - will verify this article</span>
+              </div>
+            )}
               {error && (
               <div className="flex items-center space-x-2 text-xs sm:text-sm text-destructive animate-fade-in">
                 <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />

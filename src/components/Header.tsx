@@ -57,8 +57,7 @@ const Header = ({ className }: HeaderProps) => {
           </h1>
         </Link>
           {/* Mobile menu button */}
-        <div className="lg:hidden flex items-center gap-2">
-          {/* Mobile search history trigger */}
+        <div className="lg:hidden flex items-center gap-2">          {/* Mobile search history trigger */}
           {currentUser && (
             <Sheet>
               <SheetTrigger asChild>
@@ -67,7 +66,7 @@ const Header = ({ className }: HeaderProps) => {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="p-0 w-80">
-                <SearchHistory />
+                <SearchHistory showCloseButton={false} />
               </SheetContent>
             </Sheet>
           )}
