@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import VerificationResult from '@/components/VerificationResult';
@@ -6,7 +6,7 @@ import SearchHistory from '@/components/SearchHistory';
 import { useNews } from '@/context/NewsContext';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Home, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { ArrowLeft, Home, ChevronRight, Clock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { History } from 'lucide-react';
@@ -14,35 +14,27 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 const Results = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();  
-  const { result, status, searchNews, verifyNews, setNewsContent } = useNews();
+  const navigate = useNavigate();
+  const { result, status } = useNews();
   const { currentUser } = useAuth();
   const isMobile = useIsMobile();
   const [showSearchHistory, setShowSearchHistory] = useLocalStorage('showSearchHistory', true);
   
   const query = searchParams.get('q');
   const type = searchParams.get('type');
-
   const toggleSearchHistory = () => {
-    setShowSearchHistory(!showSearchHistory);
-  };  useEffect(() => {
-    // If we have a query but no result and we're not already processing, trigger search/verification
-    if (query && !result && status === 'idle') {
-      if (type === 'url') {
-        // For URL verification, set the content and verify
-        setNewsContent(query);
-        verifyNews();
-      } else {
-        // For search queries, search for news
-        searchNews(query);
-      }
-    }
-  }, [query, type, result, status, searchNews, verifyNews, setNewsContent]);useEffect(() => {
-    // If no query, redirect to home
-    if (!query) {
+    setShowSearchHistory(prev => !prev);
+  };
+
+  const closeSidebar = () => {
+    setShowSearchHistory(false);
+  };
+  useEffect(() => {
+    // If no query or result, redirect to home
+    if (!query || (!result && status !== 'verifying')) {
       navigate('/', { replace: true });
     }
-  }, [query, navigate]);
+  }, [query, result, status, navigate]);
 
   const handleBackToSearch = () => {
     navigate('/', { replace: true });
@@ -55,22 +47,35 @@ const Results = () => {
   if (!query) {
     return null;
   }
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-        <div className="flex-1 flex">        
-        {/* Desktop Sidebar */}
-        {currentUser && !isMobile && (
-          <div className="relative">
+      <div className="flex-1 flex">
+        {/* Mobile sidebar overlay */}
+        {showSearchHistory && (
+          <div className="md:hidden fixed inset-0 z-40 bg-black/50" onClick={closeSidebar}>
+            <div className="w-80 h-full bg-background" onClick={(e) => e.stopPropagation()}>
+              <SearchHistory 
+                onClose={closeSidebar}
+                showCloseButton={true}
+                className="h-full"
+              />
+            </div>
+          </div>
+        )}
+          {/* Desktop Sidebar */}
+        {(currentUser || process.env.NODE_ENV === 'development') && !isMobile && (
+          <div>
             {showSearchHistory ? (
-              <div className="w-64 border-r border-foreground/10 bg-background/50 backdrop-blur-sm">
+              <div className="w-80 fixed left-0 top-0 h-screen border-r border-foreground/10 bg-background/50 backdrop-blur-sm transform transition-transform duration-300 ease-in-out translate-x-0 z-30">
                 <SearchHistory 
-                  onClose={() => setShowSearchHistory(false)}
+                  onClose={closeSidebar}
                   showCloseButton={true}
+                  className="h-full overflow-y-auto"
                 />
-              </div>            ) : (
-              <div className="w-16 border-r border-border bg-card backdrop-blur-sm min-h-screen flex flex-col items-center py-4 shadow-sm">
+              </div>
+            ) : (
+              <div className="w-16 fixed left-0 top-0 h-screen border-r border-border bg-card backdrop-blur-sm flex flex-col items-center py-4 shadow-sm z-30">
                 <Button
                   onClick={toggleSearchHistory}
                   variant="ghost"
@@ -80,12 +85,12 @@ const Results = () => {
                 >
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </Button>
-                
-                <div className="flex-1 flex flex-col items-center justify-center gap-2">
-                  <Clock className="h-5 w-5 text-primary/60 mb-2" />
-                  <div className="text-[10px] text-muted-foreground/80 font-medium tracking-wider text-center leading-tight">
-                    <div>SEARCH</div>
-                    <div>HISTORY</div>
+                  <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                  <Clock className="h-4 w-4 text-primary/60" />
+                  <div className="writing-mode-vertical text-xs text-muted-foreground/70 font-medium tracking-widest">
+                    <span className="block transform rotate-180" style={{ writingMode: 'vertical-rl' }}>
+                      HISTORY
+                    </span>
                   </div>
                 </div>
                 
@@ -99,10 +104,12 @@ const Results = () => {
               </div>
             )}
           </div>
-        )}
-
-        {/* Main Content */}
-        <div className="flex-1 overflow-auto">
+        )}        {/* Main Content */}
+        <div className={`flex-1 overflow-auto transition-all duration-300 ${
+          (currentUser || process.env.NODE_ENV === 'development') && !isMobile ? 
+            (showSearchHistory ? 'ml-80' : 'ml-16') : 
+            'ml-0'
+        }`}>
           <div className="container max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
             {/* Header with Back Button */}
             <div className="flex items-center justify-between mb-6">
@@ -116,7 +123,9 @@ const Results = () => {
                   <ArrowLeft className="h-4 w-4" />
                   <span className="hidden sm:inline">Back to Search</span>
                   <span className="sm:hidden">Back</span>
-                </Button>                {currentUser && isMobile && (
+                </Button>
+                
+                {currentUser && isMobile && (
                   <Drawer>
                     <DrawerTrigger asChild>
                       <Button variant="outline" size="sm" className="flex items-center gap-2">
@@ -126,7 +135,7 @@ const Results = () => {
                     </DrawerTrigger>
                     <DrawerContent className="max-h-[80vh]">
                       <div className="p-4">
-                        <SearchHistory showCloseButton={false} />
+                        <SearchHistory />
                       </div>
                     </DrawerContent>
                   </Drawer>
@@ -157,31 +166,9 @@ const Results = () => {
                   </p>
                 )}
               </div>
-            </div>
-
-            {/* Verification Result */}
+            </div>            {/* Verification Result */}
             <div className="space-y-6">
               <VerificationResult />
-                {/* Additional Actions */}
-              {result && (
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button
-                    onClick={handleBackToSearch}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    Verify Another
-                  </Button>
-                  <Button
-                    onClick={handleGoHome}
-                    className="flex items-center gap-2"
-                  >
-                    <Home className="h-4 w-4" />
-                    Back to Home
-                  </Button>
-                </div>
-              )}
             </div>
           </div>
         </div>

@@ -98,9 +98,15 @@ export const saveSearchToHistory = async (
   searchQuery: string,
   selectedArticle?: NewsArticle | null
 ) => {
-  if (!userId || !db) return;
+  console.log('🔍 saveSearchToHistory called:', { userId, searchQuery, hasDB: !!db });
+  
+  if (!userId || !db) {
+    console.warn('❌ saveSearchToHistory aborted - missing userId or db:', { userId: !!userId, db: !!db });
+    return;
+  }
   
   try {
+    console.log('💾 Attempting to save search to history...');
     await retryOperation(() =>
       addDoc(collection(db, 'searchHistory'), {
         userId: userId,
@@ -111,8 +117,9 @@ export const saveSearchToHistory = async (
         timestamp: serverTimestamp()
       })
     );
+    console.log('✅ Search saved to history successfully');
   } catch (error) {
-    console.error('Error saving search to history:', error);
+    console.error('❌ Error saving search to history:', error);
     // Don't throw - allow the app to continue working
   }
 };
@@ -125,9 +132,15 @@ export const saveVerificationToHistory = async (
   result: VerificationResult,
   selectedArticle?: NewsArticle | null
 ) => {
-  if (!userId || !db) return;
+  console.log('🔍 saveVerificationToHistory called:', { userId, searchQuery, hasDB: !!db });
+  
+  if (!userId || !db) {
+    console.warn('❌ saveVerificationToHistory aborted - missing userId or db:', { userId: !!userId, db: !!db });
+    return;
+  }
   
   try {
+    console.log('💾 Attempting to save verification to history...');
     await retryOperation(() =>
       addDoc(collection(db, 'searchHistory'), {
         userId: userId,
@@ -140,8 +153,9 @@ export const saveVerificationToHistory = async (
         timestamp: serverTimestamp()
       })
     );
+    console.log('✅ Verification saved to history successfully');
   } catch (error) {
-    console.error('Error saving verification to search history:', error);
+    console.error('❌ Error saving verification to search history:', error);
     // Don't throw - allow the app to continue working
   }
 };

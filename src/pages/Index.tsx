@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import Header from '@/components/Header';
 import NewsForm from '@/components/NewsForm';
 import NewsSearch from '@/components/NewsSearch';
@@ -7,7 +7,7 @@ import NewsArticles from '@/components/NewsArticles';
 import SearchHistory from '@/components/SearchHistory';
 import { useNews } from '@/context/NewsContext';
 import { useAuth } from '@/context/AuthContext';
-import { Shield, FileText, Image, Mic, Video, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Shield, FileText, Image, Mic, Video, Clock, ChevronRight, Link } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
@@ -102,23 +102,40 @@ const VerificationContent = () => {
 const Index = () => {
   const { currentUser } = useAuth();
   const [showSearchHistory, setShowSearchHistory] = useLocalStorage('showSearchHistory', true);
-
   const toggleSearchHistory = () => {
-    setShowSearchHistory(!showSearchHistory);
+    setShowSearchHistory(prev => !prev);
   };
 
+  const closeSidebar = () => {
+    setShowSearchHistory(false);
+  };
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1 flex flex-col lg:flex-row relative">
-        {/* Desktop sidebar - hidden on mobile */}
-        {currentUser && (
-          <div className="hidden lg:block relative">
-            {showSearchHistory ? (
+      <Header />      <main className="flex-1 flex flex-col md:flex-row relative">
+        {/* Mobile sidebar overlay */}
+        {showSearchHistory && (
+          <div className="md:hidden fixed inset-0 z-40 bg-black/50" onClick={closeSidebar}>
+            <div className="w-80 h-full bg-background" onClick={(e) => e.stopPropagation()}>
               <SearchHistory 
-                onClose={() => setShowSearchHistory(false)}
+                onClose={closeSidebar}
                 showCloseButton={true}
-              />            ) : (              <div className="w-16 border-r border-border bg-card backdrop-blur-sm min-h-screen flex flex-col items-center py-4 shadow-sm">
+                className="h-full"
+              />
+            </div>
+          </div>
+        )}        {/* Desktop sidebar */}
+        {(currentUser || process.env.NODE_ENV === 'development') && (
+          <div className="hidden md:block">
+            {showSearchHistory ? (
+              <div className="w-80 fixed left-0 top-0 h-screen transform transition-transform duration-300 ease-in-out translate-x-0 z-30">
+                <SearchHistory 
+                  onClose={closeSidebar}
+                  showCloseButton={true}
+                  className="h-full overflow-y-auto"
+                />
+              </div>
+            ) : (
+              <div className="w-16 fixed left-0 top-0 h-screen border-r border-border bg-card backdrop-blur-sm flex flex-col items-center py-4 shadow-sm z-30">
                 <Button
                   onClick={toggleSearchHistory}
                   variant="ghost"
@@ -129,11 +146,12 @@ const Index = () => {
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </Button>
                 
-                <div className="flex-1 flex flex-col items-center justify-center gap-2">
-                  <Clock className="h-5 w-5 text-primary/60 mb-2" />
-                  <div className="text-[10px] text-muted-foreground/80 font-medium tracking-wider text-center leading-tight">
-                    <div>SEARCH</div>
-                    <div>HISTORY</div>
+                <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                  <Clock className="h-4 w-4 text-primary/60" />
+                  <div className="writing-mode-vertical text-xs text-muted-foreground/70 font-medium tracking-widest">
+                    <span className="block transform rotate-180" style={{ writingMode: 'vertical-rl' }}>
+                      HISTORY
+                    </span>
                   </div>
                 </div>
                 
@@ -147,10 +165,12 @@ const Index = () => {
               </div>
             )}
           </div>
-        )}
-        
-        {/* Main content */}
-        <div className="flex-1 py-4 sm:py-6 lg:py-8">
+        )}        {/* Main content */}
+        <div className={`flex-1 py-4 sm:py-6 lg:py-8 overflow-auto transition-all duration-300 ${
+          (currentUser || process.env.NODE_ENV === 'development') ? 
+            (showSearchHistory ? 'md:ml-80' : 'md:ml-16') : 
+            'ml-0'
+        }`}>
           <VerificationContent />
         </div>
       </main>

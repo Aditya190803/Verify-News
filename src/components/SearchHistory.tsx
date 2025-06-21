@@ -67,7 +67,7 @@ const SearchHistory = ({ className, onClose, showCloseButton = false }: SearchHi
     return `${diffInWeeks}w ago`;
   };  if (!currentUser) {
     return (
-      <div className={cn('w-full lg:w-80 p-4 sm:p-6 border-r border-border bg-card/50 min-h-screen', className)}>
+      <div className={cn('w-full lg:w-80 p-4 sm:p-6 border-r border-border bg-card/50 h-full', className)}>
         {showCloseButton && onClose && (
           <div className="flex justify-end mb-4">
             <Button
@@ -89,9 +89,8 @@ const SearchHistory = ({ className, onClose, showCloseButton = false }: SearchHi
         </div>
       </div>
     );
-  }
-  return (
-    <div className={cn('w-full lg:w-80 p-4 sm:p-6 border-r border-border bg-card/50 min-h-screen', className)}>      
+  }  return (
+    <div className={cn('w-full lg:w-80 p-4 sm:p-6 border-r border-border bg-card/50 h-full', className)}>
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <h3 className="text-base sm:text-lg font-medium flex items-center gap-2">
           <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
@@ -113,7 +112,8 @@ const SearchHistory = ({ className, onClose, showCloseButton = false }: SearchHi
             >
               Refresh
             </Button>
-          )}          {showCloseButton && onClose && (
+          )}
+          {showCloseButton && onClose && (
             <Button
               onClick={onClose}
               variant="ghost"
@@ -141,7 +141,7 @@ const SearchHistory = ({ className, onClose, showCloseButton = false }: SearchHi
           <p className="text-xs sm:text-sm">No search history yet.</p>
           <p className="text-xs mt-1">Start searching to see your history here.</p>
         </div>      ) : (
-        <ScrollArea className="h-[calc(100vh-160px)] sm:h-[calc(100vh-200px)]">
+        <ScrollArea className="h-[calc(100vh-200px)] pr-2">
           <div className="space-y-2 sm:space-y-3">
             {displayedHistory.map((item, index) => (
               <div
