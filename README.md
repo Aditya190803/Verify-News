@@ -8,7 +8,7 @@ VerifyNews is a modern, AI-powered news verification platform built with React a
 
 ## ✨ Features
 - 🔍 **Smart Text Analysis** - Accepts news headlines, articles, or any text for verification
-- 🌐 **Multi-Source Verification** - Uses DuckDuckGo API to find reliable sources across the web
+- 🌐 **Multi-Source Verification** - Uses LangSearch API to find reliable sources across the web
 - 🤖 **AI-Powered Fact-Checking** - Leverages Google Gemini AI for intelligent authenticity analysis
 - ✅ **Credibility Scoring** - Provides detailed credibility assessments with confidence levels
 - 📝 **Corrected Information** - Offers accurate information when misinformation is detected
@@ -116,7 +116,7 @@ npm run preview  # Preview production build locally
 - **Authentication:** Firebase Auth
 - **Database:** Firebase Firestore
 - **AI/ML:** Google Gemini AI for fact-checking
-- **Search:** DuckDuckGo API integration
+- **Search:** LangSearch API integration
 - **Routing:** React Router DOM
 - **Form Handling:** React Hook Form with Zod validation
 - **Icons:** Lucide React

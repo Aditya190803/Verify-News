@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSearchHistoryContext } from '../context/SearchHistoryContext';
-import { searchDuckDuckGo, extractNewsFromSearch } from '../utils/searchUtils';
+import { searchLangSearch, extractNewsFromSearch, comprehensiveNewsSearch } from '../utils/searchUtils';
 import { verifyNewsWithGemini, getMockVerificationResult } from '../utils/geminiApi';
 import { 
   saveVerificationToUserHistory, 
@@ -14,7 +14,7 @@ import {
 import { getLLMGeneratedTitle } from '@/utils/llmHelpers';
 import { NewsArticle, VerificationResult, VerificationStatus } from '@/types/news';
 
-export const useNewsState = () => {
+export function useNewsState() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [newsContent, setNewsContent] = useState<string>('');
   const [status, setStatus] = useState<VerificationStatus>('idle');
@@ -38,30 +38,40 @@ export const useNewsState = () => {
       setStatus('searching');
       setSearchQuery(query);
       
-      // Search DuckDuckGo
-      const searchResults = await searchDuckDuckGo(query);
+      // Use comprehensive search with LLM keyword extraction
+      const searchResults = await comprehensiveNewsSearch(query);
       
-      // Extract news articles
-      const extractedArticles = extractNewsFromSearch(searchResults, query);
+      // Extract and combine articles from all search results
+      let allExtractedArticles: NewsArticle[] = [];
       
-      if (extractedArticles.length === 0) {
+      searchResults.forEach(result => {
+        const articles = extractNewsFromSearch(result, query);
+        allExtractedArticles.push(...articles);
+      });
+      
+      // Remove duplicates and sort by relevance
+      const uniqueArticles = allExtractedArticles.filter((article, index, arr) => 
+        index === arr.findIndex(a => a.url === article.url && a.title === article.title)
+      );
+      
+      if (uniqueArticles.length === 0) {
         throw new Error("No news articles found for this query");
       }
       
-      setArticles(extractedArticles);
+      setArticles(uniqueArticles.slice(0, 15)); // Limit to top 15 articles
       
       // Select the first article by default
-      setSelectedArticle(extractedArticles[0]);
-      setNewsContent(extractedArticles[0].snippet);
+      setSelectedArticle(uniqueArticles[0]);
+      setNewsContent(uniqueArticles[0].snippet);
         // Save search to history if user is logged in
       if (currentUser) {
-        await saveSearchToHistory(currentUser.uid, query, extractedArticles[0], slug, title);
+        await saveSearchToHistory(currentUser.uid, query, uniqueArticles[0], slug, title);
         // Refresh the search history UI
         refreshSearchHistory();
       }
       
       setStatus('idle');
-      return extractedArticles; // Return the articles for use in handleUnifiedInput
+      return uniqueArticles; // Return the articles for use in handleUnifiedInput
     } catch (error) {
       console.error('Error searching news:', error);
       setStatus('error');
@@ -75,7 +85,25 @@ export const useNewsState = () => {
 
       // Check if news content is empty
       if (!newsContent.trim()) {
-        throw new Error("News content cannot be empty");
+        throw new Error("Please provide news content to verify");
+      }
+
+      console.log("🔍 Starting news verification process...");
+
+      // Perform real-time search to get current information
+      let currentSearchResults = [];
+      try {
+        console.log("🌐 Searching for current information...");
+        currentSearchResults = await comprehensiveNewsSearch(newsContent || searchQuery);
+        console.log(`✅ Found ${currentSearchResults.length} search results for verification`);
+      } catch (searchError) {
+        console.warn("⚠️ Could not fetch current search results:", searchError);
+        // Continue with verification even if search fails - just inform Gemini about the limitation
+        currentSearchResults = [{
+          RelatedTopics: [{
+            Text: `Search for "${newsContent || searchQuery}" - Unable to fetch real-time results due to connectivity issues. Please rely on your training data and note this limitation in your response.`
+          }]
+        }];
       }
 
       // Try to verify with Gemini API
@@ -83,8 +111,11 @@ export const useNewsState = () => {
         let parsedResult = await verifyNewsWithGemini(
           newsContent, 
           searchQuery, 
-          selectedArticle?.url
+          selectedArticle?.url,
+          currentSearchResults
         );
+        
+        console.log("✅ Gemini verification completed successfully");
         
         // Ensure the article URL is included as a source if not already present
         if (selectedArticle?.url) {
@@ -145,13 +176,27 @@ export const useNewsState = () => {
         navigate(`/result/${slug}`);
         
       } catch (error) {
-        console.error("Error calling Gemini API:", error);
+        console.error("🚨 Gemini API verification failed:", error);
         
-        // Fall back to mock data if API call fails
-        console.log("Falling back to mock verification data");
+        // Provide specific error messaging
+        let errorMessage = "Verification service temporarily unavailable";
+        if (error instanceof Error) {
+          if (error.message.includes("API key")) {
+            errorMessage = "API configuration issue";
+          } else if (error.message.includes("quota")) {
+            errorMessage = "Service quota exceeded";
+          } else if (error.message.includes("JSON")) {
+            errorMessage = "Response parsing error";
+          } else if (error.message.includes("timeout")) {
+            errorMessage = "Service timeout";
+          }
+        }
+        
+        console.log(`⚠️ USING FALLBACK VERIFICATION - ${errorMessage}`);
         
         // Mock verification logic as fallback
         const mockResults = getMockVerificationResult(selectedArticle?.url);
+        mockResults.explanation = `⚠️ This is a demo result. Real verification temporarily unavailable (${errorMessage}). Please verify this information through multiple trusted news sources.`;
         setResult(mockResults);
         setStatus('verified');
         
@@ -196,12 +241,14 @@ export const useNewsState = () => {
   };
 
   const resetState = () => {
+    console.log('🔄 Resetting news state...');
     setSearchQuery('');
     setNewsContent('');
     setResult(null);
     setStatus('idle');
     setArticles([]);
     setSelectedArticle(null);
+    console.log('✅ News state reset complete');
   };
 
   // Helper to generate a unique 8-char alphanumeric slug
@@ -220,7 +267,9 @@ export const useNewsState = () => {
       setStatus('verifying');
       let verificationResult;
       try {
-        verificationResult = await verifyNewsWithGemini(value, value);
+        // Get current search results for URL verification
+        const searchResults = await comprehensiveNewsSearch(value);
+        verificationResult = await verifyNewsWithGemini(value, value, value, searchResults);
         setResult(verificationResult);
         setStatus('verified');
       } catch (error) {
@@ -266,7 +315,9 @@ export const useNewsState = () => {
       setSearchQuery(value);
       let verificationResult;
       try {
-        verificationResult = await verifyNewsWithGemini(value, `Topic: ${value}`);
+        // Get current search results for topic verification
+        const searchResults = await comprehensiveNewsSearch(value);
+        verificationResult = await verifyNewsWithGemini(value, `Topic: ${value}`, undefined, searchResults);
         setResult(verificationResult);
         setStatus('verified');
       } catch (error) {
@@ -315,7 +366,9 @@ export const useNewsState = () => {
       setStatus('verifying');
       let verificationResult;
       try {
-        verificationResult = await verifyNewsWithGemini(value, value);
+        // Get current search results for pasted news verification
+        const searchResults = await comprehensiveNewsSearch(value);
+        verificationResult = await verifyNewsWithGemini(value, value, undefined, searchResults);
         setResult(verificationResult);
         setStatus('verified');
       } catch (error) {
