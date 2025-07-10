@@ -33,7 +33,7 @@ export interface SearchHistoryItem {
   slug?: string;
 }
 
-// Utility function to retry Firestore operations
+// Utility function to retry Firestore operations with better error handling
 const retryOperation = async <T>(operation: () => Promise<T>, maxRetries = 3): Promise<T> => {
   let lastError;
   
@@ -47,6 +47,18 @@ const retryOperation = async <T>(operation: () => Promise<T>, maxRetries = 3): P
       // Don't retry if it's a permission error or if db is null
       if (!db || error.code === 'permission-denied' || error.code === 'unauthenticated') {
         throw error;
+      }
+      
+      // Handle network/connectivity errors (likely from ad blockers)
+      if (error.message?.includes('ERR_BLOCKED_BY_CLIENT') || 
+          error.message?.includes('Failed to fetch') ||
+          error.code === 'unavailable' ||
+          error.code === 'network-request-failed') {
+        console.warn(`🚫 Network error detected (likely blocked by ad blocker): ${error.message}`);
+        if (attempt === maxRetries) {
+          // Return a more user-friendly error for network issues
+          throw new Error('Connection blocked - please disable ad blocker for this site or try again later');
+        }
       }
       
       // Wait before retrying (exponential backoff)
@@ -342,5 +354,30 @@ export const getUserSearchHistory = async (userId: string): Promise<SearchHistor
   } catch (error) {
     console.error('❌ Error getting user search history:', error);
     return [];
+  }
+};
+
+// Check if Firestore is accessible (not blocked by ad blockers)
+export const checkFirestoreConnectivity = async (): Promise<boolean> => {
+  if (!db) {
+    console.warn('🔥 Firestore not initialized');
+    return false;
+  }
+  
+  try {
+    // Try a simple read operation to check connectivity
+    const testDoc = doc(db, 'connectivity-test', 'test');
+    await getDoc(testDoc);
+    console.log('✅ Firestore connectivity check passed');
+    return true;
+  } catch (error: any) {
+    console.warn('❌ Firestore connectivity check failed:', error);
+    
+    if (error.message?.includes('ERR_BLOCKED_BY_CLIENT') || 
+        error.message?.includes('Failed to fetch')) {
+      console.warn('🚫 Firestore appears to be blocked by ad blocker');
+    }
+    
+    return false;
   }
 };

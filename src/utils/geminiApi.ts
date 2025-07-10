@@ -134,10 +134,54 @@ CRITICAL INSTRUCTIONS:
     // Generate content with improved configuration for Gemini 2.5 Flash
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const text = response.text();
+    
+    // Check if response is blocked or empty
+    if (!response) {
+      console.error('❌ No response object received from Gemini');
+      throw new Error('No response received from Gemini API - service may be temporarily unavailable');
+    }
 
-    if (!text) {
-      throw new Error('No response text received from Gemini');
+    // Check for safety filtering or other blocks
+    if (response.candidates && response.candidates.length === 0) {
+      console.error('❌ Response was blocked by safety filters');
+      throw new Error('Content was blocked by safety filters - please try different wording');
+    }
+
+    let text;
+    try {
+      text = response.text();
+    } catch (textError) {
+      console.error('❌ Error extracting text from response:', textError);
+      
+      // Try to get text from candidates directly
+      if (response.candidates && response.candidates[0] && response.candidates[0].content) {
+        try {
+          text = response.candidates[0].content.parts[0].text;
+          console.log('✅ Extracted text from candidates');
+        } catch (candidateError) {
+          console.error('❌ Failed to extract text from candidates:', candidateError);
+          throw new Error('Unable to extract response text from Gemini');
+        }
+      } else {
+        throw new Error('No response text available from Gemini API');
+      }
+    }
+
+    if (!text || text.trim().length === 0) {
+      console.error('❌ Empty response text from Gemini');
+      console.log('📊 Response candidates:', response.candidates);
+      
+      // Check if the response was blocked by safety filters
+      const candidates = response.candidates;
+      if (candidates && candidates.length > 0) {
+        const candidate = candidates[0];
+        if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+          console.warn(`⚠️ Response was blocked: ${candidate.finishReason}`);
+          throw new Error(`Gemini response blocked due to safety filters: ${candidate.finishReason}`);
+        }
+      }
+      
+      throw new Error('No response text received from Gemini - response may be empty or blocked');
     }
 
     console.log('✅ Successfully received response from Gemini 2.5 Flash');
@@ -217,11 +261,30 @@ CRITICAL INSTRUCTIONS:
   } catch (error) {
     console.error('Error calling Gemini 2.5 Flash API:', error);
     
+    // Provide more specific error messages
+    let errorMessage = 'Unable to verify this content due to a technical error.';
+    
+    if (error instanceof Error) {
+      if (error.message.includes('API key')) {
+        errorMessage = 'Invalid or missing Gemini API key. Please check your configuration.';
+      } else if (error.message.includes('quota') || error.message.includes('rate limit')) {
+        errorMessage = 'API quota exceeded. Please try again in a few minutes.';
+      } else if (error.message.includes('blocked') || error.message.includes('safety')) {
+        errorMessage = 'Content was blocked by safety filters. Please try different phrasing.';
+      } else if (error.message.includes('No response')) {
+        errorMessage = 'No response received from AI service. Please try again.';
+      } else if (error.message.includes('JSON')) {
+        errorMessage = 'Error processing AI response. Please try again.';
+      } else if (error.message.includes('network') || error.message.includes('fetch')) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      }
+    }
+    
     // Return a fallback result instead of throwing
     return {
       veracity: 'unverified' as const,
       confidence: 0,
-      explanation: 'Unable to verify this content due to a technical error. Please try again or verify manually using reliable news sources.',
+      explanation: `${errorMessage} Please try again or verify manually using reliable news sources.`,
       sources: []
     };
   }

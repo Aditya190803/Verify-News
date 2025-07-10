@@ -12,6 +12,7 @@ import {
   saveVerificationToHistory 
 } from '../services/firebaseService';
 import { getLLMGeneratedTitle } from '@/utils/llmHelpers';
+import { handleFirebaseError, handleGeminiError } from '@/utils/errorHandling';
 import { NewsArticle, VerificationResult, VerificationStatus } from '@/types/news';
 
 export function useNewsState() {
@@ -137,40 +138,45 @@ export function useNewsState() {
         const slug = generateSlug();
         const llmTitle = await getLLMGeneratedTitle(newsContent || searchQuery);
         
-        // Save to Firebase
-        if (currentUser) {
-          await saveVerificationToUserHistory(
-            currentUser.uid,
+        // Save to Firebase with error handling
+        try {
+          if (currentUser) {
+            await saveVerificationToUserHistory(
+              currentUser.uid,
+              searchQuery,
+              newsContent,
+              parsedResult,
+              selectedArticle,
+              slug,
+              llmTitle
+            );
+              // Also save to search history
+            await saveVerificationToHistory(
+              currentUser.uid,
+              searchQuery,
+              newsContent,
+              parsedResult,
+              selectedArticle,
+              slug,
+              llmTitle
+            );
+            // Refresh the search history UI
+            refreshSearchHistory();
+          }
+          
+          await saveVerificationToCollection(
             searchQuery,
             newsContent,
             parsedResult,
+            currentUser?.uid || 'anonymous',
             selectedArticle,
             slug,
             llmTitle
           );
-            // Also save to search history
-          await saveVerificationToHistory(
-            currentUser.uid,
-            searchQuery,
-            newsContent,
-            parsedResult,
-            selectedArticle,
-            slug,
-            llmTitle
-          );
-          // Refresh the search history UI
-          refreshSearchHistory();
+        } catch (firebaseError) {
+          handleFirebaseError(firebaseError, 'verification save');
+          // Continue without throwing - verification result is still valid
         }
-        
-        await saveVerificationToCollection(
-          searchQuery,
-          newsContent,
-          parsedResult,
-          currentUser?.uid || 'anonymous',
-          selectedArticle,
-          slug,
-          llmTitle
-        );
         
         // Navigate to result page with slug
         navigate(`/result/${slug}`);
@@ -178,19 +184,8 @@ export function useNewsState() {
       } catch (error) {
         console.error("🚨 Gemini API verification failed:", error);
         
-        // Provide specific error messaging
-        let errorMessage = "Verification service temporarily unavailable";
-        if (error instanceof Error) {
-          if (error.message.includes("API key")) {
-            errorMessage = "API configuration issue";
-          } else if (error.message.includes("quota")) {
-            errorMessage = "Service quota exceeded";
-          } else if (error.message.includes("JSON")) {
-            errorMessage = "Response parsing error";
-          } else if (error.message.includes("timeout")) {
-            errorMessage = "Service timeout";
-          }
-        }
+        // Get user-friendly error message
+        const errorMessage = handleGeminiError(error);
         
         console.log(`⚠️ USING FALLBACK VERIFICATION - ${errorMessage}`);
         
@@ -279,35 +274,42 @@ export function useNewsState() {
       }
       setNewsContent(value);
       setSearchQuery(value);
-      if (currentUser) {
-        await saveVerificationToUserHistory(
-          currentUser.uid,
+      
+      // Save with error handling
+      try {
+        if (currentUser) {
+          await saveVerificationToUserHistory(
+            currentUser.uid,
+            value,
+            value,
+            verificationResult,
+            null,
+            slug,
+            llmTitle
+          );
+          await saveVerificationToHistory(
+            currentUser.uid,
+            value,
+            value,
+            verificationResult,
+            null,
+            slug,
+            llmTitle
+          );
+        }
+        await saveVerificationToCollection(
           value,
           value,
           verificationResult,
+          currentUser?.uid || 'anonymous',
           null,
           slug,
           llmTitle
         );
-        await saveVerificationToHistory(
-          currentUser.uid,
-          value,
-          value,
-          verificationResult,
-          null,
-          slug,
-          llmTitle
-        );
+      } catch (firebaseError) {
+        handleFirebaseError(firebaseError, 'URL verification save');
       }
-      await saveVerificationToCollection(
-        value,
-        value,
-        verificationResult,
-        currentUser?.uid || 'anonymous',
-        null,
-        slug,
-        llmTitle
-      );
+      
       navigate(`/result/${slug}`);
     } else if (value.length < 80) {
       // Treat as topic: verify the topic directly without searching for news

@@ -2,11 +2,53 @@ import React, { useState, useEffect } from 'react';
 import { useNews } from '@/context/NewsContext';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Check, X, AlertTriangle, ExternalLink, Share2, RefreshCw } from 'lucide-react';
+import { Check, X, AlertTriangle, ExternalLink, Share2, RefreshCw, Wifi, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
 import { extractHeadlineFromUrl, isValidUrl } from '@/utils/urlExtractor';
 import { getVerificationBySlug } from '@/services/firebaseService';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
+// Network Status Component
+const NetworkStatusAlert = () => {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showOfflineAlert, setShowOfflineAlert] = useState(false);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      setShowOfflineAlert(false);
+    };
+    
+    const handleOffline = () => {
+      setIsOnline(false);
+      setShowOfflineAlert(true);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  if (!showOfflineAlert && isOnline) return null;
+
+  return (
+    <Alert className="mb-4 border-orange-200 bg-orange-50">
+      <WifiOff className="h-4 w-4 text-orange-600" />
+      <AlertDescription className="text-orange-800">
+        {!isOnline ? (
+          "No internet connection detected. Some features may be limited."
+        ) : (
+          "Network connectivity restored."
+        )}
+      </AlertDescription>
+    </Alert>
+  );
+};
 
 interface VerificationResultProps {
   className?: string;
@@ -146,6 +188,7 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
   };
   return (
     <div className={cn('w-full animate-scale-in', className)}>
+      <NetworkStatusAlert />
       <div className="glass-card p-4 sm:p-6 lg:p-8 mx-auto max-w-2xl overflow-hidden">
         <div className="flex items-center mb-4 sm:mb-6">
           <div className={cn("flex items-center justify-center p-1.5 sm:p-2 rounded-full", 
