@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useGlobalToastListener } from '@/hooks/useGlobalToastListener';
 import Header from '@/components/Header';
 import UnifiedNewsInput from '@/components/UnifiedNewsInput';
@@ -24,7 +25,15 @@ const ErrorBoundary = ({ children, fallback }: { children: React.ReactNode; fall
 
 const VerificationContent = () => {
   useGlobalToastListener();
-  const { status, articles } = useNews();
+  const { status, articles, resetState } = useNews();
+  const navigate = useNavigate();
+  
+  // Navigate to search results page when articles are found
+  useEffect(() => {
+    if (articles.length > 0) {
+      navigate('/search-results');
+    }
+  }, [articles, navigate]);
   
   return (
     <div className="w-full px-4 sm:px-6 flex flex-col items-center justify-center min-h-[calc(100vh-120px)] sm:min-h-[calc(100vh-200px)]">
@@ -42,17 +51,9 @@ const VerificationContent = () => {
         </p>
       </div>
       
-      {articles.length > 0 ? (
-        <ErrorBoundary fallback={<div>Error loading news articles</div>}>
-          <NewsArticles />
-        </ErrorBoundary>
-      ) : (
-        <>
-          <ErrorBoundary fallback={<div>Error loading unified input</div>}>
-            <UnifiedNewsInput />
-          </ErrorBoundary>
-        </>
-      )}
+      <ErrorBoundary fallback={<div>Error loading unified input</div>}>
+        <UnifiedNewsInput />
+      </ErrorBoundary>
       
       <div className="mt-12 sm:mt-16 w-full max-w-2xl">
         <div className="text-center mb-4 sm:mb-6">

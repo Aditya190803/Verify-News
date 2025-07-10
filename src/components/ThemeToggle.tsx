@@ -3,6 +3,7 @@ import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 interface ThemeToggleProps {
   className?: string;
@@ -10,17 +11,63 @@ interface ThemeToggleProps {
 
 export function ThemeToggle({ className }: ThemeToggleProps) {
   const { theme, setTheme } = useTheme();
+  const [systemTheme, setSystemTheme] = useState<"light" | "dark">("dark");
+
+  // Track system theme changes to show the correct icon for system mode
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const updateSystemTheme = () => {
+      setSystemTheme(mediaQuery.matches ? "dark" : "light");
+    };
+    
+    updateSystemTheme();
+    mediaQuery.addEventListener("change", updateSystemTheme);
+    return () => mediaQuery.removeEventListener("change", updateSystemTheme);
+  }, []);
+
+  const toggleTheme = () => {
+    // If currently on system, switch to the opposite of current system theme
+    if (theme === "system") {
+      setTheme(systemTheme === "dark" ? "light" : "dark");
+    } else {
+      // Toggle between light and dark
+      setTheme(theme === "light" ? "dark" : "light");
+    }
+  };
+
+  const getIcon = () => {
+    if (theme === "system") {
+      // Show the current system theme icon
+      return systemTheme === "dark" ? Moon : Sun;
+    } else if (theme === "light") {
+      return Sun;
+    } else {
+      return Moon;
+    }
+  };
+
+  const getLabel = () => {
+    if (theme === "system") {
+      return `System theme (${systemTheme})`;
+    } else if (theme === "light") {
+      return "Light theme";
+    } else {
+      return "Dark theme";
+    }
+  };
+
+  const Icon = getIcon();
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+      onClick={toggleTheme}
       className={cn("rounded-full", className)}
-      aria-label="Toggle theme"
+      aria-label={getLabel()}
+      title={getLabel()}
     >
-      <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-      <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      <Icon className="h-5 w-5" />
     </Button>
   );
 }

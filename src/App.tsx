@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import TestIndex from "./pages/TestIndex";
+import SearchResults from "./pages/SearchResults";
 import About from "./pages/About";
 import HowItWorks from "./pages/HowItWorks";
 import Login from "./pages/Login";
@@ -21,7 +22,7 @@ const queryClient = new QueryClient();
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark">
+      <ThemeProvider defaultTheme="system">
         <AuthProvider>
           <SearchHistoryProvider>
             <TooltipProvider>
@@ -32,6 +33,7 @@ const App = () => {
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/test" element={<TestIndex />} />
+                    <Route path="/search-results" element={<SearchResults />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/how-it-works" element={<HowItWorks />} />
                     <Route path="/login" element={<Login />} />

@@ -29,7 +29,9 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
     const storedTheme = localStorage.getItem(storageKey);
-    if (storedTheme) {
+    // For existing users, if they have "dark" or "light" stored, keep it
+    // For new users or if no preference is stored, default to "system"
+    if (storedTheme && (storedTheme === "dark" || storedTheme === "light" || storedTheme === "system")) {
       return storedTheme as Theme;
     }
     return defaultTheme;
@@ -45,7 +47,16 @@ export function ThemeProvider({
         ? "dark"
         : "light";
       root.classList.add(systemTheme);
-      return;
+      
+      // Listen for system theme changes
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      const handleChange = (e: MediaQueryListEvent) => {
+        root.classList.remove("light", "dark");
+        root.classList.add(e.matches ? "dark" : "light");
+      };
+      
+      mediaQuery.addEventListener("change", handleChange);
+      return () => mediaQuery.removeEventListener("change", handleChange);
     }
 
     root.classList.add(theme);

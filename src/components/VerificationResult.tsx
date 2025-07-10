@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useNews } from '@/context/NewsContext';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Check, X, AlertTriangle, ExternalLink, Share2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ interface VerificationResultProps {
 const VerificationResult = ({ className }: VerificationResultProps) => {
   const { result, status, resetState, newsContent } = useNews();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   if (status !== 'verified' || !result) {
     return (
@@ -90,6 +92,11 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
       });
     }
   };
+
+  const handleVerifyAnother = () => {
+    resetState(); // Clear all search/verification state
+    navigate('/', { replace: true }); // Navigate to home page
+  };
   return (
     <div className={cn('w-full animate-scale-in', className)}>
       <div className="glass-card p-4 sm:p-6 lg:p-8 mx-auto max-w-2xl overflow-hidden">
@@ -159,7 +166,7 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
           
           <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-2">
             <Button 
-              onClick={resetState}
+              onClick={handleVerifyAnother}
               variant="outline"
               className="flex-1 border border-foreground/10 bg-background/50 hover:bg-foreground/5"
             >

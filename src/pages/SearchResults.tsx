@@ -1,64 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
-import Header from '@/components/Header';
-import VerificationResult from '@/components/VerificationResult';
-import SearchHistory from '@/components/SearchHistory';
+import React from 'react';
 import { useNews } from '@/context/NewsContext';
-import { getVerificationBySlug } from '@/services/firebaseService';
 import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import Header from '@/components/Header';
+import NewsArticles from '@/components/NewsArticles';
+import SearchHistory from '@/components/SearchHistory';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Home, ChevronRight, Clock, History } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { ArrowLeft, Home, Clock, ChevronRight } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 
-const Results = () => {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const { result: contextResult, status: contextStatus, setResult, setStatus, resetState } = useNews();
+const SearchResults = () => {
+  const { articles, searchQuery, resetState } = useNews();
   const { currentUser } = useAuth();
-  const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const [showSearchHistory, setShowSearchHistory] = useLocalStorage('showSearchHistory', false);
-  const { slug } = useParams();
-  const [loading, setLoading] = useState(false);
-  const [fetchedResult, setFetchedResult] = useState(null);
-  const [fetchedQuery, setFetchedQuery] = useState('');
-  const [fetchedType, setFetchedType] = useState('');
-
-  // Prefer slug from /result/:slug, fallback to search param
-  const urlSlug = slug || searchParams.get('slug');
-  const query = searchParams.get('q') || fetchedQuery;
-  const type = searchParams.get('type') || fetchedType;
-
-  // Fetch result by slug if present
-  useEffect(() => {
-    if (urlSlug) {
-      setLoading(true);
-      getVerificationBySlug(urlSlug).then((data: any) => {
-        console.log('Fetched data by slug:', data); // Debug log
-        if (data && data.result) {
-          // All documents should have { result: VerificationResult, ... } structure
-          setFetchedResult(data.result);
-          setFetchedQuery(data.query || '');
-          setFetchedType(data.type || '');
-          setResult(data.result);
-          setStatus('verified');
-        } else {
-          console.log('No valid result found in document:', data);
-          setFetchedResult(null);
-          setStatus('error');
-        }
-        setLoading(false);
-      }).catch(error => {
-        console.error('Error fetching by slug:', error);
-        setFetchedResult(null);
-        setStatus('error');
-        setLoading(false);
-      });
-    }
-  }, [urlSlug, setResult, setStatus]);
-
-  const result = urlSlug ? fetchedResult : contextResult;
-  const status = urlSlug ? (loading ? 'verifying' : (fetchedResult ? 'verified' : 'error')) : contextStatus;
 
   const toggleSearchHistory = () => {
     setShowSearchHistory(prev => !prev);
@@ -68,32 +23,26 @@ const Results = () => {
     setShowSearchHistory(false);
   };
 
-  useEffect(() => {
-    // If no query or result, redirect to home
-    if (!urlSlug && (!query || (!result && status !== 'verifying'))) {
-      navigate('/', { replace: true });
-    }
-  }, [urlSlug, query, result, status, navigate]);
-
   const handleBackToSearch = () => {
-    resetState(); // Clear all search/verification state 
     navigate('/', { replace: true });
   };
 
   const handleGoHome = () => {
-    resetState(); // Clear all search/verification state
+    resetState(); // Clear the search results
     navigate('/', { replace: true });
   };
 
-  if (!urlSlug && !query) {
+  // If no articles, redirect to home
+  if (!articles || articles.length === 0) {
+    navigate('/', { replace: true });
     return null;
   }
 
   return (
     <div className="min-h-screen flex bg-background">
       {/* Desktop Sidebar - Full Height */}
-      {(currentUser || process.env.NODE_ENV === 'development') && !isMobile && (
-        <div>
+      {(currentUser || process.env.NODE_ENV === 'development') && (
+        <div className="hidden md:block">
           {showSearchHistory ? (
             <div className="w-80 fixed left-0 top-0 h-screen border-r border-foreground/10 bg-background/95 backdrop-blur-sm transform transition-transform duration-300 ease-in-out translate-x-0 z-30">
               <div className="h-full flex flex-col">
@@ -157,8 +106,8 @@ const Results = () => {
 
       {/* Main Content Area */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${
-        (currentUser || process.env.NODE_ENV === 'development') && !isMobile ? 
-          (showSearchHistory ? 'ml-80' : 'ml-16') : 
+        (currentUser || process.env.NODE_ENV === 'development') ? 
+          (showSearchHistory ? 'md:ml-80' : 'md:ml-16') : 
           'ml-0'
       }`}>
         {/* Header */}
@@ -167,8 +116,8 @@ const Results = () => {
         {/* Page Content */}
         <div className="flex-1 overflow-auto">
           {/* Mobile sidebar overlay */}
-          {showSearchHistory && isMobile && (
-            <div className="fixed inset-0 z-40 bg-black/50" onClick={closeSidebar}>
+          {currentUser && showSearchHistory && (
+            <div className="md:hidden fixed inset-0 z-40 bg-black/50" onClick={closeSidebar}>
               <div className="w-80 h-full bg-background" onClick={(e) => e.stopPropagation()}>
                 <SearchHistory 
                   onClose={closeSidebar}
@@ -177,6 +126,19 @@ const Results = () => {
                 />
               </div>
             </div>
+          )}
+          
+          {/* Mobile History Button */}
+          {currentUser && (
+            <Button
+              onClick={toggleSearchHistory}
+              variant="outline"
+              size="sm"
+              className="md:hidden fixed bottom-6 right-6 z-20 bg-background/95 backdrop-blur-sm border-foreground/20 shadow-lg flex items-center gap-2"
+            >
+              <Clock className="h-4 w-4" />
+              <span>History</span>
+            </Button>
           )}
           
           <div className="container max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
@@ -190,21 +152,9 @@ const Results = () => {
                   className="flex items-center gap-2"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  <span className="hidden sm:inline">Back to Search</span>
-                  <span className="sm:hidden">Back</span>
+                  <span className="hidden sm:inline">New Search</span>
+                  <span className="sm:hidden">Search</span>
                 </Button>
-                
-                {currentUser && isMobile && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex items-center gap-2"
-                    onClick={() => setShowSearchHistory(true)}
-                  >
-                    <History className="h-4 w-4" />
-                    <span className="hidden sm:inline">History</span>
-                  </Button>
-                )}
               </div>
 
               <Button
@@ -220,25 +170,19 @@ const Results = () => {
 
             {/* Search Info */}
             <div className="mb-6 p-4 sm:p-6 glass-card">
-              <h1 className="text-xl sm:text-2xl font-semibold mb-2">Verification Results</h1>
+              <h1 className="text-xl sm:text-2xl font-semibold mb-2">Search Results</h1>
               <div className="text-sm sm:text-base text-foreground/70">
                 <p className="mb-1">
-                  <span className="font-medium">Query:</span> {query}
+                  <span className="font-medium">Query:</span> {searchQuery}
                 </p>
-                {type && (
-                  <p>
-                    <span className="font-medium">Type:</span> {type === 'url' ? 'URL/Link' : 'Text Content'}
-                  </p>
-                )}
+                <p>
+                  <span className="font-medium">Found:</span> {articles.length} article{articles.length !== 1 ? 's' : ''}
+                </p>
               </div>
             </div>
             
-            {/* Verification Result */}
-            <div className="space-y-6">
-              {status === 'verifying' && <div className="text-center text-muted-foreground">Loading result...</div>}
-              {status === 'verified' && result && <VerificationResult />}
-              {status === 'error' && <div className="text-center text-destructive">Result not found or unavailable.</div>}
-            </div>
+            {/* News Articles */}
+            <NewsArticles />
           </div>
         </div>
       </div>
@@ -246,4 +190,4 @@ const Results = () => {
   );
 };
 
-export default Results;
+export default SearchResults;
