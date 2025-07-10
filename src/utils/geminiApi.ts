@@ -32,6 +32,13 @@ export const verifyNewsWithGemini = async (
     // Get the Gemini model
     const model = genAI.getGenerativeModel({ 
       model: "gemini-2.5-flash",
+      generationConfig: {
+        temperature: 0.1,
+        topP: 0.8,
+        topK: 40,
+        maxOutputTokens: 2048, // Increased to prevent truncation
+        responseMimeType: "text/plain",
+      },
       safetySettings: [
         {
           category: HarmCategory.HARM_CATEGORY_HARASSMENT,
@@ -91,147 +98,132 @@ The above represents available search context from real-time web search. Use thi
       day: 'numeric' 
     });
     
-    const prompt = `You are an expert news verification assistant using the latest Gemini 2.5 Flash model with access to current information. Analyze the following news content and determine its veracity with high accuracy.
+    const prompt = `You are a professional fact-checker and news verification expert. Today's date is ${currentDate}.
 
-**Current Date**: ${currentDate}
+Your task is to verify the following news content and provide a structured analysis.
 
-**Task**: Verify the truthfulness of the news content below and provide a detailed analysis using current information.
+NEWS CONTENT TO VERIFY:
+"${newsContent}"
 
 ${searchResultsContext}
 
-**STRICT REQUIREMENTS:**
-- You MUST use the current search results provided above to verify information if available and relevant
-- If search results are limited, contain only search context, or indicate connectivity issues, acknowledge this limitation
-- When real-time search data is unavailable, use logical analysis of the claim itself, considering factors like:
-  * Timeline consistency (is the date in the future/past relative to current date?)
-  * Plausibility of the claim
-  * Known patterns or historical context
-- If the search results contain current information that contradicts your training data, prioritize the search results
-- You MUST only include real, working sources with valid URLs that are accessible and directly support your analysis
-- If you cannot find real sources, return an empty sources array
-- Your explanation must be clear, specific, and mention if verification is limited by search availability
-- Consider the current date (${currentDate}) when evaluating time-sensitive claims
-- For future-dated claims, note that events cannot be verified until they occur
-- Do NOT include any source with a URL that is not a real, working page
+INSTRUCTIONS:
+1. Analyze the news content for factual accuracy
+2. Use the provided search results as your PRIMARY source of current information
+3. If search results are limited, clearly state this limitation
+4. Cross-reference multiple sources when possible
+5. Consider the credibility of sources
+6. Check for temporal consistency (dates, timelines)
+7. Look for corroborating evidence or contradictory information
 
-**Required JSON Response Format:**
+RESPONSE FORMAT - You MUST respond with valid JSON only, no additional text:
 {
-  "veracity": "true|false|partially-true|unverified",
-  "confidence": [number between 0-100],
-  "explanation": "[detailed analysis explaining your reasoning with specific points]",
-  "sources": [
-    { "name": "Source Name", "url": "https://source-url.com" },
-    { "name": "Another Source", "url": "https://another-source.com" }
-  ],
-  "correctedInfo": "[provide accurate information if content is false or partially true, null if true]"
+  "veracity": "true" | "false" | "partially-true" | "unverified",
+  "confidence": 85,
+  "explanation": "Detailed explanation in exactly 2-3 sentences",
+  "sources": ["source1", "source2"]
 }
 
-**News Content to Verify:**
-"${newsContent}"
-
-**Context:**
-- Search query: "${searchQuery}"
-${articleUrl ? `- Original source: ${articleUrl}` : ''}
-
-**Instructions:**
-1. Analyze the content for factual accuracy
-2. Cross-reference with known reliable sources  
-3. Consider the context and potential bias
-4. Provide specific evidence for your assessment
-5. If false/partially-true, explain what the correct information should be
-6. Return ONLY valid JSON - no markdown, no extra text
-
-**CRITICAL**: Your response must be valid JSON only. Do not include any text before or after the JSON.
-
-Respond with the JSON object only:`;
+CRITICAL INSTRUCTIONS:
+- Respond ONLY with the JSON object
+- Keep explanation to exactly 2-3 sentences
+- Be concise but thorough
+- Ensure the JSON is complete and properly formatted
+- Do not include any text before or after the JSON`;
 
     // Generate content with improved configuration for Gemini 2.5 Flash
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.3, // Lower temperature for more factual responses
-        topK: 40,
-        topP: 0.8,
-        maxOutputTokens: 2048,
-        responseMimeType: "application/json", // Request JSON response
-      },
-    });
-    
-    console.log("✅ Successfully received response from Gemini 2.5 Flash");
-    
+    const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
-    
-    console.log("📄 Raw Gemini response (first 500 chars):", text.substring(0, 500));
-    
-    // Clean up the response text
+
+    if (!text) {
+      throw new Error('No response text received from Gemini');
+    }
+
+    console.log('✅ Successfully received response from Gemini 2.5 Flash');
+    console.log('📄 Raw Gemini response (first 500 chars):', text.substring(0, 500));
+
+    // More aggressive text cleaning and validation
     let cleanedText = text.trim();
     
-    // Remove any markdown code block formatting
+    // Remove any markdown formatting
     cleanedText = cleanedText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
     
-    // Remove any leading/trailing text that's not JSON
-    const jsonStart = cleanedText.indexOf('{');
-    const jsonEnd = cleanedText.lastIndexOf('}');
+    // Find the first { and last } to extract just the JSON
+    const firstBrace = cleanedText.indexOf('{');
+    const lastBrace = cleanedText.lastIndexOf('}');
     
-    if (jsonStart !== -1 && jsonEnd !== -1) {
-      cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
+    if (firstBrace === -1 || lastBrace === -1 || firstBrace >= lastBrace) {
+      console.error('❌ No valid JSON braces found in response');
+      throw new Error('Invalid JSON structure in Gemini response');
     }
     
-    console.log("🔧 Cleaned text for parsing (first 300 chars):", cleanedText.substring(0, 300));
+    cleanedText = cleanedText.substring(firstBrace, lastBrace + 1);
     
-    // Validate that we have a proper JSON structure
+    console.log('🔧 Cleaned text for parsing (first 300 chars):', cleanedText.substring(0, 300));
+    
+    // Validate that it looks like JSON before parsing
     if (!cleanedText.startsWith('{') || !cleanedText.endsWith('}')) {
-      console.error("❌ Response doesn't look like valid JSON structure");
-      console.error("❌ Full cleaned response:", cleanedText);
-      throw new Error("Invalid JSON structure in Gemini response");
+      console.error('❌ Response doesn\'t look like valid JSON structure');
+      console.error('❌ Full cleaned response:', cleanedText);
+      throw new Error('Invalid JSON structure in Gemini response');
     }
-    
-    // Try to parse the cleaned JSON
+
+    let parsedResponse;
     try {
-      const parsedResult = JSON.parse(cleanedText);
-      console.log("✅ Successfully parsed JSON response");
-      
-      // Validate required fields
-      if (!parsedResult.veracity || !parsedResult.explanation || parsedResult.confidence === undefined) {
-        console.error("❌ Missing required fields in response:", parsedResult);
-        throw new Error("Response missing required fields");
-      }
-      
-      return parsedResult;
+      parsedResponse = JSON.parse(cleanedText);
+      console.log('✅ Successfully parsed JSON response');
     } catch (parseError) {
-      console.error("❌ JSON parsing failed:", parseError.message);
-      console.error("📄 Failed text:", cleanedText);
+      console.error('❌ JSON parsing failed:', parseError);
+      console.error('❌ Attempted to parse:', cleanedText);
       
-      // Try to extract any JSON that might be embedded
-      const jsonMatch = cleanedText.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/);
-      if (jsonMatch) {
-        try {
-          const embeddedJson = JSON.parse(jsonMatch[0]);
-          console.log("✅ Extracted embedded JSON successfully");
-          return embeddedJson;
-        } catch (embeddedError) {
-          console.error("❌ Embedded JSON parsing also failed:", embeddedError.message);
-        }
+      // Attempt to fix common JSON issues
+      let fixedText = cleanedText;
+      
+      // Fix common truncation issues
+      if (!cleanedText.endsWith('}')) {
+        fixedText = cleanedText + '}';
       }
       
-      throw new Error(`Failed to parse Gemini response as JSON: ${parseError.message}`);
+      // Fix incomplete strings at the end
+      fixedText = fixedText.replace(/",?\s*$/, '"}');
+      fixedText = fixedText.replace(/,\s*}$/, '}');
+      
+      // Fix incomplete arrays
+      fixedText = fixedText.replace(/,\s*\]$/, ']');
+      
+      // Try parsing the fixed version
+      try {
+        parsedResponse = JSON.parse(fixedText);
+        console.log('✅ Successfully parsed fixed JSON response');
+      } catch (secondParseError) {
+        console.error('❌ Failed to parse even after fixes:', secondParseError);
+        throw new Error('Invalid JSON structure in Gemini response');
+      }
     }
+
+    // Validate required fields and provide defaults if missing
+    const validatedResponse: VerificationResult = {
+      veracity: parsedResponse.veracity || 'unverified',
+      confidence: typeof parsedResponse.confidence === 'number' ? 
+        Math.max(0, Math.min(100, parsedResponse.confidence)) : 0,
+      explanation: parsedResponse.explanation || 'Unable to verify due to response parsing issues.',
+      sources: Array.isArray(parsedResponse.sources) ? parsedResponse.sources : []
+    };
+
+    console.log('🎯 Final verification result:', validatedResponse);
+    return validatedResponse;
+
   } catch (error) {
-    console.error("Error calling Gemini 2.5 Flash API:", error);
+    console.error('Error calling Gemini 2.5 Flash API:', error);
     
-    // Provide more specific error context
-    if (error instanceof Error) {
-      if (error.message.includes('API key')) {
-        throw new Error("Invalid Gemini API key. Please check your API key configuration.");
-      } else if (error.message.includes('quota')) {
-        throw new Error("Gemini API quota exceeded. Please try again later.");
-      } else if (error.message.includes('JSON')) {
-        throw new Error("Failed to parse response from Gemini 2.5 Flash. The model may be experiencing issues.");
-      }
-    }
-    
-    throw error;
+    // Return a fallback result instead of throwing
+    return {
+      veracity: 'unverified' as const,
+      confidence: 0,
+      explanation: 'Unable to verify this content due to a technical error. Please try again or verify manually using reliable news sources.',
+      sources: []
+    };
   }
 };
 
