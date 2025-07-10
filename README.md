@@ -1,115 +1,113 @@
-# Verify News
+# VerifyNews 📰✅
 
 ## Overview
-Fake News Verifier is a React-based web application that checks the authenticity of news articles or headlines using web search and AI-powered analysis. The app integrates DuckDuckGo for web searches and Gemini LLM for AI-based fact-checking.
+VerifyNews is a modern, AI-powered news verification platform built with React and TypeScript. It helps users fact-check news articles and headlines in real-time using advanced web search capabilities and Google's Gemini AI for intelligent analysis. The application provides instant credibility assessments, source verification, and corrected information when misinformation is detected.
 
-## Features
-- Accepts **text** input for verification.
-- Uses **DuckDuckGo API** to find reliable sources.
-- Leverages **Gemini LLM** to determine authenticity.
-- Provides **corrected information** if news is fake.
-- Allows users to **share results** via social media.
-- Stores past verifications in a **Firebase database**.
-- Supports **user authentication** for history tracking.
+**🌐 Live Demo**: [https://verifynews.adityamer.live/](https://verifynews.adityamer.live/)  
+**🤖 Get Gemini API Key**: [Google AI Studio](https://aistudio.google.com/app/apikey)
 
-## Installation
+## ✨ Features
+- 🔍 **Smart Text Analysis** - Accepts news headlines, articles, or any text for verification
+- 🌐 **Multi-Source Verification** - Uses DuckDuckGo API to find reliable sources across the web
+- 🤖 **AI-Powered Fact-Checking** - Leverages Google Gemini AI for intelligent authenticity analysis
+- ✅ **Credibility Scoring** - Provides detailed credibility assessments with confidence levels
+- 📝 **Corrected Information** - Offers accurate information when misinformation is detected
+- 📱 **Social Sharing** - Share verified results across social media platforms
+- 💾 **History Tracking** - Stores past verifications in Firebase Firestore
+- 🔐 **User Authentication** - Secure login with Firebase Auth (Email/Password + Google)
+- 🌙 **Theme Support** - Dark/Light mode toggle for better user experience
+- 📊 **Analytics Dashboard** - Track verification history and patterns
+- ⚡ **Real-time Updates** - Instant verification results with loading states
+- 📱 **Responsive Design** - Optimized for desktop, tablet, and mobile devices
+
+## 🚀 Quick Start
+
 ### Prerequisites
-- Node.js & npm
+- **Node.js** (v18 or higher)
+- **npm** or **yarn**
+- **Firebase account** (free tier available)
+- **Google AI Studio account** - Get your free API key at [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
 
-### Steps
-1. Clone the repository:
-   ```sh
+### Installation
+
+1. **Clone the repository:**
+   ```bash
    git clone https://github.com/Aditya190803/Verify-News.git
    cd Verify-News
    ```
 
-2. Install dependencies:
-   ```sh
+2. **Install dependencies:**
+   ```bash
    npm install
    ```
 
-3. **Configure Environment Variables:**
+3. **Environment Setup:**
    
-   Copy the `.env.example` file to `.env` (if not already present):
-   ```sh
+   Copy the example environment file and add your API keys:
+   ```bash
    cp .env.example .env
    ```
    
-   Update the `.env` file with your API keys:
-
-   #### Firebase Configuration
-   1. Visit [Firebase Console](https://console.firebase.google.com/)
-   2. Create a new project or select existing one
-   3. Go to Project Settings > General > Your apps
-   4. Copy the configuration values and update:
+   Update the `.env` file with your own API keys:
    ```env
+   # Firebase Configuration
+   # Get these from: https://console.firebase.google.com/
    VITE_FIREBASE_API_KEY=your-firebase-api-key
    VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
    VITE_FIREBASE_PROJECT_ID=your-project-id
    VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
    VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
    VITE_FIREBASE_APP_ID=your-app-id
-   ```
-
-   #### Google Gemini AI Configuration
-   1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-   2. Create an API key
-   3. Update the environment variable:
-   ```env
+   
+   # Gemini AI Configuration
+   # Get your API key from: https://aistudio.google.com/app/apikey
    VITE_GEMINI_API_KEY=your-gemini-api-key
    ```
 
-   #### Firebase Setup (Required for full functionality)
-   1. **Enable Authentication:**
-      - Go to Authentication > Sign-in method
-      - Enable Email/Password and Google (optional)
-   
-   2. **Create Firestore Database:**
-      - Go to Firestore Database
-      - Create database in test mode
-      - Set up security rules as needed
-
-4. Start the development server:
-   ```sh
+4. **Start the development server:**
+   ```bash
    npm run dev
    ```
+   
+   🎉 **Your app will be available at:** `http://localhost:5173`
 
-   The app will be available at `http://localhost:8080`
-
-## Environment Variables
-
-This project requires the following environment variables to be set in your `.env` file:
-
-| Variable | Description | Required | Where to Get |
-|----------|-------------|----------|--------------|
-| `VITE_FIREBASE_API_KEY` | Firebase API key | Yes* | [Firebase Console](https://console.firebase.google.com/) |
-| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase auth domain | Yes* | Firebase Console |
-| `VITE_FIREBASE_PROJECT_ID` | Firebase project ID | Yes* | Firebase Console |
-| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket | Yes* | Firebase Console |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID | Yes* | Firebase Console |
-| `VITE_FIREBASE_APP_ID` | Firebase app ID | Yes* | Firebase Console |
-| `VITE_GEMINI_API_KEY` | Google Gemini AI API key | Yes | [Google AI Studio](https://makersuite.google.com/app/apikey) |
-
-\* Required for authentication and data persistence. The app will work in demo mode without these.
-
-### Example .env file:
-```env
-# Firebase Configuration
-VITE_FIREBASE_API_KEY=AIza...
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
-VITE_FIREBASE_APP_ID=1:123456789:web:abc...
-
-# Gemini AI Configuration
-VITE_GEMINI_API_KEY=AIza...
+### 📦 Build for Production
+```bash
+npm run build
+npm run preview  # Preview production build locally
 ```
 
-## Usage
-- Enter a news headline or paste an article.
-- Click **Verify News** to check authenticity.
-- View results and **share verified information**.
+### Current Services Enabled:
+✅ **Authentication** - Email/Password + Google Sign-in  
+✅ **Firestore Database** - User data and verification history  
+✅ **Hosting** - Static web hosting  
+✅ **Analytics** - Google Analytics integration  
+
+## 📱 Usage Guide
+
+### Basic Verification Process
+1. **Enter Content**: Paste a news headline, article excerpt, or any text you want to verify
+2. **Click Verify**: Hit the "Verify News" button to start the fact-checking process
+3. **Review Results**: Get instant credibility assessment with:
+   - ✅ **Credibility Score** (0-100%)
+   - 📊 **Confidence Level**
+   - 🔍 **Source Analysis**
+   - 📰 **Related Articles**
+   - ✏️ **Corrections** (if misinformation detected)
+4. **Share Results**: Use social media buttons to share verified information
+
+### User Account Features
+- **Sign Up/Login**: Create an account to save your verification history
+- **History Dashboard**: Access all your past verifications
+- **Search History**: Find previous verifications quickly
+- **Theme Preferences**: Switch between light and dark modes
+
+### Example Verification Types
+- 📰 News headlines from any source
+- 📄 Article excerpts or full articles
+- 📱 Social media claims
+- 💬 Statements requiring fact-checking
+- 🗳️ Political claims and statements
 
 ## Tech Stack
 - **Frontend:** React 18, TypeScript, Vite
@@ -124,53 +122,8 @@ VITE_GEMINI_API_KEY=AIza...
 - **Icons:** Lucide React
 - **Deployment:** Optimized for modern web deployment
 
-## Project Structure
-```
-src/
-├── components/          # Reusable UI components
-│   ├── ui/             # shadcn/ui components
-│   └── auth/           # Authentication components
-├── pages/              # Page components
-├── context/            # React Context providers
-├── hooks/              # Custom React hooks
-├── services/           # API services
-├── utils/              # Utility functions
-├── types/              # TypeScript type definitions
-└── config/             # Configuration files
-```
-
-## Troubleshooting
-
-### Blank White Screen
-- Ensure all environment variables are properly set in `.env`
-- Check browser console for errors
-- Verify Firebase configuration is correct
-- Make sure the development server is running
-
-### Firebase Errors
-- Double-check your Firebase project configuration
-- Ensure Firestore database is created and accessible
-- Verify authentication methods are enabled in Firebase Console
-
-### API Key Issues
-- Ensure Gemini API key is valid and has proper permissions
-- Check API quotas and billing settings in Google Cloud Console
-
-### Development Server Issues
-```bash
-# Clear node modules and reinstall
-rm -rf node_modules package-lock.json
-npm install
-
-# Clear Vite cache
-npx vite --force
-
-# Restart development server
-npm run dev
-```
-
 ## Future Enhancements
 - Real-time misinformation alerts
 - Browser extension for instant verification
 - AI-powered sentiment analysis
--Multi-Modal Support
+- Multi-Modal Support
