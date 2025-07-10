@@ -23,7 +23,7 @@ const About = () => {
               <section className="glass-card p-4 sm:p-6 lg:p-8">
                 <h2 className="text-xl sm:text-2xl font-medium mb-4 sm:mb-6">Our Story</h2>
                 <p className="text-foreground/80 leading-relaxed mb-4 sm:mb-6 text-sm sm:text-base">
-                  VerifyNews was founded with a simple but powerful goal: to provide everyone with the tools to verify 
+                  VerifyNews was founded with a simple but powerful goal to provide everyone with the tools to verify 
                   information before believing or sharing it. In today's information-saturated world, distinguishing 
                   fact from fiction has become increasingly challenging.
                 </p>
