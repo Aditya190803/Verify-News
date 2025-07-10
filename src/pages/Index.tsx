@@ -1,8 +1,7 @@
 
 import React from 'react';
 import Header from '@/components/Header';
-import NewsForm from '@/components/NewsForm';
-import NewsSearch from '@/components/NewsSearch';
+import UnifiedNewsInput from '@/components/UnifiedNewsInput';
 import NewsArticles from '@/components/NewsArticles';
 import SearchHistory from '@/components/SearchHistory';
 import { useNews } from '@/context/NewsContext';
@@ -47,14 +46,8 @@ const VerificationContent = () => {
         </ErrorBoundary>
       ) : (
         <>
-          <ErrorBoundary fallback={<div>Error loading news search</div>}>
-            <NewsSearch />
-          </ErrorBoundary>
-            <div className="my-6 sm:my-8 text-center text-foreground/60">
-            <p className="text-sm sm:text-base">- OR -</p>
-          </div>
-            <ErrorBoundary fallback={<div>Error loading news form</div>}>
-            <NewsForm />
+          <ErrorBoundary fallback={<div>Error loading unified input</div>}>
+            <UnifiedNewsInput />
           </ErrorBoundary>
         </>
       )}
@@ -109,68 +102,82 @@ const Index = () => {
   const closeSidebar = () => {
     setShowSearchHistory(false);
   };
+  // Calculate sidebar margin for header
+  let sidebarMargin = '';
+  if (currentUser) {
+    sidebarMargin = showSearchHistory ? 'md:ml-80' : 'md:ml-16';
+  } else {
+    sidebarMargin = 'ml-0';
+  }
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />      <main className="flex-1 flex flex-col md:flex-row relative">
+    <div className="min-h-screen flex flex-col overflow-x-hidden">
+      <Header sidebarMargin={sidebarMargin} />
+      <main className="flex-1 flex flex-col md:flex-row relative overflow-x-hidden">
         {/* Mobile sidebar overlay */}
-        {showSearchHistory && (
-          <div className="md:hidden fixed inset-0 z-40 bg-black/50" onClick={closeSidebar}>
-            <div className="w-80 h-full bg-background" onClick={(e) => e.stopPropagation()}>
-              <SearchHistory 
-                onClose={closeSidebar}
-                showCloseButton={true}
-                className="h-full"
-              />
-            </div>
-          </div>
-        )}        {/* Desktop sidebar */}
-        {(currentUser || process.env.NODE_ENV === 'development') && (
-          <div className="hidden md:block">
-            {showSearchHistory ? (
-              <div className="w-80 fixed left-0 top-0 h-screen transform transition-transform duration-300 ease-in-out translate-x-0 z-30">
-                <SearchHistory 
-                  onClose={closeSidebar}
-                  showCloseButton={true}
-                  className="h-full overflow-y-auto"
-                />
-              </div>
-            ) : (
-              <div className="w-16 fixed left-0 top-0 h-screen border-r border-border bg-card backdrop-blur-sm flex flex-col items-center py-4 shadow-sm z-30">
-                <Button
-                  onClick={toggleSearchHistory}
-                  variant="ghost"
-                  size="sm"
-                  className="h-10 w-10 p-0 mb-3 hover:bg-accent hover:scale-105 rounded-lg transition-all duration-200 border border-transparent hover:border-border"
-                  title="Show Search History"
-                >
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </Button>
-                
-                <div className="flex-1 flex flex-col items-center justify-center gap-3">
-                  <Clock className="h-4 w-4 text-primary/60" />
-                  <div className="writing-mode-vertical text-xs text-muted-foreground/70 font-medium tracking-widest">
-                    <span className="block transform rotate-180" style={{ writingMode: 'vertical-rl' }}>
-                      HISTORY
-                    </span>
-                  </div>
-                </div>
-                
-                <div 
-                  className="w-8 h-8 rounded-lg bg-primary/5 border border-primary/20 flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 transition-all duration-200 cursor-pointer"
-                  title="Show Search History"
-                  onClick={toggleSearchHistory}
-                >
-                  <ChevronRight className="h-3 w-3 text-primary/70" />
+        {currentUser && (
+          <>
+            {showSearchHistory && (
+              <div className="md:hidden fixed inset-0 z-40 bg-black/50" onClick={closeSidebar}>
+                <div className="w-80 h-full bg-background" onClick={(e) => e.stopPropagation()}>
+                  <SearchHistory 
+                    onClose={closeSidebar}
+                    showCloseButton={true}
+                    className="h-full"
+                  />
                 </div>
               </div>
             )}
-          </div>
-        )}        {/* Main content */}
-        <div className={`flex-1 py-4 sm:py-6 lg:py-8 overflow-auto transition-all duration-300 ${
-          (currentUser || process.env.NODE_ENV === 'development') ? 
-            (showSearchHistory ? 'md:ml-80' : 'md:ml-16') : 
-            'ml-0'
-        }`}>
+            {/* Desktop sidebar */}
+            <div className="hidden md:block">
+              {showSearchHistory ? (
+                <div className="w-80 fixed left-0 top-0 h-screen transform transition-transform duration-300 ease-in-out translate-x-0 z-30">
+                  <SearchHistory 
+                    onClose={closeSidebar}
+                    showCloseButton={true}
+                    className="h-full overflow-y-auto"
+                  />
+                </div>
+              ) : (
+                <div className="w-16 fixed left-0 top-0 h-screen border-r border-border bg-card backdrop-blur-sm flex flex-col items-center py-4 shadow-sm z-30">
+                  <Button
+                    onClick={toggleSearchHistory}
+                    variant="ghost"
+                    size="sm"
+                    className="h-10 w-10 p-0 mb-3 hover:bg-accent hover:scale-105 rounded-lg transition-all duration-200 border border-transparent hover:border-border"
+                    title="Show Search History"
+                  >
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                  <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                    <Clock className="h-4 w-4 text-primary/60" />
+                    <div className="writing-mode-vertical text-xs text-muted-foreground/70 font-medium tracking-widest">
+                      <span className="block transform rotate-180" style={{ writingMode: 'vertical-rl' }}>
+                        HISTORY
+                      </span>
+                    </div>
+                  </div>
+                  <div 
+                    className="w-8 h-8 rounded-lg bg-primary/5 border border-primary/20 flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 transition-all duration-200 cursor-pointer"
+                    title="Show Search History"
+                    onClick={toggleSearchHistory}
+                  >
+                    <ChevronRight className="h-3 w-3 text-primary/70" />
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+        <div
+          className={`flex-1 py-4 sm:py-6 lg:py-8 overflow-auto transition-all duration-300 mx-auto w-full ${
+            currentUser
+              ? showSearchHistory
+                ? 'md:ml-80'
+                : 'md:ml-16'
+              : 'ml-0'
+          }`}
+        >
           <VerificationContent />
         </div>
       </main>
