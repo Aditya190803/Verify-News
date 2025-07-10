@@ -12,10 +12,9 @@ import SearchHistory from './SearchHistory';
 
 interface HeaderProps {
   className?: string;
-  sidebarMargin?: string;
 }
 
-const Header = ({ className, sidebarMargin }: HeaderProps) => {
+const Header = ({ className }: HeaderProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -51,20 +50,25 @@ const Header = ({ className, sidebarMargin }: HeaderProps) => {
   return (
     <header
       className={cn(
-        'w-full py-3 sm:py-4 lg:py-6 px-4 animate-fade-in transition-all duration-300',
-        sidebarMargin,
+        'w-full py-3 sm:py-4 lg:py-6 px-4 animate-fade-in transition-all duration-300 relative z-40 bg-background/95 backdrop-blur-sm',
         className
       )}
     >
       <div className="container max-w-6xl mx-auto flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2">
+        {/* Left section - Logo */}
+        <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
           <ShieldCheck className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-primary animate-slide-in-right" />
           <h1 className="text-lg sm:text-xl lg:text-2xl font-medium tracking-tight text-foreground animate-slide-in-right" style={{ animationDelay: '50ms' }}>
             <span className="font-semibold">Verify</span>News
           </h1>
         </Link>
-          {/* Mobile menu button */}
-        <div className="lg:hidden flex items-center gap-2">          {/* Mobile search history trigger */}
+
+        {/* Center section - Empty space for better layout */}
+        <div className="hidden lg:flex flex-1 justify-center mx-8">
+        </div>
+        {/* Mobile menu button */}
+        <div className="lg:hidden flex items-center gap-2 flex-shrink-0">
+          {/* Mobile search history trigger */}
           {currentUser && (
             <Sheet>
               <SheetTrigger asChild>
@@ -87,12 +91,13 @@ const Header = ({ className, sidebarMargin }: HeaderProps) => {
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
-          {/* Desktop navigation */}
-        <nav className="hidden lg:flex items-center space-x-1">
+
+        {/* Desktop navigation - Right section */}
+        <nav className="hidden lg:flex items-center space-x-1 flex-shrink-0">
           <Link 
             to="/about" 
             className={cn(
-              "px-4 py-2 text-sm rounded-lg hover:bg-foreground/5 transition-colors duration-200",
+              "px-2 xl:px-4 py-2 text-sm rounded-lg hover:bg-foreground/5 transition-colors duration-200",
               isActive('/about') 
                 ? "text-foreground bg-foreground/5" 
                 : "text-foreground/80 hover:text-foreground"
@@ -103,7 +108,7 @@ const Header = ({ className, sidebarMargin }: HeaderProps) => {
           <Link 
             to="/how-it-works" 
             className={cn(
-              "px-4 py-2 text-sm rounded-lg hover:bg-foreground/5 transition-colors duration-200",
+              "px-2 xl:px-4 py-2 text-sm rounded-lg hover:bg-foreground/5 transition-colors duration-200",
               isActive('/how-it-works') 
                 ? "text-foreground bg-foreground/5" 
                 : "text-foreground/80 hover:text-foreground"
@@ -116,15 +121,15 @@ const Header = ({ className, sidebarMargin }: HeaderProps) => {
           {!isOnline && (
             <div className="flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md text-xs">
               <WifiOff className="h-3 w-3" />
-              <span>Offline</span>
+              <span className="hidden xl:inline">Offline</span>
             </div>
           )}
           
           {currentUser ? (
             <div className="flex items-center gap-2 ml-2">
-              <div className="flex items-center gap-2 px-3 py-2 bg-foreground/5 rounded-lg">
+              <div className="flex items-center gap-2 px-2 xl:px-3 py-2 bg-foreground/5 rounded-lg">
                 <User className="h-4 w-4 text-primary" />
-                <span className="text-sm text-foreground/80">
+                <span className="text-sm text-foreground/80 max-w-[100px] xl:max-w-none truncate">
                   {currentUser.displayName || currentUser.email?.split('@')[0] || 'User'}
                 </span>
               </div>
@@ -135,16 +140,16 @@ const Header = ({ className, sidebarMargin }: HeaderProps) => {
                 className="flex items-center gap-1.5"
               >
                 <LogOut className="h-3.5 w-3.5" />
-                Sign Out
+                <span className="hidden xl:inline">Sign Out</span>
               </Button>
             </div>
           ) : (
             <Link 
               to="/login" 
-              className="ml-2 px-4 py-2 text-sm rounded-lg bg-foreground/5 hover:bg-foreground/10 transition-colors duration-200 flex items-center gap-1.5"
+              className="ml-2 px-2 xl:px-4 py-2 text-sm rounded-lg bg-foreground/5 hover:bg-foreground/10 transition-colors duration-200 flex items-center gap-1.5"
             >
               <LogIn className="h-3.5 w-3.5" />
-              Sign In
+              <span className="hidden xl:inline">Sign In</span>
             </Link>
           )}
         </nav>
