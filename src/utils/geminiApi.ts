@@ -22,7 +22,8 @@ interface VerificationResult {
 export const verifyNewsWithGemini = async (
   newsContent: string,
   searchQuery: string,
-  articleUrl?: string
+  articleUrl?: string,
+  searchResults?: any[]
 ): Promise<VerificationResult> => {
   try {
     console.log("🚀 Starting news verification with Gemini 2.5 Flash model...");
@@ -49,16 +50,69 @@ export const verifyNewsWithGemini = async (
           threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
         },
       ],
-    });    // Prepare prompt for news verification
-    const prompt = `You are an expert news verification assistant using the latest Gemini 2.5 Flash model. Analyze the following news content and determine its veracity with high accuracy.
+    });
 
-**Task**: Verify the truthfulness of the news content below and provide a detailed analysis.
+    // Prepare search results context if available
+    // Prepare search results context if available
+    console.log('🔍 Processing search results for Gemini:', {
+      hasSearchResults: !!searchResults,
+      searchResultsLength: searchResults?.length || 0,
+      firstResultStructure: searchResults?.[0] ? Object.keys(searchResults[0]) : [],
+      hasWebPages: !!searchResults?.[0]?.webPages,
+      hasValue: !!searchResults?.[0]?.webPages?.value,
+      valueLength: searchResults?.[0]?.webPages?.value?.length || 0
+    });
+    
+    const searchResultsContext = searchResults && searchResults.length > 0 
+      ? `**Current Search Results from Internet:**
+${searchResults.map((result, index) => {
+  // Handle LangSearch format (webPages.value)
+  const articles = result.webPages?.value || [];
+  if (articles.length === 0) {
+    return `${index + 1}. No search results available for this query`;
+  }
+  return articles.slice(0, 3).map((article: any, articleIndex: number) => 
+    `${index + 1}.${articleIndex + 1} ${article.name || 'No title'}: ${article.snippet || 'No description'} (${article.url || 'No URL'})`
+  ).join('\n');
+}).filter(text => text.trim()).join('\n')}
+
+**Real-time Information Context:**
+The above represents available search context from real-time web search. Use this information to verify the claims in the news content.
+` 
+      : `**Search Status:** Unable to retrieve current search results due to connectivity issues. Please analyze based on the content itself and your training data, while noting this limitation in your response.
+`;
+
+    console.log('📝 Search results context preview:', searchResultsContext.substring(0, 500) + '...');
+
+    // Prepare prompt for news verification
+    const currentDate = new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    
+    const prompt = `You are an expert news verification assistant using the latest Gemini 2.5 Flash model with access to current information. Analyze the following news content and determine its veracity with high accuracy.
+
+**Current Date**: ${currentDate}
+
+**Task**: Verify the truthfulness of the news content below and provide a detailed analysis using current information.
+
+${searchResultsContext}
 
 **STRICT REQUIREMENTS:**
-- You MUST only include real, working sources with valid URLs that are accessible and directly support your analysis. Do NOT invent sources, use generic pages, or provide links that do not exist.
-- If you cannot find real sources, return an empty sources array.
-- Your explanation must be clear, specific, and reference the actual sources you provide.
-- Do NOT include any source with a URL that is not a real, working page.
+- You MUST use the current search results provided above to verify information if available and relevant
+- If search results are limited, contain only search context, or indicate connectivity issues, acknowledge this limitation
+- When real-time search data is unavailable, use logical analysis of the claim itself, considering factors like:
+  * Timeline consistency (is the date in the future/past relative to current date?)
+  * Plausibility of the claim
+  * Known patterns or historical context
+- If the search results contain current information that contradicts your training data, prioritize the search results
+- You MUST only include real, working sources with valid URLs that are accessible and directly support your analysis
+- If you cannot find real sources, return an empty sources array
+- Your explanation must be clear, specific, and mention if verification is limited by search availability
+- Consider the current date (${currentDate}) when evaluating time-sensitive claims
+- For future-dated claims, note that events cannot be verified until they occur
+- Do NOT include any source with a URL that is not a real, working page
 
 **Required JSON Response Format:**
 {
@@ -81,11 +135,13 @@ ${articleUrl ? `- Original source: ${articleUrl}` : ''}
 
 **Instructions:**
 1. Analyze the content for factual accuracy
-2. Cross-reference with known reliable sources
+2. Cross-reference with known reliable sources  
 3. Consider the context and potential bias
 4. Provide specific evidence for your assessment
 5. If false/partially-true, explain what the correct information should be
-6. Return only valid JSON format
+6. Return ONLY valid JSON - no markdown, no extra text
+
+**CRITICAL**: Your response must be valid JSON only. Do not include any text before or after the JSON.
 
 Respond with the JSON object only:`;
 
@@ -106,21 +162,62 @@ Respond with the JSON object only:`;
     const response = await result.response;
     const text = response.text();
     
-    // Since we requested JSON format, try to parse directly first
+    console.log("📄 Raw Gemini response (first 500 chars):", text.substring(0, 500));
+    
+    // Clean up the response text
+    let cleanedText = text.trim();
+    
+    // Remove any markdown code block formatting
+    cleanedText = cleanedText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+    
+    // Remove any leading/trailing text that's not JSON
+    const jsonStart = cleanedText.indexOf('{');
+    const jsonEnd = cleanedText.lastIndexOf('}');
+    
+    if (jsonStart !== -1 && jsonEnd !== -1) {
+      cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
+    }
+    
+    console.log("🔧 Cleaned text for parsing (first 300 chars):", cleanedText.substring(0, 300));
+    
+    // Validate that we have a proper JSON structure
+    if (!cleanedText.startsWith('{') || !cleanedText.endsWith('}')) {
+      console.error("❌ Response doesn't look like valid JSON structure");
+      console.error("❌ Full cleaned response:", cleanedText);
+      throw new Error("Invalid JSON structure in Gemini response");
+    }
+    
+    // Try to parse the cleaned JSON
     try {
-      const parsedResult = JSON.parse(text);
-      return parsedResult;
-    } catch (parseError) {
-      // Fallback: Extract JSON from text if direct parsing fails
-      const jsonMatch = text.match(/{[\s\S]*}/);
+      const parsedResult = JSON.parse(cleanedText);
+      console.log("✅ Successfully parsed JSON response");
       
-      if (!jsonMatch) {
-        throw new Error("Failed to parse JSON response from Gemini 2.5 Flash API");
+      // Validate required fields
+      if (!parsedResult.veracity || !parsedResult.explanation || parsedResult.confidence === undefined) {
+        console.error("❌ Missing required fields in response:", parsedResult);
+        throw new Error("Response missing required fields");
       }
       
-      const parsedResult = JSON.parse(jsonMatch[0]);
       return parsedResult;
-    }  } catch (error) {
+    } catch (parseError) {
+      console.error("❌ JSON parsing failed:", parseError.message);
+      console.error("📄 Failed text:", cleanedText);
+      
+      // Try to extract any JSON that might be embedded
+      const jsonMatch = cleanedText.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/);
+      if (jsonMatch) {
+        try {
+          const embeddedJson = JSON.parse(jsonMatch[0]);
+          console.log("✅ Extracted embedded JSON successfully");
+          return embeddedJson;
+        } catch (embeddedError) {
+          console.error("❌ Embedded JSON parsing also failed:", embeddedError.message);
+        }
+      }
+      
+      throw new Error(`Failed to parse Gemini response as JSON: ${parseError.message}`);
+    }
+  } catch (error) {
     console.error("Error calling Gemini 2.5 Flash API:", error);
     
     // Provide more specific error context
