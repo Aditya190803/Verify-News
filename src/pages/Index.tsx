@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useGlobalToastListener } from '@/hooks/useGlobalToastListener';
 import Header from '@/components/Header';
 import UnifiedNewsInput from '@/components/UnifiedNewsInput';
@@ -27,6 +27,42 @@ const VerificationContent = () => {
   useGlobalToastListener();
   const { status, articles, resetState } = useNews();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Reset state when returning to home page
+  useEffect(() => {
+    // Reset state if we're coming back from a completed verification
+    if (status === 'verified') {
+      resetState();
+    }
+  }, []); // Empty dependency array means this runs once when component mounts
+  
+  // Also listen for browser navigation events
+  useEffect(() => {
+    const handlePopState = () => {
+      // When user navigates back to home page, reset state
+      if (window.location.pathname === '/') {
+        resetState();
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [resetState]);
+  
+  // Reset state when location changes to home page
+  useEffect(() => {
+    if (location.pathname === '/') {
+      // Small delay to ensure any navigation-related state changes are complete
+      const timer = setTimeout(() => {
+        if (status === 'verified' || status === 'error') {
+          resetState();
+        }
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [location.pathname, status, resetState]);
   
   // Navigate to search results page when articles are found
   useEffect(() => {

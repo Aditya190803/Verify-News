@@ -1,27 +1,74 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNews } from '@/context/NewsContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Check, X, AlertTriangle, ExternalLink, Share2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
+import { extractHeadlineFromUrl, isValidUrl } from '@/utils/urlExtractor';
+import { getVerificationBySlug } from '@/services/firebaseService';
 
 interface VerificationResultProps {
   className?: string;
 }
 
 const VerificationResult = ({ className }: VerificationResultProps) => {
-  const { result, status, resetState, newsContent } = useNews();
+  const { result, status, resetState, newsContent, searchQuery } = useNews();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { slug } = useParams();
+  const [originalContent, setOriginalContent] = useState<string>('');
+  const [isLoadingHeadline, setIsLoadingHeadline] = useState<boolean>(false);
+  const [fetchedQuery, setFetchedQuery] = useState('');
+
+  // Get the query from URL params or context
+  const query = searchParams.get('q') || fetchedQuery || searchQuery;
+  const content = newsContent || query;
+
+  // Fetch original query if we have a slug but no query in context
+  useEffect(() => {
+    const fetchOriginalData = async () => {
+      if (slug && !searchQuery && !searchParams.get('q')) {
+        try {
+          const data = await getVerificationBySlug(slug);
+          if (data && (data as any).query) {
+            setFetchedQuery((data as any).query);
+          }
+        } catch (error) {
+          console.error('Error fetching original data:', error);
+        }
+      }
+    };
+
+    fetchOriginalData();
+  }, [slug, searchQuery, searchParams]);
+
+  // Extract headline if query is a URL
+  useEffect(() => {
+    const extractContent = async () => {
+      const currentQuery = query || content;
+      if (currentQuery && isValidUrl(currentQuery)) {
+        setIsLoadingHeadline(true);
+        try {
+          const headline = await extractHeadlineFromUrl(currentQuery);
+          setOriginalContent(headline);
+        } catch (error) {
+          console.error('Error extracting headline:', error);
+          setOriginalContent(currentQuery);
+        } finally {
+          setIsLoadingHeadline(false);
+        }
+      } else {
+        setOriginalContent(currentQuery || 'No content available');
+      }
+    };
+
+    extractContent();
+  }, [query, content]);
 
   if (status !== 'verified' || !result) {
-    return (
-      <div className="text-center text-muted-foreground py-8">
-        No verification result available.
-      </div>
-    );
+    return null;
   }
   const getStatusIcon = () => {
     switch (result.veracity) {
@@ -124,7 +171,22 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
           <div className="space-y-2">
             <h3 className="text-xs sm:text-sm font-medium text-foreground/80">Original Content</h3>
             <div className="p-3 sm:p-4 rounded-xl bg-foreground/5 border border-foreground/10">
-              <p className="text-foreground text-sm sm:text-base leading-relaxed">{newsContent}</p>
+              <p className="text-foreground text-sm sm:text-base leading-relaxed" style={{ whiteSpace: 'pre-wrap' }}>
+                {isLoadingHeadline ? 'Extracting headline...' : originalContent}
+              </p>
+              {/^https?:\/\//.test(query || content) && (
+                <div className="mt-2 pt-2 border-t border-foreground/10">
+                  <a 
+                    href={query || content}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    View Original URL
+                  </a>
+                </div>
+              )}
             </div>
           </div>
           

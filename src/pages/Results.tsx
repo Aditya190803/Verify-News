@@ -10,11 +10,12 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Home, ChevronRight, Clock, History } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { extractHeadlineFromUrl, isValidUrl } from '@/utils/urlExtractor';
 
 const Results = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { result: contextResult, status: contextStatus, setResult, setStatus, resetState } = useNews();
+  const { result: contextResult, status: contextStatus, setResult, setStatus, resetState, setSearchQuery, setNewsContent } = useNews();
   const { currentUser } = useAuth();
   const isMobile = useIsMobile();
   const [showSearchHistory, setShowSearchHistory] = useLocalStorage('showSearchHistory', false);
@@ -42,6 +43,9 @@ const Results = () => {
           setFetchedType(data.type || '');
           setResult(data.result);
           setStatus('verified');
+          // Set the original query/content in context for VerificationResult component
+          setSearchQuery(data.query || '');
+          setNewsContent(data.newsContent || data.query || '');
         } else {
           console.log('No valid result found in document:', data);
           setFetchedResult(null);
@@ -216,21 +220,6 @@ const Results = () => {
                 <Home className="h-4 w-4" />
                 <span className="hidden sm:inline">Home</span>
               </Button>
-            </div>
-
-            {/* Search Info */}
-            <div className="mb-6 p-4 sm:p-6 glass-card">
-              <h1 className="text-xl sm:text-2xl font-semibold mb-2">Verification Results</h1>
-              <div className="text-sm sm:text-base text-foreground/70">
-                <p className="mb-1">
-                  <span className="font-medium">Query:</span> {query}
-                </p>
-                {type && (
-                  <p>
-                    <span className="font-medium">Type:</span> {type === 'url' ? 'URL/Link' : 'Text Content'}
-                  </p>
-                )}
-              </div>
             </div>
             
             {/* Verification Result */}

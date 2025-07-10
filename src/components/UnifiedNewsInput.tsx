@@ -21,6 +21,9 @@ const UnifiedNewsInput = ({ className }: { className?: string }) => {
     }
     // Reset submitting state when component mounts (e.g., returning to home page)
     setIsSubmitting(false);
+    // Also clear input and error states when returning to home page
+    setInput('');
+    setError('');
   }, []);
 
   // Reset submitting state when component unmounts
