@@ -95,6 +95,7 @@ const LoginForm = ({ email, setEmail, password, setPassword }: LoginFormProps) =
             className="pl-10"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
             required
           />
         </div>
@@ -120,6 +121,7 @@ const LoginForm = ({ email, setEmail, password, setPassword }: LoginFormProps) =
             className="pl-10"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
             required
           />
         </div>

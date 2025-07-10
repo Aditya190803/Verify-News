@@ -92,6 +92,7 @@ const SignupForm = ({ email, setEmail, password, setPassword }: SignupFormProps)
             className="pl-10"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
             required
           />
         </div>
@@ -108,6 +109,7 @@ const SignupForm = ({ email, setEmail, password, setPassword }: SignupFormProps)
             className="pl-10"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
             required
           />
         </div>
@@ -124,6 +126,7 @@ const SignupForm = ({ email, setEmail, password, setPassword }: SignupFormProps)
             className="pl-10"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            autoComplete="new-password"
             required
           />
         </div>
