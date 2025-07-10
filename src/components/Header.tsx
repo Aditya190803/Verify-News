@@ -12,9 +12,10 @@ import SearchHistory from './SearchHistory';
 
 interface HeaderProps {
   className?: string;
+  sidebarMargin?: string;
 }
 
-const Header = ({ className }: HeaderProps) => {
+const Header = ({ className, sidebarMargin }: HeaderProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -48,7 +49,13 @@ const Header = ({ className }: HeaderProps) => {
     }
   };
   return (
-    <header className={cn('w-full py-3 sm:py-4 lg:py-6 px-4 animate-fade-in', className)}>
+    <header
+      className={cn(
+        'w-full py-3 sm:py-4 lg:py-6 px-4 animate-fade-in transition-all duration-300',
+        sidebarMargin,
+        className
+      )}
+    >
       <div className="container max-w-6xl mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center space-x-2">
           <ShieldCheck className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-primary animate-slide-in-right" />
