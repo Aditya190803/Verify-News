@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNews } from '@/context/NewsContext';
 import { cn } from '@/lib/utils';
-import { Check, X, AlertTriangle, ExternalLink, Copy, RefreshCw } from 'lucide-react';
+import { Check, X, AlertTriangle, ExternalLink, Share2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
 
@@ -14,7 +14,13 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
   const { result, status, resetState, newsContent } = useNews();
   const { toast } = useToast();
 
-  if (status !== 'verified' || !result) return null;
+  if (status !== 'verified' || !result) {
+    return (
+      <div className="text-center text-muted-foreground py-8">
+        No verification result available.
+      </div>
+    );
+  }
   const getStatusIcon = () => {
     switch (result.veracity) {
       case 'true':
@@ -54,13 +60,35 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
     }
   };
 
-  const handleCopyResults = () => {
-    navigator.clipboard.writeText(`Verification Result: ${getStatusText()}\n\n${result.explanation}\n\nSources: ${result.sources.map(s => s.name).join(', ')}`);
-    toast({
-      title: "Copied to clipboard",
-      description: "Verification results have been copied to your clipboard",
-      duration: 3000,
-    });
+  // Try to get slug from URL if not present in result
+  const handleShareResult = async () => {
+    let slug = '';
+    if (typeof window !== 'undefined') {
+      const match = window.location.pathname.match(/\/result\/(\w{8})/);
+      if (match) slug = match[1];
+    }
+    const url = `${window.location.origin}/result/${slug}`;
+    let shared = false;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'VerifyNews Result',
+          text: 'Check out this verification result on VerifyNews:',
+          url,
+        });
+        shared = true;
+      } catch (err) {
+        // fallback to copy
+      }
+    }
+    if (!shared) {
+      await navigator.clipboard.writeText(url);
+      toast({
+        title: 'Link copied',
+        description: 'Result link copied to clipboard.',
+        duration: 3000,
+      });
+    }
   };
   return (
     <div className={cn('w-full animate-scale-in', className)}>
@@ -69,14 +97,16 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
           <div className={cn("flex items-center justify-center p-1.5 sm:p-2 rounded-full", 
             result.veracity === 'true' ? "bg-truth/10" : 
             result.veracity === 'false' ? "bg-falsehood/10" : 
-            "bg-amber-500/10"
+            result.veracity === 'partially-true' ? "bg-amber-500/10" : "bg-neutral/10"
           )}>
             {getStatusIcon()}
           </div>
           <div className="ml-3 sm:ml-4 flex-1 min-w-0">
             <div className={cn("inline-flex items-center px-2.5 sm:px-3 py-1 text-xs font-medium rounded-full", getStatusColor())}>
               {getStatusText()}
-              <span className="ml-1 text-xs opacity-70">{result.confidence}% confidence</span>
+              {typeof result.confidence === 'number' && (
+                <span className="ml-1 text-xs opacity-70">{result.confidence}% confidence</span>
+              )}
             </div>
             <h2 className="text-lg sm:text-xl font-medium text-foreground mt-1">Verification Complete</h2>
           </div>
@@ -92,8 +122,8 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
           </div>
           
           <div className="space-y-2">
-            <h3 className="text-xs sm:text-sm font-medium text-foreground/80">Analysis</h3>
-            <p className="text-foreground text-sm sm:text-base leading-relaxed">{result.explanation}</p>
+            <h3 className="text-xs sm:text-sm font-medium text-foreground/80">AI Explanation</h3>
+            <p className="text-foreground text-sm sm:text-base leading-relaxed">{result.explanation || 'No explanation provided.'}</p>
           </div>
           
           {result.correctedInfo && (
@@ -108,8 +138,8 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-foreground/80">Sources</h3>
             <div className="space-y-2">
-              {result.sources && result.sources.length > 0 ? (
-                result.sources.map((source, index) => (
+              {result.sources && Array.isArray(result.sources) && result.sources.filter(s => s.url && s.url.startsWith('http')).length > 0 ? (
+                result.sources.filter(s => s.url && s.url.startsWith('http')).map((source, index) => (
                   <a 
                     key={index}
                     href={source.url}
@@ -122,7 +152,7 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
                   </a>
                 ))
               ) : (
-                <p className="text-foreground/60 text-sm italic">No sources available</p>
+                <p className="text-foreground/60 text-sm italic">No real sources provided.</p>
               )}
             </div>
           </div>
@@ -136,13 +166,13 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
               <RefreshCw className="h-4 w-4 mr-2" />
               Verify Another
             </Button>
-            <Button 
+            <Button
               variant="default"
-              className="flex-1 glass-button"
-              onClick={handleCopyResults}
+              className="flex-1 glass-button bg-primary text-white hover:bg-primary/90"
+              onClick={handleShareResult}
             >
-              <Copy className="h-4 w-4 mr-2" />
-              Copy Results
+              <Share2 className="h-4 w-4 mr-2" />
+              Share Result
             </Button>
           </div>
         </div>

@@ -32,7 +32,8 @@ export interface NewsContextType {
   setArticles: (articles: NewsArticle[]) => void;
   selectedArticle: NewsArticle | null;
   setSelectedArticle: (article: NewsArticle | null) => void;
-  searchNews: (query: string) => Promise<void>;
+  searchNews: (query: string, slug?: string, title?: string) => Promise<NewsArticle[] | void>;
   verifyNews: () => Promise<void>;
   resetState: () => void;
+  handleUnifiedInput?: (input: string) => Promise<string | undefined>;
 }

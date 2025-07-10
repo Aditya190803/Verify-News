@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
+import { useSearchHistoryContext } from '@/context/SearchHistoryContext';
 import { SearchHistoryItem } from '@/services/firebaseService';
 import { useNews } from '@/context/NewsContext';
-import { Clock, Search, FileCheck, ExternalLink, ChevronDown, ChevronUp, X, Minimize2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Clock, Search, FileCheck, ExternalLink, ChevronDown, ChevronUp, X, Minimize2, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -14,34 +16,41 @@ interface SearchHistoryProps {
   showCloseButton?: boolean;
 }
 
-// Create a global refresh function that can be called from anywhere
-let globalRefreshHistory: (() => void) | null = null;
-
-export const refreshSearchHistoryGlobally = () => {
-  if (globalRefreshHistory) {
-    globalRefreshHistory();
-  }
-};
-
 const SearchHistory = ({ className, onClose, showCloseButton = false }: SearchHistoryProps) => {
   const { currentUser } = useAuth();
   const { searchNews } = useNews();
   const { history, loading, refreshHistory } = useSearchHistory();
+  const { registerRefreshFunction, unregisterRefreshFunction } = useSearchHistoryContext();
   const [isExpanded, setIsExpanded] = useState(false);
+  const navigate = useNavigate();
 
-  // Set the global refresh function
+  console.log('🔍 SearchHistory render:', { 
+    historyLength: history.length, 
+    loading, 
+    currentUser: currentUser?.uid,
+    history: history.slice(0, 3) // Log first 3 items
+  });
+
+  // Register the refresh function with the context
   useEffect(() => {
-    globalRefreshHistory = refreshHistory;
+    registerRefreshFunction(refreshHistory);
     return () => {
-      globalRefreshHistory = null;
+      unregisterRefreshFunction();
     };
-  }, [refreshHistory]);
+  }, [refreshHistory, registerRefreshFunction, unregisterRefreshFunction]);
 
   const handleSearchClick = async (item: SearchHistoryItem) => {
     try {
-      await searchNews(item.query);
+      if (item.resultType === 'verification' && item.slug) {
+        // Navigate directly to the verification result
+        navigate(`/result/${item.slug}`);
+      } else {
+        // For search items, re-run the search and stay on main page
+        navigate('/'); // Go to home page first
+        await searchNews(item.query);
+      }
     } catch (error) {
-      console.error('Error re-running search:', error);
+      console.error('Error handling history item click:', error);
     }
   };
 
@@ -107,10 +116,11 @@ const SearchHistory = ({ className, onClose, showCloseButton = false }: SearchHi
               onClick={refreshHistory}
               variant="ghost"
               size="sm"
-              className="text-xs"
+              className="h-8 w-8 p-0"
               disabled={loading}
+              title="Refresh History"
             >
-              Refresh
+              <RotateCcw className={cn("h-3 w-3", loading && "animate-spin")} />
             </Button>
           )}
           {showCloseButton && onClose && (

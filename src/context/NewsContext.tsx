@@ -15,12 +15,13 @@ export const NewsProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useNews = (): NewsContextType => {
+// Add display name for better debugging
+NewsProvider.displayName = 'NewsProvider';
+
+export const useNews = () => {
   const context = useContext(NewsContext);
   if (context === undefined) {
     throw new Error('useNews must be used within a NewsProvider');
   }
   return context;
 };
-
-export type { NewsVeracity, VerificationStatus } from '@/types/news';

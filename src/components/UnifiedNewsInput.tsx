@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNews } from '@/context/NewsContext';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Search } from 'lucide-react';
@@ -8,31 +8,38 @@ const isUrl = (str: string) => /^https?:\/\/.+/.test(str.trim());
 const isLikelyTopic = (str: string) => str.trim().length > 0 && str.trim().length < 80 && !str.includes(' ');
 
 const UnifiedNewsInput = ({ className }: { className?: string }) => {
-  const { setSearchQuery, setNewsContent, searchNews, verifyNews, status } = useNews();
+  const { handleUnifiedInput, status } = useNews();
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Focus the textarea when component mounts
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, []);
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     const value = input.trim();
     if (!value) {
       setError('Please enter a link, topic, or news content.');
       return;
     }
     setError('');
-    if (isUrl(value)) {
-      setNewsContent(value);
-      setSearchQuery(value);
-      await verifyNews();
-    } else if (value.length < 80) {
-      // Treat as topic if short (heuristic)
-      setSearchQuery(value);
-      await searchNews(value);
-    } else {
-      // Treat as pasted news
-      setNewsContent(value);
-      setSearchQuery(value);
-      await verifyNews();
+    try {
+      await handleUnifiedInput(value);
+    } catch (error) {
+      console.error('Error in handleUnifiedInput:', error);
+      setError('An error occurred. Please try again.');
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      handleSubmit();
     }
   };
 
@@ -46,14 +53,16 @@ const UnifiedNewsInput = ({ className }: { className?: string }) => {
           </div>
           <h2 className="text-lg sm:text-xl font-medium text-foreground">Verify or Search News</h2>
           <p className="mt-1 text-xs sm:text-sm text-foreground/60">
-            Paste a link, enter a topic, or paste news content to verify or search.
+            Paste a link, enter a topic, or paste news content to verify or search. Press Ctrl+Enter to submit.
           </p>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="space-y-3 sm:space-y-4">
             <textarea
+              ref={textareaRef}
               value={input}
               onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="Paste a link, topic, or news content here..."
               className="glass-input dark:bg-gray-700/50 dark:border-gray-600/50 w-full min-h-[80px] sm:min-h-[120px] resize-none text-sm sm:text-base"
               disabled={status === 'verifying' || status === 'searching'}

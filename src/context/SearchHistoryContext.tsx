@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useCallback, ReactNode, useRef } from 'react';
 
 interface SearchHistoryContextType {
   refreshSearchHistory: () => void;
+  registerRefreshFunction: (fn: () => void) => void;
+  unregisterRefreshFunction: () => void;
 }
 
 const SearchHistoryContext = createContext<SearchHistoryContextType | undefined>(undefined);
@@ -12,6 +14,8 @@ export const useSearchHistoryContext = () => {
     // Return a no-op function if context is not available
     return {
       refreshSearchHistory: () => {},
+      registerRefreshFunction: () => {},
+      unregisterRefreshFunction: () => {},
     };
   }
   return context;
@@ -19,18 +23,29 @@ export const useSearchHistoryContext = () => {
 
 interface SearchHistoryProviderProps {
   children: ReactNode;
-  onRefreshHistory?: () => void;
 }
 
-export const SearchHistoryProvider = ({ children, onRefreshHistory }: SearchHistoryProviderProps) => {
+export const SearchHistoryProvider = ({ children }: SearchHistoryProviderProps) => {
+  const refreshFunctionRef = useRef<(() => void) | null>(null);
+
+  const registerRefreshFunction = useCallback((fn: () => void) => {
+    refreshFunctionRef.current = fn;
+  }, []);
+
+  const unregisterRefreshFunction = useCallback(() => {
+    refreshFunctionRef.current = null;
+  }, []);
+
   const refreshSearchHistory = useCallback(() => {
-    if (onRefreshHistory) {
-      onRefreshHistory();
+    if (refreshFunctionRef.current) {
+      refreshFunctionRef.current();
     }
-  }, [onRefreshHistory]);
+  }, []);
 
   const value = {
     refreshSearchHistory,
+    registerRefreshFunction,
+    unregisterRefreshFunction,
   };
 
   return (

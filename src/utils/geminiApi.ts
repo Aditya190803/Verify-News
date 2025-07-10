@@ -52,36 +52,42 @@ export const verifyNewsWithGemini = async (
     });    // Prepare prompt for news verification
     const prompt = `You are an expert news verification assistant using the latest Gemini 2.5 Flash model. Analyze the following news content and determine its veracity with high accuracy.
 
-    **Task**: Verify the truthfulness of the news content below and provide a detailed analysis.
+**Task**: Verify the truthfulness of the news content below and provide a detailed analysis.
 
-    **Required JSON Response Format**:
-    {
-      "veracity": "true|false|partially-true|unverified",
-      "confidence": [number between 0-100],
-      "explanation": "[detailed analysis explaining your reasoning with specific points]",
-      "sources": [
-        { "name": "Source Name", "url": "https://source-url.com" },
-        { "name": "Another Source", "url": "https://another-source.com" }
-      ],
-      "correctedInfo": "[provide accurate information if content is false or partially true, null if true]"
-    }
+**STRICT REQUIREMENTS:**
+- You MUST only include real, working sources with valid URLs that are accessible and directly support your analysis. Do NOT invent sources, use generic pages, or provide links that do not exist.
+- If you cannot find real sources, return an empty sources array.
+- Your explanation must be clear, specific, and reference the actual sources you provide.
+- Do NOT include any source with a URL that is not a real, working page.
 
-    **News Content to Verify**:
-    "${newsContent}"
+**Required JSON Response Format:**
+{
+  "veracity": "true|false|partially-true|unverified",
+  "confidence": [number between 0-100],
+  "explanation": "[detailed analysis explaining your reasoning with specific points]",
+  "sources": [
+    { "name": "Source Name", "url": "https://source-url.com" },
+    { "name": "Another Source", "url": "https://another-source.com" }
+  ],
+  "correctedInfo": "[provide accurate information if content is false or partially true, null if true]"
+}
 
-    **Context**:
-    - Search query: "${searchQuery}"
-    ${articleUrl ? `- Original source: ${articleUrl}` : ''}
-    
-    **Instructions**:
-    1. Analyze the content for factual accuracy
-    2. Cross-reference with known reliable sources
-    3. Consider the context and potential bias
-    4. Provide specific evidence for your assessment
-    5. If false/partially-true, explain what the correct information should be
-    6. Return only valid JSON format
+**News Content to Verify:**
+"${newsContent}"
 
-    Respond with the JSON object only:`;
+**Context:**
+- Search query: "${searchQuery}"
+${articleUrl ? `- Original source: ${articleUrl}` : ''}
+
+**Instructions:**
+1. Analyze the content for factual accuracy
+2. Cross-reference with known reliable sources
+3. Consider the context and potential bias
+4. Provide specific evidence for your assessment
+5. If false/partially-true, explain what the correct information should be
+6. Return only valid JSON format
+
+Respond with the JSON object only:`;
 
     // Generate content with improved configuration for Gemini 2.5 Flash
     const result = await model.generateContent({
@@ -154,7 +160,7 @@ export const getMockVerificationResult = (articleUrl?: string): VerificationResu
     ],
     correctedInfo: Math.random() > 0.5 
       ? "The correct information states that..." 
-      : undefined
+      : null
   };
 
   // If we have an article URL, include it as the primary source
