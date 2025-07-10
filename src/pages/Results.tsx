@@ -47,9 +47,17 @@ const Results = () => {
   if (!query) {
     return null;
   }
+  // Calculate sidebar margin for header
+  let sidebarMargin = '';
+  if ((currentUser || process.env.NODE_ENV === 'development') && !isMobile) {
+    sidebarMargin = showSearchHistory ? 'ml-80' : 'ml-16';
+  } else {
+    sidebarMargin = 'ml-0';
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Header />
+      <Header sidebarMargin={sidebarMargin} />
       <div className="flex-1 flex">
         {/* Mobile sidebar overlay */}
         {showSearchHistory && (
