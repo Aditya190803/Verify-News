@@ -8,7 +8,8 @@ import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  signInAnonymously
 } from 'firebase/auth';
 import { auth, db } from '../config/firebase';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
@@ -117,6 +118,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!auth) throw new Error('Authentication not available');
     await sendPasswordResetEmail(auth, email);
   };
+
+  // Attempt anonymous sign-in so Firestore writes can succeed without manual login
+  useEffect(() => {
+    if (!auth) return;
+    if (!auth.currentUser) {
+      signInAnonymously(auth).catch((error: any) => {
+        // If anonymous auth is not enabled, ignore; writes will require login
+        if (error?.code !== 'auth/operation-not-allowed') {
+          console.warn('Anonymous sign-in failed:', error?.code || error);
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (!auth) {

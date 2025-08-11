@@ -3,6 +3,7 @@ import { useNews } from '@/context/NewsContext';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 const isUrl = (str: string) => /^https?:\/\/.+/.test(str.trim());
 const isLikelyTopic = (str: string) => str.trim().length > 0 && str.trim().length < 80 && !str.includes(' ');
@@ -12,6 +13,8 @@ const UnifiedNewsInput = ({ className }: { className?: string }) => {
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Focus the textarea when component mounts and reset submitting state
@@ -74,6 +77,21 @@ const UnifiedNewsInput = ({ className }: { className?: string }) => {
     }
   };
 
+  // Handle image file selection
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setImageFile(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
+    }
+  };
+
   const isProcessing = isSubmitting || status === 'verifying' || status === 'searching' || status === 'verified';
 
   return (
@@ -86,7 +104,7 @@ const UnifiedNewsInput = ({ className }: { className?: string }) => {
           </div>
           <h2 className="text-lg sm:text-xl font-medium text-foreground">Verify or Search News</h2>
           <p className="mt-1 text-xs sm:text-sm text-foreground/60">
-            Paste a link, enter a topic, or paste news content to verify or search. Press Ctrl+Enter to submit.
+            Paste a link, enter a topic, paste news content, or upload an image to verify or search. Press Ctrl+Enter to submit.
           </p>
         </div>
         <form onSubmit={handleSubmit}>
@@ -100,6 +118,21 @@ const UnifiedNewsInput = ({ className }: { className?: string }) => {
               className="glass-input dark:bg-gray-700/50 dark:border-gray-600/50 w-full min-h-[80px] sm:min-h-[120px] resize-none text-sm sm:text-base"
               disabled={isProcessing}
             />
+            {/* Image upload input */}
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-foreground/80 mb-1">Or upload an image (screenshot, photo, etc.)</label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                disabled={isProcessing}
+              />
+              {imagePreview && (
+                <div className="mt-2">
+                  <img src={imagePreview} alt="Preview" className="max-h-40 rounded border border-gray-300 dark:border-gray-600" />
+                </div>
+              )}
+            </div>
             {error && (
               <div className="flex items-center space-x-2 text-xs sm:text-sm text-destructive animate-fade-in">
                 <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
