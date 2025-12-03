@@ -1,26 +1,37 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getUserSearchHistory, SearchHistoryItem } from '@/services/firebaseService';
+import { 
+  getUserSearchHistory, 
+  deleteSearchHistoryItem, 
+  clearUserSearchHistory,
+  SearchHistoryItem 
+} from '@/services/appwriteService';
 
 export const useSearchHistory = () => {
   const { currentUser } = useAuth();
   const [history, setHistory] = useState<SearchHistoryItem[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const pageSize = 50;
 
-  const loadSearchHistory = useCallback(async () => {
+  const loadSearchHistory = useCallback(async (pageNum: number = 0) => {
     console.log('🔄 loadSearchHistory called, currentUser:', currentUser?.uid);
     if (!currentUser) {
       console.log('❌ No current user, setting empty history');
       setHistory([]);
+      setTotal(0);
       return;
     }
     
     setLoading(true);
     try {
       console.log('📡 Fetching search history...');
-      const userHistory = await getUserSearchHistory(currentUser.uid);
-      console.log('📚 Received history:', userHistory);
-      setHistory(userHistory);
+      const result = await getUserSearchHistory(currentUser.uid, pageSize, pageNum * pageSize);
+      console.log('📚 Received history:', result.items);
+      setHistory(result.items);
+      setTotal(result.total);
+      setPage(pageNum);
     } catch (error) {
       console.error('❌ Error loading search history:', error);
     } finally {
@@ -29,16 +40,48 @@ export const useSearchHistory = () => {
   }, [currentUser]);
 
   useEffect(() => {
-    loadSearchHistory();
+    loadSearchHistory(0);
   }, [loadSearchHistory]);
 
   const refreshHistory = useCallback(() => {
-    loadSearchHistory();
-  }, [loadSearchHistory]);
+    loadSearchHistory(page);
+  }, [loadSearchHistory, page]);
+
+  const deleteItem = useCallback(async (itemId: string) => {
+    if (!currentUser) return false;
+    const success = await deleteSearchHistoryItem(currentUser.uid, itemId);
+    if (success) {
+      // Optimistically update local state
+      setHistory(prev => prev.filter(item => item.id !== itemId));
+      setTotal(prev => prev - 1);
+    }
+    return success;
+  }, [currentUser]);
+
+  const clearHistory = useCallback(async () => {
+    if (!currentUser) return false;
+    const success = await clearUserSearchHistory(currentUser.uid);
+    if (success) {
+      setHistory([]);
+      setTotal(0);
+    }
+    return success;
+  }, [currentUser]);
+
+  const loadMore = useCallback(() => {
+    if (history.length < total) {
+      loadSearchHistory(page + 1);
+    }
+  }, [history.length, total, page, loadSearchHistory]);
 
   return {
     history,
+    total,
     loading,
+    hasMore: history.length < total,
     refreshHistory,
+    deleteItem,
+    clearHistory,
+    loadMore,
   };
 };

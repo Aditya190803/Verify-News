@@ -3,17 +3,18 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSearchHistoryContext } from '../context/SearchHistoryContext';
-import { searchLangSearch, extractNewsFromSearch, comprehensiveNewsSearch } from '../utils/searchUtils';
-import { verifyNewsWithGemini, getMockVerificationResult } from '../utils/geminiApi';
+import { extractNewsFromSearch, comprehensiveNewsSearch } from '../utils/searchUtils';
+import { verifyNewsWithGemini, getMockVerificationResult, verifyMediaWithGemini } from '../utils/geminiApi';
 import { 
-  saveVerificationToUserHistory, 
   saveVerificationToCollection, 
   saveSearchToHistory, 
   saveVerificationToHistory 
-} from '../services/firebaseService';
+} from '../services/appwriteService';
 import { getLLMGeneratedTitle } from '@/utils/llmHelpers';
-import { handleFirebaseError, handleGeminiError } from '@/utils/errorHandling';
-import { NewsArticle, VerificationResult, VerificationStatus } from '@/types/news';
+import { handleAppwriteError, handleGeminiError } from '@/utils/errorHandling';
+import { sanitizeNewsContent, sanitizeSearchQuery, sanitizeUrl } from '@/lib/sanitize';
+import { NewsArticle, VerificationResult, VerificationStatus, MediaFile } from '@/types/news';
+import { SearchResponse } from '@/types/search';
 
 export function useNewsState() {
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -22,11 +23,12 @@ export function useNewsState() {
   const [result, setResult] = useState<VerificationResult | null>(null);
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
+  const [mediaFile, setMediaFile] = useState<MediaFile | null>(null);
   const { currentUser } = useAuth();
   const { refreshSearchHistory } = useSearchHistoryContext();
   const navigate = useNavigate();
 
-  // Store user email in localStorage for Firestore history
+  // Store user email in localStorage for Appwrite history
   useEffect(() => {
     if (currentUser && currentUser.email) {
       if (typeof window !== 'undefined' && window.localStorage) {
@@ -37,13 +39,18 @@ export function useNewsState() {
   const searchNews = async (query: string, slug?: string, title?: string) => {
     try {
       setStatus('searching');
-      setSearchQuery(query);
+      // Sanitize search query
+      const sanitizedQuery = sanitizeSearchQuery(query);
+      if (!sanitizedQuery) {
+        throw new Error("Invalid search query");
+      }
+      setSearchQuery(sanitizedQuery);
       
       // Use comprehensive search with LLM keyword extraction
-      const searchResults = await comprehensiveNewsSearch(query);
+      const searchResults = await comprehensiveNewsSearch(sanitizedQuery);
       
       // Extract and combine articles from all search results
-      let allExtractedArticles: NewsArticle[] = [];
+      const allExtractedArticles: NewsArticle[] = [];
       
       searchResults.forEach(result => {
         const articles = extractNewsFromSearch(result, query);
@@ -66,7 +73,7 @@ export function useNewsState() {
       setNewsContent(uniqueArticles[0].snippet);
         // Save search to history if user is logged in
       if (currentUser) {
-        await saveSearchToHistory(currentUser.uid, query, uniqueArticles[0], slug, title);
+        await saveSearchToHistory(currentUser.uid, sanitizedQuery, uniqueArticles[0], slug, title);
         // Refresh the search history UI
         refreshSearchHistory();
       }
@@ -109,7 +116,7 @@ export function useNewsState() {
 
       // Try to verify with Gemini API
       try {
-        let parsedResult = await verifyNewsWithGemini(
+        const parsedResult = await verifyNewsWithGemini(
           newsContent, 
           searchQuery, 
           selectedArticle?.url,
@@ -138,19 +145,10 @@ export function useNewsState() {
         const slug = generateSlug();
         const llmTitle = await getLLMGeneratedTitle(newsContent || searchQuery);
         
-        // Save to Firebase with error handling
+        // Save to Appwrite with error handling
         try {
           if (currentUser) {
-            await saveVerificationToUserHistory(
-              currentUser.uid,
-              searchQuery,
-              newsContent,
-              parsedResult,
-              selectedArticle,
-              slug,
-              llmTitle
-            );
-              // Also save to search history
+            // Save to search history (single source of truth for user history)
             await saveVerificationToHistory(
               currentUser.uid,
               searchQuery,
@@ -173,8 +171,8 @@ export function useNewsState() {
             slug,
             llmTitle
           );
-        } catch (firebaseError) {
-          handleFirebaseError(firebaseError, 'verification save');
+        } catch (appwriteError) {
+          handleAppwriteError(appwriteError, 'verification save');
           // Continue without throwing - verification result is still valid
         }
         
@@ -202,10 +200,10 @@ export function useNewsState() {
         // Navigate to result page with slug
         navigate(`/result/${slug}`);
 
-        // Save the mock result to Firebase
+        // Save the mock result to Appwrite
         try {
           if (currentUser) {
-            await saveVerificationToUserHistory(
+            await saveVerificationToHistory(
               currentUser.uid,
               searchQuery,
               newsContent,
@@ -214,6 +212,7 @@ export function useNewsState() {
               slug,
               llmTitle
             );
+            refreshSearchHistory();
           }
           
           await saveVerificationToCollection(
@@ -225,8 +224,8 @@ export function useNewsState() {
             slug,
             llmTitle
           );
-        } catch (firestoreError) {
-          console.error('Error saving verification to Firestore:', firestoreError);
+        } catch (appwriteError) {
+          console.error('Error saving verification to Appwrite:', appwriteError);
         }
       }
     } catch (error) {
@@ -243,6 +242,7 @@ export function useNewsState() {
     setStatus('idle');
     setArticles([]);
     setSelectedArticle(null);
+    setMediaFile(null);
     console.log('✅ News state reset complete');
   };
 
@@ -251,13 +251,105 @@ export function useNewsState() {
     return Math.random().toString(36).substring(2, 10).toUpperCase();
   }
   // Unified handler for all input types, always saves with a slug
-  const handleUnifiedInput = async (input: string) => {
-    const value = input.trim();
-    if (!value) return;
+  const handleUnifiedInput = async (input: string, media?: MediaFile) => {
+    // Sanitize input based on type
+    const rawValue = input.trim();
+    const isUrl = /^https?:\/\//.test(rawValue);
+    const value = isUrl 
+      ? sanitizeUrl(rawValue) 
+      : rawValue.length < 80 
+        ? sanitizeSearchQuery(rawValue) 
+        : sanitizeNewsContent(rawValue);
+    
+    // Validate sanitized input
+    if (!value && !media) {
+      console.warn('Input validation failed: empty after sanitization');
+      return;
+    }
+    
     const slug = generateSlug();
+    
+    // Handle media verification
+    if (media) {
+      console.log(`🎬 Starting ${media.type} verification...`);
+      setStatus('verifying');
+      setMediaFile(media);
+      
+      let verificationResult;
+      try {
+        // Get search results for context if text is provided
+        let searchResults: SearchResponse[] = [];
+        if (value) {
+          try {
+            searchResults = await comprehensiveNewsSearch(value);
+          } catch {
+            console.warn('Could not fetch search results for media context');
+          }
+        }
+        
+        verificationResult = await verifyMediaWithGemini(media, value || undefined, searchResults);
+        setResult(verificationResult);
+        setStatus('verified');
+      } catch (error) {
+        console.error('Media verification error:', error);
+        setStatus('error');
+        verificationResult = {
+          veracity: 'unverified' as const,
+          confidence: 0,
+          explanation: `Unable to verify ${media.type}. Please try again.`,
+          sources: [],
+          mediaAnalysis: {
+            type: media.type,
+            description: 'Verification failed'
+          }
+        };
+        setResult(verificationResult);
+      }
+      
+      const mediaDescription = `[${media.type.toUpperCase()}] ${media.file.name}${value ? ` - ${value}` : ''}`;
+      setNewsContent(mediaDescription);
+      setSearchQuery(value || media.file.name);
+      
+      const llmTitle = await getLLMGeneratedTitle(value || `${media.type} verification: ${media.file.name}`);
+      
+      // Save the verification
+      try {
+        if (currentUser) {
+          await saveVerificationToHistory(
+            currentUser.uid,
+            value || media.file.name,
+            mediaDescription,
+            verificationResult,
+            null,
+            slug,
+            llmTitle
+          );
+          refreshSearchHistory();
+        }
+        
+        await saveVerificationToCollection(
+          value || media.file.name,
+          mediaDescription,
+          verificationResult,
+          currentUser?.uid || 'anonymous',
+          null,
+          slug,
+          llmTitle
+        );
+      } catch (appwriteError) {
+        handleAppwriteError(appwriteError, 'media verification save');
+      }
+      
+      navigate(`/result/${slug}`);
+      return slug;
+    }
+    
+    // Original text-based verification logic
+    if (!value) return;
+    
     const llmTitle = await getLLMGeneratedTitle(value);
-    // URL detection
-    if (/^https?:\/\//.test(value)) {
+    // URL detection (check against sanitized value)
+    if (isUrl && value) {
       // Directly verify the URL
       setStatus('verifying');
       let verificationResult;
@@ -267,7 +359,7 @@ export function useNewsState() {
         verificationResult = await verifyNewsWithGemini(value, value, value, searchResults);
         setResult(verificationResult);
         setStatus('verified');
-      } catch (error) {
+      } catch {
         setStatus('error');
         verificationResult = getMockVerificationResult();
         setResult(verificationResult);
@@ -278,15 +370,6 @@ export function useNewsState() {
       // Save with error handling
       try {
         if (currentUser) {
-          await saveVerificationToUserHistory(
-            currentUser.uid,
-            value,
-            value,
-            verificationResult,
-            null,
-            slug,
-            llmTitle
-          );
           await saveVerificationToHistory(
             currentUser.uid,
             value,
@@ -296,6 +379,7 @@ export function useNewsState() {
             slug,
             llmTitle
           );
+          refreshSearchHistory();
         }
         await saveVerificationToCollection(
           value,
@@ -306,8 +390,8 @@ export function useNewsState() {
           slug,
           llmTitle
         );
-      } catch (firebaseError) {
-        handleFirebaseError(firebaseError, 'URL verification save');
+      } catch (appwriteError) {
+        handleAppwriteError(appwriteError, 'URL verification save');
       }
       
       navigate(`/result/${slug}`);
@@ -322,7 +406,7 @@ export function useNewsState() {
         verificationResult = await verifyNewsWithGemini(value, `Topic: ${value}`, undefined, searchResults);
         setResult(verificationResult);
         setStatus('verified');
-      } catch (error) {
+      } catch {
         setStatus('error');
         verificationResult = getMockVerificationResult();
         setResult(verificationResult);
@@ -331,15 +415,6 @@ export function useNewsState() {
       
       // Save the verification
       if (currentUser) {
-        await saveVerificationToUserHistory(
-          currentUser.uid,
-          value,
-          `Topic: ${value}`,
-          verificationResult,
-          null,
-          slug,
-          llmTitle
-        );
         await saveVerificationToHistory(
           currentUser.uid,
           value,
@@ -373,7 +448,7 @@ export function useNewsState() {
         verificationResult = await verifyNewsWithGemini(value, value, undefined, searchResults);
         setResult(verificationResult);
         setStatus('verified');
-      } catch (error) {
+      } catch {
         setStatus('error');
         verificationResult = getMockVerificationResult();
         setResult(verificationResult);
@@ -381,15 +456,6 @@ export function useNewsState() {
       setNewsContent(value);
       setSearchQuery(value);
       if (currentUser) {
-        await saveVerificationToUserHistory(
-          currentUser.uid,
-          value,
-          value,
-          verificationResult,
-          null,
-          slug,
-          llmTitle
-        );
         await saveVerificationToHistory(
           currentUser.uid,
           value,
@@ -399,6 +465,7 @@ export function useNewsState() {
           slug,
           llmTitle
         );
+        refreshSearchHistory();
       }
       await saveVerificationToCollection(
         value,
@@ -427,6 +494,8 @@ export function useNewsState() {
     setArticles,
     selectedArticle,
     setSelectedArticle,
+    mediaFile,
+    setMediaFile,
     searchNews,
     verifyNews,
     resetState,
