@@ -1,5 +1,8 @@
 import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
-import { NewsVeracity } from '@/types/news';
+import { NewsVeracity, MediaFile, MediaType } from '@/types/news';
+import { SearchResponse, SearchArticle } from '@/types/search';
+import { retryWithBackoff, isQuotaError, isAuthError } from './errorHandling';
+import { RATE_LIMITS, ERROR_MESSAGES } from '@/lib/constants';
 
 // API key for Google Gemini model
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "demo-api-key";
@@ -17,13 +20,317 @@ interface VerificationResult {
     url: string;
   }[];
   correctedInfo?: string;
+  mediaAnalysis?: {
+    type: MediaType;
+    description?: string;
+    transcription?: string;
+    manipulationIndicators?: string[];
+  };
 }
+
+// Helper function to convert File to base64
+export const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
+// Helper function to determine media type from MIME type
+export const getMediaTypeFromMime = (mimeType: string): MediaType => {
+  if (mimeType.startsWith('image/')) return 'image';
+  if (mimeType.startsWith('audio/')) return 'audio';
+  if (mimeType.startsWith('video/')) return 'video';
+  return 'text';
+};
+
+// Verify media content (images, audio, video) with Gemini
+export const verifyMediaWithGemini = async (
+  mediaFile: MediaFile,
+  additionalContext?: string,
+  searchResults?: SearchResponse[]
+): Promise<VerificationResult> => {
+  try {
+    console.log(`🚀 Starting ${mediaFile.type} verification with Gemini 2.5 Flash model...`);
+    
+    // Convert file to base64 if not already done
+    const base64Data = mediaFile.base64 || await fileToBase64(mediaFile.file);
+    
+    // Get the Gemini model with multimodal capabilities
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.5-flash",
+      generationConfig: {
+        temperature: 0.1,
+        topP: 0.8,
+        topK: 40,
+        maxOutputTokens: 2048,
+        responseMimeType: "text/plain",
+      },
+      safetySettings: [
+        {
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        },
+      ],
+    });
+
+    const currentDate = new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+
+    // Prepare search results context if available
+    const searchResultsContext = searchResults && searchResults.length > 0 
+      ? `**Current Search Results from Internet:**
+${searchResults.map((result, index) => {
+  const articles = result.webPages?.value || [];
+  if (articles.length === 0) {
+    return `${index + 1}. No search results available for this query`;
+  }
+  return articles.slice(0, 3).map((article: SearchArticle, articleIndex: number) => 
+    `${index + 1}.${articleIndex + 1} ${article.name || 'No title'}: ${article.snippet || 'No description'} (${article.url || 'No URL'})`
+  ).join('\n');
+}).filter(text => text.trim()).join('\n')}
+` 
+      : '';
+
+    // Build prompt based on media type
+    let mediaPrompt = '';
+    
+    if (mediaFile.type === 'image') {
+      mediaPrompt = `You are a professional fact-checker and media verification expert. Today's date is ${currentDate}.
+
+Your task is to analyze this image for potential misinformation, manipulation, or fake news.
+
+${additionalContext ? `ADDITIONAL CONTEXT PROVIDED BY USER:\n"${additionalContext}"\n` : ''}
+
+${searchResultsContext}
+
+ANALYSIS TASKS:
+1. Describe what you see in the image in detail
+2. Check for signs of digital manipulation (inconsistent lighting, clone stamps, unnatural edges, warping, AI generation artifacts)
+3. Look for misleading context (old images presented as new, images from different events)
+4. Identify any text overlays and verify their claims
+5. Check if this appears to be a screenshot from social media or news
+6. Assess if the image could be AI-generated (look for typical AI artifacts like wrong hands, weird text, inconsistent details)
+7. Cross-reference with any search results provided
+
+RESPONSE FORMAT - You MUST respond with valid JSON only:
+{
+  "veracity": "true" | "false" | "partially-true" | "unverified",
+  "confidence": 85,
+  "explanation": "Detailed explanation in 2-3 sentences about the image's authenticity",
+  "sources": ["source1", "source2"],
+  "mediaAnalysis": {
+    "type": "image",
+    "description": "Detailed description of the image content",
+    "manipulationIndicators": ["indicator1", "indicator2"]
+  }
+}`;
+    } else if (mediaFile.type === 'audio') {
+      mediaPrompt = `You are a professional fact-checker and audio verification expert. Today's date is ${currentDate}.
+
+Your task is to analyze this audio for potential misinformation, manipulation, or fake news.
+
+${additionalContext ? `ADDITIONAL CONTEXT PROVIDED BY USER:\n"${additionalContext}"\n` : ''}
+
+${searchResultsContext}
+
+ANALYSIS TASKS:
+1. Transcribe the main content of the audio
+2. Verify any claims or statements made in the audio
+3. Check for signs of audio manipulation (unnatural cuts, voice cloning indicators, inconsistent background noise)
+4. Identify the speakers if possible
+5. Assess if the audio could be AI-generated or deepfaked
+6. Cross-reference claims with any search results provided
+
+RESPONSE FORMAT - You MUST respond with valid JSON only:
+{
+  "veracity": "true" | "false" | "partially-true" | "unverified",
+  "confidence": 85,
+  "explanation": "Detailed explanation in 2-3 sentences about the audio's authenticity",
+  "sources": ["source1", "source2"],
+  "mediaAnalysis": {
+    "type": "audio",
+    "transcription": "Full transcription of the audio content",
+    "description": "Description of audio characteristics and speakers",
+    "manipulationIndicators": ["indicator1", "indicator2"]
+  }
+}`;
+    } else if (mediaFile.type === 'video') {
+      mediaPrompt = `You are a professional fact-checker and video verification expert. Today's date is ${currentDate}.
+
+Your task is to analyze this video for potential misinformation, manipulation, or fake news.
+
+${additionalContext ? `ADDITIONAL CONTEXT PROVIDED BY USER:\n"${additionalContext}"\n` : ''}
+
+${searchResultsContext}
+
+ANALYSIS TASKS:
+1. Describe the video content in detail
+2. Transcribe any spoken content or text overlays
+3. Check for signs of video manipulation (deepfakes, face swaps, edited clips, out-of-context usage)
+4. Look for inconsistencies in lighting, shadows, or movements
+5. Identify speakers and verify their identity if claimed
+6. Assess if the video could be AI-generated
+7. Check for signs of selective editing or misleading cuts
+8. Cross-reference claims with any search results provided
+
+RESPONSE FORMAT - You MUST respond with valid JSON only:
+{
+  "veracity": "true" | "false" | "partially-true" | "unverified",
+  "confidence": 85,
+  "explanation": "Detailed explanation in 2-3 sentences about the video's authenticity",
+  "sources": ["source1", "source2"],
+  "mediaAnalysis": {
+    "type": "video",
+    "transcription": "Transcription of spoken content",
+    "description": "Detailed description of the video content and scenes",
+    "manipulationIndicators": ["indicator1", "indicator2"]
+  }
+}`;
+    }
+
+    // Create the multimodal content parts
+    const parts = [
+      {
+        inlineData: {
+          mimeType: mediaFile.mimeType,
+          data: base64Data
+        }
+      },
+      { text: mediaPrompt }
+    ];
+
+    // Generate content with multimodal input
+    const result = await model.generateContent(parts);
+    const response = await result.response;
+    
+    if (!response) {
+      throw new Error('No response received from Gemini API');
+    }
+
+    let text;
+    try {
+      text = response.text();
+    } catch {
+      if (response.candidates && response.candidates[0] && response.candidates[0].content) {
+        text = response.candidates[0].content.parts[0].text;
+      } else {
+        throw new Error('No response text available from Gemini API');
+      }
+    }
+
+    if (!text || text.trim().length === 0) {
+      throw new Error('Empty response from Gemini');
+    }
+
+    console.log('✅ Successfully received media analysis from Gemini');
+
+    // Parse the response
+    let cleanedText = text.trim();
+    cleanedText = cleanedText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+    
+    const firstBrace = cleanedText.indexOf('{');
+    const lastBrace = cleanedText.lastIndexOf('}');
+    
+    if (firstBrace === -1 || lastBrace === -1) {
+      throw new Error('Invalid JSON structure in response');
+    }
+    
+    cleanedText = cleanedText.substring(firstBrace, lastBrace + 1);
+    
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(cleanedText);
+    } catch {
+      let fixedText = cleanedText;
+      if (!cleanedText.endsWith('}')) fixedText = cleanedText + '}';
+      fixedText = fixedText.replace(/,\s*}$/, '}');
+      parsedResponse = JSON.parse(fixedText);
+    }
+
+    // Normalize sources - handle both string arrays and object arrays
+    let normalizedSources: { name: string; url: string }[] = [];
+    if (Array.isArray(parsedResponse.sources)) {
+      normalizedSources = parsedResponse.sources.map((source: unknown) => {
+        if (typeof source === 'string') {
+          if (source.startsWith('http')) {
+            try {
+              const urlObj = new URL(source);
+              return { name: urlObj.hostname.replace('www.', ''), url: source };
+            } catch {
+              return { name: source, url: source };
+            }
+          }
+          return { name: source, url: '' };
+        } else if (source && typeof source === 'object') {
+          const s = source as { name?: string; url?: string; title?: string; link?: string };
+          return {
+            name: s.name || s.title || 'Unknown Source',
+            url: s.url || s.link || ''
+          };
+        }
+        return { name: 'Unknown Source', url: '' };
+      }).filter((s: { name: string; url: string }) => s.url && s.url.startsWith('http'));
+    }
+
+    const validatedResponse: VerificationResult = {
+      veracity: parsedResponse.veracity || 'unverified',
+      confidence: typeof parsedResponse.confidence === 'number' ? 
+        Math.max(0, Math.min(100, parsedResponse.confidence)) : 0,
+      explanation: parsedResponse.explanation || 'Unable to verify media content.',
+      sources: normalizedSources,
+      mediaAnalysis: parsedResponse.mediaAnalysis || {
+        type: mediaFile.type,
+        description: 'Analysis completed'
+      }
+    };
+
+    console.log('🎯 Final media verification result:', validatedResponse);
+    return validatedResponse;
+
+  } catch (error) {
+    console.error('Error verifying media with Gemini:', error);
+    
+    return {
+      veracity: 'unverified' as const,
+      confidence: 0,
+      explanation: `Unable to verify ${mediaFile.type} content due to a technical error. Please try again.`,
+      sources: [],
+      mediaAnalysis: {
+        type: mediaFile.type,
+        description: 'Analysis failed due to technical error'
+      }
+    };
+  }
+};
 
 export const verifyNewsWithGemini = async (
   newsContent: string,
   searchQuery: string,
   articleUrl?: string,
-  searchResults?: any[]
+  searchResults?: SearchResponse[]
 ): Promise<VerificationResult> => {
   try {
     console.log("🚀 Starting news verification with Gemini 2.5 Flash model...");
@@ -78,7 +385,7 @@ ${searchResults.map((result, index) => {
   if (articles.length === 0) {
     return `${index + 1}. No search results available for this query`;
   }
-  return articles.slice(0, 3).map((article: any, articleIndex: number) => 
+  return articles.slice(0, 3).map((article: SearchArticle, articleIndex: number) => 
     `${index + 1}.${articleIndex + 1} ${article.name || 'No title'}: ${article.snippet || 'No description'} (${article.url || 'No URL'})`
   ).join('\n');
 }).filter(text => text.trim()).join('\n')}
@@ -121,7 +428,10 @@ RESPONSE FORMAT - You MUST respond with valid JSON only, no additional text:
   "veracity": "true" | "false" | "partially-true" | "unverified",
   "confidence": 85,
   "explanation": "Detailed explanation in exactly 2-3 sentences",
-  "sources": ["source1", "source2"]
+  "sources": [
+    {"name": "Source Name", "url": "https://example.com/article"},
+    {"name": "Another Source", "url": "https://example2.com/article"}
+  ]
 }
 
 CRITICAL INSTRUCTIONS:
@@ -129,7 +439,9 @@ CRITICAL INSTRUCTIONS:
 - Keep explanation to exactly 2-3 sentences
 - Be concise but thorough
 - Ensure the JSON is complete and properly formatted
-- Do not include any text before or after the JSON`;
+- Do not include any text before or after the JSON
+- Sources MUST include real URLs from the search results provided above
+- Use actual article titles as source names`;
 
     // Generate content with improved configuration for Gemini 2.5 Flash
     const result = await model.generateContent(prompt);
@@ -246,16 +558,43 @@ CRITICAL INSTRUCTIONS:
       }
     }
 
+    // Normalize sources - handle both string arrays and object arrays
+    let normalizedSources: { name: string; url: string }[] = [];
+    if (Array.isArray(parsedResponse.sources)) {
+      normalizedSources = parsedResponse.sources.map((source: unknown) => {
+        if (typeof source === 'string') {
+          // If it's a URL string, extract domain as name
+          if (source.startsWith('http')) {
+            try {
+              const urlObj = new URL(source);
+              return { name: urlObj.hostname.replace('www.', ''), url: source };
+            } catch {
+              return { name: source, url: source };
+            }
+          }
+          return { name: source, url: '' };
+        } else if (source && typeof source === 'object') {
+          const s = source as { name?: string; url?: string; title?: string; link?: string };
+          return {
+            name: s.name || s.title || 'Unknown Source',
+            url: s.url || s.link || ''
+          };
+        }
+        return { name: 'Unknown Source', url: '' };
+      }).filter((s: { name: string; url: string }) => s.url && s.url.startsWith('http'));
+    }
+
     // Validate required fields and provide defaults if missing
     const validatedResponse: VerificationResult = {
       veracity: parsedResponse.veracity || 'unverified',
       confidence: typeof parsedResponse.confidence === 'number' ? 
         Math.max(0, Math.min(100, parsedResponse.confidence)) : 0,
       explanation: parsedResponse.explanation || 'Unable to verify due to response parsing issues.',
-      sources: Array.isArray(parsedResponse.sources) ? parsedResponse.sources : []
+      sources: normalizedSources
     };
 
     console.log('🎯 Final verification result:', validatedResponse);
+    console.log('📚 Normalized sources:', normalizedSources);
     return validatedResponse;
 
   } catch (error) {

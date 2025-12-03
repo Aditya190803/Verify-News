@@ -1,14 +1,36 @@
 /**
- * Utility functions for handling various types of errors in the news verification app
+ * @fileoverview Error handling utilities for the news verification application.
+ * Provides functions for categorizing errors, generating user-friendly messages,
+ * and implementing retry logic with exponential backoff.
+ * @module utils/errorHandling
  */
 
+import { RATE_LIMITS, ERROR_MESSAGES } from '@/lib/constants';
+
 /**
- * Check if an error is caused by network connectivity issues (ad blockers, firewall, etc.)
+ * Checks if an error is caused by network connectivity issues.
+ * This includes ad blockers, firewalls, CORS issues, and general network failures.
+ * 
+ * @param {unknown} error - The error to check
+ * @returns {boolean} True if the error is network-related
+ * 
+ * @example
+ * ```ts
+ * try {
+ *   await fetchData();
+ * } catch (error) {
+ *   if (isNetworkError(error)) {
+ *     showOfflineMessage();
+ *   }
+ * }
+ * ```
  */
-export const isNetworkError = (error: any): boolean => {
+export const isNetworkError = (error: unknown): boolean => {
   if (!error) return false;
   
-  const errorMessage = error.message || error.toString();
+  const errorMessage = error instanceof Error 
+    ? error.message 
+    : String(error);
   
   return (
     errorMessage.includes('ERR_BLOCKED_BY_CLIENT') ||
@@ -23,12 +45,25 @@ export const isNetworkError = (error: any): boolean => {
 };
 
 /**
- * Check if an error is caused by API rate limiting or quota issues
+ * Checks if an error is caused by API rate limiting or quota issues.
+ * 
+ * @param {unknown} error - The error to check
+ * @returns {boolean} True if the error is quota/rate-limit related
+ * 
+ * @example
+ * ```ts
+ * if (isQuotaError(error)) {
+ *   showRateLimitMessage();
+ *   scheduleRetry();
+ * }
+ * ```
  */
-export const isQuotaError = (error: any): boolean => {
+export const isQuotaError = (error: unknown): boolean => {
   if (!error) return false;
   
-  const errorMessage = error.message || error.toString();
+  const errorMessage = error instanceof Error 
+    ? error.message 
+    : String(error);
   
   return (
     errorMessage.includes('quota') ||
@@ -39,12 +74,24 @@ export const isQuotaError = (error: any): boolean => {
 };
 
 /**
- * Check if an error is caused by API authentication issues
+ * Checks if an error is caused by API authentication issues.
+ * 
+ * @param {unknown} error - The error to check
+ * @returns {boolean} True if the error is auth-related
+ * 
+ * @example
+ * ```ts
+ * if (isAuthError(error)) {
+ *   redirectToLogin();
+ * }
+ * ```
  */
-export const isAuthError = (error: any): boolean => {
+export const isAuthError = (error: unknown): boolean => {
   if (!error) return false;
   
-  const errorMessage = error.message || error.toString();
+  const errorMessage = error instanceof Error 
+    ? error.message 
+    : String(error);
   
   return (
     errorMessage.includes('API key') ||
@@ -56,9 +103,19 @@ export const isAuthError = (error: any): boolean => {
 };
 
 /**
- * Get user-friendly error message based on error type
+ * Generates a user-friendly error message based on the error type.
+ * 
+ * @param {unknown} error - The error to generate a message for
+ * @returns {string} A human-readable error message
+ * 
+ * @example
+ * ```ts
+ * catch (error) {
+ *   toast.error(getUserFriendlyErrorMessage(error));
+ * }
+ * ```
  */
-export const getUserFriendlyErrorMessage = (error: any): string => {
+export const getUserFriendlyErrorMessage = (error: unknown): string => {
   if (isNetworkError(error)) {
     return 'Network connectivity issue detected. This may be caused by ad blockers or firewall settings. The verification will continue without cloud synchronization.';
   }
@@ -75,24 +132,52 @@ export const getUserFriendlyErrorMessage = (error: any): string => {
 };
 
 /**
- * Handle Firebase errors gracefully without breaking the verification flow
+ * Handles Appwrite errors gracefully without breaking the verification flow.
+ * Logs the error appropriately based on type but does not throw.
+ * 
+ * @param {unknown} error - The error that occurred
+ * @param {string} operation - Description of the operation that failed
+ * 
+ * @example
+ * ```ts
+ * try {
+ *   await saveToAppwrite(data);
+ * } catch (error) {
+ *   handleAppwriteError(error, 'save verification');
+ *   // Continue without throwing
+ * }
+ * ```
  */
-export const handleFirebaseError = (error: any, operation: string): void => {
-  console.warn(`📱 Firebase ${operation} failed:`, error);
+export const handleAppwriteError = (error: unknown, operation: string): void => {
+  console.warn(`📱 Appwrite ${operation} failed:`, error);
   
   if (isNetworkError(error)) {
-    console.warn('🚫 Firebase blocked by ad blocker or network filter');
+    console.warn('🚫 Appwrite blocked by ad blocker or network filter');
   } else {
-    console.error(`🔥 Firebase ${operation} error:`, error);
+    console.error(`🔥 Appwrite ${operation} error:`, error);
   }
   
   // Don't throw - allow verification to continue
 };
 
+/** @deprecated Use handleAppwriteError instead */
+export const handleFirebaseError = handleAppwriteError;
+
 /**
- * Handle Gemini API errors with specific messaging
+ * Handles Gemini API errors and returns a user-friendly message.
+ * 
+ * @param {unknown} error - The error from Gemini API
+ * @returns {string} A concise error description for display
+ * 
+ * @example
+ * ```ts
+ * catch (error) {
+ *   const message = handleGeminiError(error);
+ *   setErrorMessage(`Verification failed: ${message}`);
+ * }
+ * ```
  */
-export const handleGeminiError = (error: any): string => {
+export const handleGeminiError = (error: unknown): string => {
   if (isNetworkError(error)) {
     return 'Network connectivity issue - verification service temporarily unavailable';
   }
@@ -105,15 +190,17 @@ export const handleGeminiError = (error: any): string => {
     return 'API configuration issue';
   }
   
-  if (error.message?.includes('JSON')) {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  
+  if (errorMessage.includes('JSON')) {
     return 'Response parsing error';
   }
   
-  if (error.message?.includes('timeout')) {
+  if (errorMessage.includes('timeout')) {
     return 'Service timeout';
   }
   
-  if (error.message?.includes('safety')) {
+  if (errorMessage.includes('safety')) {
     return 'Content blocked by safety filters';
   }
   
@@ -121,14 +208,31 @@ export const handleGeminiError = (error: any): string => {
 };
 
 /**
- * Retry function with exponential backoff
+ * Retries an async operation with exponential backoff.
+ * Will not retry on auth or quota errors.
+ * 
+ * @template T - The return type of the function
+ * @param {() => Promise<T>} fn - The async function to retry
+ * @param {number} [maxRetries=RATE_LIMITS.MAX_RETRIES] - Maximum number of retry attempts
+ * @param {number} [baseDelay=RATE_LIMITS.RETRY_DELAY_MS] - Initial delay in milliseconds
+ * @returns {Promise<T>} The result of the successful function call
+ * @throws {Error} The last error if all retries fail
+ * 
+ * @example
+ * ```ts
+ * const result = await retryWithBackoff(
+ *   () => fetchVerification(id),
+ *   3,
+ *   1000
+ * );
+ * ```
  */
 export const retryWithBackoff = async <T>(
   fn: () => Promise<T>,
-  maxRetries: number = 3,
-  baseDelay: number = 1000
+  maxRetries: number = RATE_LIMITS.MAX_RETRIES,
+  baseDelay: number = RATE_LIMITS.RETRY_DELAY_MS
 ): Promise<T> => {
-  let lastError: any;
+  let lastError: unknown;
   
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {

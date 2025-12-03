@@ -1,13 +1,71 @@
 /**
- * Utility functions for searching news via LangSearch
+ * @fileoverview News search utilities for the verification application.
+ * Provides functions for searching news via LangSearch API, extracting keywords,
+ * and performing comprehensive multi-source news searches.
+ * @module utils/searchUtils
  */
 
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+/** Represents a search result article from the LangSearch API */
+interface SearchArticle {
+  name?: string;
+  title?: string;
+  snippet?: string;
+  url?: string;
+  displayUrl?: string;
+  summary?: string;
+  datePublished?: string;
+  dateLastCrawled?: string;
+}
+
+/** Represents the structured search response from LangSearch */
+interface SearchResponse {
+  _type?: string;
+  queryContext?: {
+    originalQuery: string;
+  };
+  webPages?: {
+    webSearchUrl?: string;
+    totalEstimatedMatches?: number | null;
+    value: SearchArticle[];
+  };
+  results?: SearchArticle[];
+  value?: SearchArticle[];
+  data?: {
+    webPages?: {
+      value: SearchArticle[];
+    };
+  };
+  error?: string;
+  message?: string;
+}
+
+/** Represents a processed news article for display */
+interface NewsArticle {
+  title: string;
+  snippet: string;
+  url: string;
+  summary?: string;
+  datePublished?: string;
+  dateLastCrawled?: string;
+}
+
 /**
- * Search LangSearch for news on a given topic
- * @param query The search query
- * @returns The search results
+ * Search LangSearch API for news articles on a given topic.
+ * Implements retry logic with multiple query variations for better results.
+ * 
+ * @param {string} query - The search query string
+ * @returns {Promise<SearchResponse>} The search results with webPages.value array
+ * @throws {Error} When all search attempts fail
+ * 
+ * @example
+ * ```ts
+ * const results = await searchLangSearch("climate change policy");
+ * console.log(results.webPages.value.length); // Number of articles found
+ * ```
  */
-export const searchLangSearch = async (query: string) => {
+export const searchLangSearch = async (query: string): Promise<SearchResponse> => {
   try {
     console.log(`🔍 Searching for: "${query}"`);
     
@@ -58,7 +116,7 @@ export const searchLangSearch = async (query: string) => {
           throw new Error(`LangSearch API returned ${response.status}`);
         }
         
-        const data = await response.json();
+        const data: SearchResponse = await response.json();
         
         console.log('🔍 LangSearch response structure:', {
           hasData: !!data,
@@ -72,16 +130,16 @@ export const searchLangSearch = async (query: string) => {
         });
         
         // Check multiple possible response formats
-        let searchResults = null;
+        let searchResults: SearchResponse | null = null;
         let resultCount = 0;
         
-        if (data?.data?.webPages?.value?.length > 0) {
-          searchResults = data.data;
+        if (data?.data?.webPages?.value && data.data.webPages.value.length > 0) {
+          searchResults = data.data as SearchResponse;
           resultCount = data.data.webPages.value.length;
-        } else if (data?.webPages?.value?.length > 0) {
+        } else if (data?.webPages?.value && data.webPages.value.length > 0) {
           searchResults = data;
           resultCount = data.webPages.value.length;
-        } else if (data?.results?.length > 0) {
+        } else if (data?.results && data.results.length > 0) {
           // Alternative format - convert to expected format
           searchResults = {
             webPages: {
@@ -89,7 +147,7 @@ export const searchLangSearch = async (query: string) => {
             }
           };
           resultCount = data.results.length;
-        } else if (data?.value?.length > 0) {
+        } else if (data?.value && data.value.length > 0) {
           searchResults = {
             webPages: {
               value: data.value
@@ -109,10 +167,11 @@ export const searchLangSearch = async (query: string) => {
         
       } catch (fetchError) {
         if (attempt === searchAttempts.length - 1) {
-          if (fetchError.name === 'AbortError') {
+          const err = fetchError as Error;
+          if (err.name === 'AbortError') {
             console.warn('⏰ LangSearch API timeout - falling back to alternative search');
           } else {
-            console.warn('❌ LangSearch API error:', fetchError.message);
+            console.warn('❌ LangSearch API error:', err.message);
           }
           throw fetchError;
         }
@@ -121,8 +180,10 @@ export const searchLangSearch = async (query: string) => {
       }
     }
     
+    throw new Error('All search attempts failed');
   } catch (error) {
-    console.warn('🔄 Falling back to search simulation due to:', error.message);
+    const err = error as Error;
+    console.warn('🔄 Falling back to search simulation due to:', err.message);
     
     // Generic fallback with context for verification
     const currentDate = new Date().toLocaleDateString('en-US', { 
@@ -143,14 +204,13 @@ export const searchLangSearch = async (query: string) => {
         totalEstimatedMatches: null,
         value: [
           {
-            id: "fallback-1",
             name: `Verification Context for: ${query}`,
             url: `https://www.google.com/search?q=${encodeURIComponent(query)}`,
             displayUrl: `https://www.google.com/search?q=${encodeURIComponent(query)}`,
             snippet: contextualFallback,
             summary: contextualFallback,
-            datePublished: null,
-            dateLastCrawled: null
+            datePublished: undefined,
+            dateLastCrawled: undefined
           }
         ]
       }
@@ -159,23 +219,25 @@ export const searchLangSearch = async (query: string) => {
 };
 
 /**
- * Score the relevance of a news article based on keywords and content
- * @param article The article to score
- * @param query The search query
- * @returns A relevance score (higher is more relevant)
+ * Scores the relevance of a news article based on query term matching.
+ * Higher scores indicate more relevant articles.
+ * 
+ * @param {SearchArticle} article - The article to score
+ * @param {string} query - The original search query
+ * @returns {number} A relevance score (higher is more relevant)
  */
-const scoreArticleRelevance = (article: any, query: string) => {
+const scoreArticleRelevance = (article: SearchArticle, query: string): number => {
   const queryTerms = query.toLowerCase().split(' ');
   let score = 0;
   
   // Score based on title match
-  const title = article.title?.toLowerCase() || '';
+  const title = (article.title || article.name || '').toLowerCase();
   queryTerms.forEach(term => {
     if (title.includes(term)) score += 5;
   });
   
   // Score based on content match
-  const snippet = article.snippet?.toLowerCase() || '';
+  const snippet = (article.snippet || '').toLowerCase();
   queryTerms.forEach(term => {
     if (snippet.includes(term)) score += 3;
   });
@@ -190,16 +252,25 @@ const scoreArticleRelevance = (article: any, query: string) => {
 };
 
 /**
- * Extract relevant news articles from LangSearch search results
- * @param results The LangSearch search results
- * @param query The original search query
- * @returns An array of news articles sorted by relevance
+ * Extracts and normalizes news articles from LangSearch response.
+ * Articles are sorted by relevance to the original query.
+ * 
+ * @param {SearchResponse} results - The raw search results from LangSearch
+ * @param {string} query - The original search query for relevance scoring
+ * @returns {NewsArticle[]} Array of processed articles sorted by relevance
+ * 
+ * @example
+ * ```ts
+ * const results = await searchLangSearch("election results");
+ * const articles = extractNewsFromSearch(results, "election results");
+ * articles.forEach(article => console.log(article.title));
+ * ```
  */
-export const extractNewsFromSearch = (results: any, query: string) => {
-  const articles = [];
+export const extractNewsFromSearch = (results: SearchResponse, query: string): NewsArticle[] => {
+  const articles: NewsArticle[] = [];
   
   // Extract news from LangSearch webPages.value format
-  if (results?.webPages?.value?.length > 0) {
+  if (results?.webPages?.value && results.webPages.value.length > 0) {
     for (const result of results.webPages.value) {
       if (result.name && result.snippet) {
         articles.push({
@@ -215,7 +286,7 @@ export const extractNewsFromSearch = (results: any, query: string) => {
   }
   
   // Fallback: Check for any other format that might exist
-  if (articles.length === 0 && results?.value?.length > 0) {
+  if (articles.length === 0 && results?.value && results.value.length > 0) {
     for (const result of results.value) {
       if (result.name && result.snippet) {
         articles.push({
@@ -230,16 +301,28 @@ export const extractNewsFromSearch = (results: any, query: string) => {
   
   // Sort articles by relevance score
   return articles
-    .sort((a, b) => scoreArticleRelevance(b, query) - scoreArticleRelevance(a, query))
+    .sort((a, b) => {
+      const articleA = { name: a.title, snippet: a.snippet, url: a.url };
+      const articleB = { name: b.title, snippet: b.snippet, url: b.url };
+      return scoreArticleRelevance(articleB, query) - scoreArticleRelevance(articleA, query);
+    })
     .slice(0, 10); // Limit to top 10 most relevant results
 };
 
 /**
- * Search multiple sources including Indian news for comprehensive coverage
- * @param query The search query
- * @returns Combined search results
+ * Searches multiple news sources for comprehensive coverage.
+ * Includes major news outlets and Indian news sources.
+ * 
+ * @param {string} query - The search query
+ * @returns {Promise<SearchResponse[]>} Combined results from multiple sources
+ * 
+ * @example
+ * ```ts
+ * const results = await searchMultipleSources("technology policy");
+ * console.log(`Found ${results.length} source responses`);
+ * ```
  */
-export const searchMultipleSources = async (query: string) => {
+export const searchMultipleSources = async (query: string): Promise<SearchResponse[]> => {
   const searches = [
     // General search
     `${query}`,
@@ -250,7 +333,7 @@ export const searchMultipleSources = async (query: string) => {
     `${query} site:ndtv.com`,
   ];
 
-  const allResults = [];
+  const allResults: SearchResponse[] = [];
   let successfulSearches = 0;
   
   let failedSearches = 0;
@@ -285,14 +368,16 @@ export const searchMultipleSources = async (query: string) => {
     }
   }
   
-    console.log(`✅ Completed ${successfulSearches}/${searches.length} sources for query: "${query.substring(0, 50)}..."`);
-    return allResults;
+  console.log(`✅ Completed ${successfulSearches}/${searches.length} sources for query: "${query.substring(0, 50)}..."`);
+  return allResults;
 };
 
 /**
- * Extract key terms from a news query for comprehensive searching
- * @param query The original news query
- * @returns Array of search variations
+ * Generates search query variations for comprehensive coverage.
+ * Creates multiple search approaches from a single query.
+ * 
+ * @param {string} query - The original search query
+ * @returns {string[]} Array of search variations
  */
 export const generateSearchVariations = (query: string): string[] => {
   const variations = [query];
@@ -321,14 +406,20 @@ export const generateSearchVariations = (query: string): string[] => {
 };
 
 /**
- * Use LLM to extract keywords from news content for verification
- * @param content The news content to analyze
- * @returns Array of keywords extracted by LLM
+ * Uses LLM to extract keywords from news content for verification.
+ * Falls back to basic keyword extraction if LLM is unavailable.
+ * 
+ * @param {string} content - The news content to analyze
+ * @returns {Promise<string[]>} Array of extracted keywords
+ * 
+ * @example
+ * ```ts
+ * const keywords = await extractKeywordsWithLLM(newsArticle);
+ * // Returns: ["Tesla", "Elon Musk", "electric vehicles", "factory"]
+ * ```
  */
 export const extractKeywordsWithLLM = async (content: string): Promise<string[]> => {
   try {
-    const { GoogleGenerativeAI } = await import('@google/generative-ai');
-    
     if (!import.meta.env.VITE_GEMINI_API_KEY) {
       console.warn('Gemini API key not available, falling back to basic keyword extraction');
       return extractBasicKeywords(content);
@@ -368,9 +459,11 @@ export const extractKeywordsWithLLM = async (content: string): Promise<string[]>
 };
 
 /**
- * Fallback basic keyword extraction
- * @param content The news content
- * @returns Array of basic keywords
+ * Fallback basic keyword extraction without LLM.
+ * Removes common words and returns unique terms.
+ * 
+ * @param {string} content - The news content
+ * @returns {string[]} Array of basic keywords
  */
 const extractBasicKeywords = (content: string): string[] => {
   const words = content.toLowerCase().match(/\b[a-z]{3,}\b/g) || [];
@@ -383,12 +476,14 @@ const extractBasicKeywords = (content: string): string[] => {
 };
 
 /**
- * Generate comprehensive search queries based on LLM-extracted keywords
- * @param content The news content
- * @returns Array of targeted search queries
+ * Generates comprehensive search queries based on LLM-extracted keywords.
+ * Creates targeted queries for fact-checking verification.
+ * 
+ * @param {string} content - The news content to create queries for
+ * @returns {Promise<string[]>} Array of targeted search queries
  */
 export const generateKeywordSearchQueries = async (content: string): Promise<string[]> => {
-  const queries = [];
+  const queries: string[] = [];
   
   // Original content as exact search (first 100 characters)
   queries.push(`"${content.substring(0, 100)}"`);
@@ -422,14 +517,22 @@ export const generateKeywordSearchQueries = async (content: string): Promise<str
 };
 
 /**
- * Comprehensive search using LLM-extracted keywords and multiple sources
- * @param content The news content to verify
- * @returns Combined search results from multiple approaches
+ * Performs a comprehensive news search using LLM-extracted keywords.
+ * Searches multiple sources with various query strategies.
+ * 
+ * @param {string} content - The news content to verify
+ * @returns {Promise<SearchResponse[]>} Combined search results
+ * 
+ * @example
+ * ```ts
+ * const results = await comprehensiveNewsSearch(newsArticleText);
+ * const allArticles = results.flatMap(r => extractNewsFromSearch(r, newsArticleText));
+ * ```
  */
-export const comprehensiveNewsSearch = async (content: string) => {
+export const comprehensiveNewsSearch = async (content: string): Promise<SearchResponse[]> => {
   console.log('Starting comprehensive news search...');
   
-  const allResults = [];
+  const allResults: SearchResponse[] = [];
   
   try {
     // 1. Get LLM-extracted keyword queries

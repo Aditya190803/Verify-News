@@ -1,6 +1,15 @@
 
 export type VerificationStatus = 'idle' | 'searching' | 'verifying' | 'verified' | 'error';
 export type NewsVeracity = 'true' | 'false' | 'unverified' | 'partially-true';
+export type MediaType = 'image' | 'audio' | 'video' | 'text';
+
+export interface MediaFile {
+  file: File;
+  type: MediaType;
+  preview?: string;
+  base64?: string;
+  mimeType: string;
+}
 
 export interface NewsArticle {
   title: string;
@@ -17,6 +26,12 @@ export interface VerificationResult {
     url: string;
   }[];
   correctedInfo?: string;
+  mediaAnalysis?: {
+    type: MediaType;
+    description?: string;
+    transcription?: string;
+    manipulationIndicators?: string[];
+  };
 }
 
 export interface NewsContextType {
@@ -32,8 +47,10 @@ export interface NewsContextType {
   setArticles: (articles: NewsArticle[]) => void;
   selectedArticle: NewsArticle | null;
   setSelectedArticle: (article: NewsArticle | null) => void;
+  mediaFile: MediaFile | null;
+  setMediaFile: (media: MediaFile | null) => void;
   searchNews: (query: string, slug?: string, title?: string) => Promise<NewsArticle[] | void>;
   verifyNews: () => Promise<void>;
   resetState: () => void;
-  handleUnifiedInput?: (input: string) => Promise<string | undefined>;
+  handleUnifiedInput?: (input: string, media?: MediaFile) => Promise<string | undefined>;
 }
