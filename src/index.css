@@ -1,85 +1,137 @@
+/* Import Inter font - must be first */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 222 47% 11%;
+    /* Warm cream background - feels handcrafted */
+    --background: 40 33% 98%;
+    --foreground: 20 14% 15%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    /* Cards - Soft white with warmth */
+    --card: 40 30% 99%;
+    --card-foreground: 20 14% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    /* Popover */
+    --popover: 40 30% 99%;
+    --popover-foreground: 20 14% 15%;
 
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Warm terracotta/rust */
+    --primary: 15 70% 50%;
+    --primary-foreground: 40 33% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222 47% 11.2%;
+    /* Secondary - Sage green */
+    --secondary: 150 25% 45%;
+    --secondary-foreground: 40 33% 98%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted - Warm gray */
+    --muted: 40 15% 94%;
+    --muted-foreground: 20 10% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Golden ochre */
+    --accent: 35 85% 55%;
+    --accent-foreground: 20 14% 15%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Destructive - Muted red */
+    --destructive: 0 55% 50%;
+    --destructive-foreground: 40 33% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221 83% 53%;
+    /* Border & Input - Warm subtle */
+    --border: 30 15% 88%;
+    --input: 30 15% 88%;
+    --ring: 15 70% 50%;
 
-    --radius: 1rem;
+    --radius: 0.5rem;
 
-    --truth: 142 72% 45%;
-    --truth-foreground: 0 0% 100%;
+    /* Veracity Colors - Muted, sophisticated */
+    --truth: 145 45% 42%;
+    --truth-foreground: 40 33% 98%;
 
-    --falsehood: 358 70% 54%;
-    --falsehood-foreground: 0 0% 100%;
+    --falsehood: 0 50% 48%;
+    --falsehood-foreground: 40 33% 98%;
 
-    --neutral: 220 14% 56%;
-    --neutral-foreground: 0 0% 100%;
+    --uncertain: 40 70% 50%;
+    --uncertain-foreground: 20 14% 15%;
+
+    --neutral: 20 10% 50%;
+    --neutral-foreground: 40 33% 98%;
+
+    /* Success/Warning/Info */
+    --success: 145 45% 42%;
+    --success-foreground: 40 33% 98%;
+
+    --warning: 35 85% 50%;
+    --warning-foreground: 20 14% 15%;
+
+    --info: 200 55% 48%;
+    --info-foreground: 40 33% 98%;
   }
+  
   .dark {
-    --background: 222 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Dark mode - Warm charcoal */
+    --background: 25 15% 10%;
+    --foreground: 40 20% 92%;
 
-    --card: 222 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    /* Cards - Slightly lighter */
+    --card: 25 12% 14%;
+    --card-foreground: 40 20% 92%;
 
-    --popover: 222 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    /* Popover */
+    --popover: 25 12% 14%;
+    --popover-foreground: 40 20% 92%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 84% 4.9%;
+    /* Primary - Warm coral */
+    --primary: 15 65% 60%;
+    --primary-foreground: 25 15% 10%;
 
-    --secondary: 217 32% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    /* Secondary - Sage green */
+    --secondary: 150 30% 55%;
+    --secondary-foreground: 25 15% 10%;
 
-    --muted: 217 32% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    /* Muted */
+    --muted: 25 10% 20%;
+    --muted-foreground: 30 15% 60%;
 
-    --accent: 217 32% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    /* Accent */
+    --accent: 35 75% 55%;
+    --accent-foreground: 25 15% 10%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Destructive */
+    --destructive: 0 50% 55%;
+    --destructive-foreground: 40 20% 92%;
 
-    --border: 217 32% 17.5%;
-    --input: 217 32% 17.5%;
-    --ring: 212 12% 84.7%;
+    /* Border & Input */
+    --border: 25 10% 22%;
+    --input: 25 10% 22%;
+    --ring: 15 65% 60%;
 
-    --truth: 142 72% 45%;
-    --truth-foreground: 0 0% 100%;
+    /* Veracity Colors */
+    --truth: 145 50% 50%;
+    --truth-foreground: 40 20% 92%;
 
-    --falsehood: 358 70% 54%;
-    --falsehood-foreground: 0 0% 100%;
+    --falsehood: 0 55% 55%;
+    --falsehood-foreground: 40 20% 92%;
 
-    --neutral: 220 14% 56%;
-    --neutral-foreground: 0 0% 100%;
+    --uncertain: 40 70% 55%;
+    --uncertain-foreground: 25 15% 10%;
+
+    --neutral: 30 15% 60%;
+    --neutral-foreground: 25 15% 10%;
+
+    /* Success */
+    --success: 145 50% 50%;
+    --success-foreground: 40 20% 92%;
+
+    /* Warning */
+    --warning: 35 75% 55%;
+    --warning-foreground: 25 15% 10%;
+
+    /* Info */
+    --info: 200 50% 55%;
+    --info-foreground: 40 20% 92%;
   }
 
   * {
@@ -88,50 +140,31 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  html {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    letter-spacing: -0.015em;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.03em;
+    line-height: 1.2;
   }
 
   ::selection {
-    @apply bg-primary/10 text-primary;
+    @apply bg-primary/15 text-foreground;
   }
 }
 
 @layer components {
-  .glass-card {
-    @apply bg-white/60 backdrop-blur-md border border-white/80 shadow-glass rounded-2xl transition-shadow duration-300 ease-out-expo;
-  }
-  
-  .dark .glass-card {
-    @apply bg-black/20 border-white/10 shadow-2xl;
-  }
-  
-  .glass-card:hover {
-    @apply shadow-glass-hover;
-  }
-  .dark .glass-card:hover {
-    @apply shadow-2xl;
-  }
-
-  .glass-input {
-    @apply bg-white/50 backdrop-blur-sm border border-white/80 shadow-subtle rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary/30 outline-none transition-all duration-300;
-  }
-
-  .dark .glass-input {
-    @apply bg-black/20 border-white/10;
-  }
-
-  .glass-button {
-    @apply bg-primary text-primary-foreground rounded-xl px-6 py-3 shadow-subtle hover:shadow-card-hover transition-all duration-300 ease-out-expo hover:bg-primary/90 active:scale-[0.98];
-  }
-  
-  .loading-shimmer {
-    @apply bg-gradient-to-r from-transparent via-white/30 to-transparent bg-[length:200%_100%] animate-loading-shimmer;
-  }
-
-  .dark .loading-shimmer {
-    @apply via-white/10;
+  /* Clean, minimal card styles with subtle depth */
+  .card-elevated {
+    @apply bg-card border border-border/60 shadow-sm;
   }
 
   /* Mobile-first responsive utilities */
@@ -302,20 +335,16 @@
 
 /* Mobile touch feedback */
 @media (hover: none) and (pointer: coarse) {
-  .glass-button:active {
-    transform: scale(0.96);
-    transition: transform 0.1s ease-out;
-  }
-  
-  .glass-card:active {
-    transform: scale(0.99);
+  button:active {
+    transform: scale(0.98);
     transition: transform 0.1s ease-out;
   }
 }
 
 /* Improved focus states for accessibility */
-.glass-button:focus-visible,
-.glass-input:focus-visible {
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
   outline: 2px solid hsl(var(--primary));
   outline-offset: 2px;
 }

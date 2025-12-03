@@ -1,10 +1,9 @@
 
 import React, { useState } from 'react';
 import { useNews } from '@/context/NewsContext';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { AlertCircle, FileText, SearchX } from 'lucide-react';
+import { AlertCircle, FileText } from 'lucide-react';
 
 interface NewsFormProps {
   className?: string;
@@ -13,7 +12,6 @@ interface NewsFormProps {
 const NewsForm = ({ className }: NewsFormProps) => {
   const { newsContent, setNewsContent, verifyNews, status, setSearchQuery } = useNews();
   const [error, setError] = useState('');
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,9 +23,8 @@ const NewsForm = ({ className }: NewsFormProps) => {
     
     setError('');
     
-    // Determine if content is a URL
-    const isUrl = newsContent.trim().match(/^https?:\/\/.+/);
-    const verificationType = isUrl ? 'url' : 'text';
+    // Determine if content is a URL (kept for future use)
+    const _isUrl = newsContent.trim().match(/^https?:\/\/.+/);
     
     // Set search query for results page
     setSearchQuery(newsContent.trim());
@@ -37,7 +34,7 @@ const NewsForm = ({ className }: NewsFormProps) => {
   };
   return (
     <div className={cn('w-full animate-fade-in', className)} style={{ animationDelay: '100ms' }}>
-      <div className="glass-card dark:bg-gray-800/60 dark:border-gray-700/50 p-4 sm:p-6 lg:p-8 mx-auto max-w-2xl">
+      <div className="bg-card border border-border rounded-lg p-4 sm:p-6 lg:p-8 mx-auto max-w-2xl">
         <div className="mb-4 sm:mb-6">
           <div className="inline-flex items-center px-2.5 sm:px-3 py-1 mb-2 text-xs font-medium rounded-full bg-primary/10 text-primary">
             <FileText className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
@@ -55,7 +52,7 @@ const NewsForm = ({ className }: NewsFormProps) => {
               value={newsContent}
               onChange={(e) => setNewsContent(e.target.value)}
               placeholder="Paste news content here to verify..."
-              className="glass-input dark:bg-gray-700/50 dark:border-gray-600/50 w-full min-h-[120px] sm:min-h-[180px] resize-none text-sm sm:text-base"
+              className="bg-background border border-input rounded-lg px-4 py-3 w-full min-h-[120px] sm:min-h-[180px] resize-none text-sm sm:text-base focus:ring-2 focus:ring-primary/20 focus:border-primary/30 outline-none transition-colors"
               disabled={status === 'verifying'}
             />
               {error && (
@@ -69,7 +66,7 @@ const NewsForm = ({ className }: NewsFormProps) => {
               <Button 
                 type="submit"
                 disabled={status === 'verifying'} 
-                className="glass-button dark:bg-primary/90 dark:hover:bg-primary/80 w-full text-sm sm:text-base"
+                className="bg-primary text-primary-foreground rounded-lg px-6 py-3 w-full text-sm sm:text-base hover:bg-primary/90 active:scale-[0.98] transition-all"
               >
                 {status === 'verifying' ? (
                   <span className="flex items-center">

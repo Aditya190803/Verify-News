@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNews } from '@/context/NewsContext';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Check, X, AlertTriangle, ExternalLink, Share2, RefreshCw, Wifi, WifiOff } from 'lucide-react';
+import { Check, X, AlertTriangle, ExternalLink, Share2, RefreshCw, WifiOff, Image, Music, Video, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
 import { extractHeadlineFromUrl, isValidUrl } from '@/utils/urlExtractor';
-import { getVerificationBySlug } from '@/services/firebaseService';
+import { getVerificationBySlug } from '@/services/appwriteService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Network Status Component
@@ -74,8 +74,8 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
       if (slug && !searchQuery && !searchParams.get('q')) {
         try {
           const data = await getVerificationBySlug(slug);
-          if (data && (data as any).query) {
-            setFetchedQuery((data as any).query);
+          if (data && data.query) {
+            setFetchedQuery(data.query);
           }
         } catch (error) {
           console.error('Error fetching original data:', error);
@@ -168,7 +168,7 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
           url,
         });
         shared = true;
-      } catch (err) {
+      } catch {
         // fallback to copy
       }
     }
@@ -187,68 +187,126 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
     navigate('/', { replace: true }); // Navigate to home page
   };
   return (
-    <div className={cn('w-full animate-scale-in', className)}>
+    <div className={cn('w-full max-w-2xl mx-auto', className)}>
       <NetworkStatusAlert />
-      <div className="glass-card p-4 sm:p-6 lg:p-8 mx-auto max-w-2xl overflow-hidden">
-        <div className="flex items-center mb-4 sm:mb-6">
-          <div className={cn("flex items-center justify-center p-1.5 sm:p-2 rounded-full", 
-            result.veracity === 'true' ? "bg-truth/10" : 
-            result.veracity === 'false' ? "bg-falsehood/10" : 
-            result.veracity === 'partially-true' ? "bg-amber-500/10" : "bg-neutral/10"
-          )}>
-            {getStatusIcon()}
-          </div>
-          <div className="ml-3 sm:ml-4 flex-1 min-w-0">
-            <div className={cn("inline-flex items-center px-2.5 sm:px-3 py-1 text-xs font-medium rounded-full", getStatusColor())}>
-              {getStatusText()}
-              {typeof result.confidence === 'number' && (
-                <span className="ml-1 text-xs opacity-70">{result.confidence}% confidence</span>
-              )}
+      
+      {/* Result Card */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
+        {/* Status Header */}
+        <div className={cn(
+          "px-6 py-5 border-b",
+          result.veracity === 'true' ? "bg-truth/5 border-truth/20" : 
+          result.veracity === 'false' ? "bg-falsehood/5 border-falsehood/20" : 
+          result.veracity === 'partially-true' ? "bg-warning/5 border-warning/20" : "bg-muted/50 border-border"
+        )}>
+          <div className="flex items-center gap-4">
+            <div className={cn(
+              "flex items-center justify-center h-12 w-12 rounded-full",
+              result.veracity === 'true' ? "bg-truth/10" : 
+              result.veracity === 'false' ? "bg-falsehood/10" : 
+              result.veracity === 'partially-true' ? "bg-warning/10" : "bg-muted"
+            )}>
+              {getStatusIcon()}
             </div>
-            <h2 className="text-lg sm:text-xl font-medium text-foreground mt-1">Verification Complete</h2>
+            <div>
+              <div className={cn(
+                "inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full mb-1",
+                getStatusColor()
+              )}>
+                {getStatusText()}
+                {typeof result.confidence === 'number' && (
+                  <span className="ml-1.5 opacity-75">• {result.confidence}%</span>
+                )}
+              </div>
+              <h2 className="text-lg font-semibold text-foreground">Verification Complete</h2>
+            </div>
           </div>
         </div>
         
-        <div className="space-y-4 sm:space-y-6">
-          {/* Original News Content */}
-          <div className="space-y-2">
-            <h3 className="text-xs sm:text-sm font-medium text-foreground/80">Original Content</h3>
-            <div className="p-3 sm:p-4 rounded-xl bg-foreground/5 border border-foreground/10">
-              <p className="text-foreground text-sm sm:text-base leading-relaxed" style={{ whiteSpace: 'pre-wrap' }}>
-                {isLoadingHeadline ? 'Extracting headline...' : originalContent}
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Original Content */}
+          <div>
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Content Verified</h3>
+            <div className="p-4 bg-muted/30 rounded-lg">
+              <p className="text-sm text-foreground leading-relaxed" style={{ whiteSpace: 'pre-wrap' }}>
+                {isLoadingHeadline ? 'Loading...' : originalContent}
               </p>
               {/^https?:\/\//.test(query || content) && (
-                <div className="mt-2 pt-2 border-t border-foreground/10">
-                  <a 
-                    href={query || content}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    View Original URL
-                  </a>
-                </div>
+                <a 
+                  href={query || content}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 mt-3 text-xs text-primary hover:underline"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  View source
+                </a>
               )}
             </div>
           </div>
           
-          <div className="space-y-2">
-            <h3 className="text-xs sm:text-sm font-medium text-foreground/80">AI Explanation</h3>
-            <p className="text-foreground text-sm sm:text-base leading-relaxed">{result.explanation || 'No explanation provided.'}</p>
+          {/* Explanation */}
+          <div>
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Analysis</h3>
+            <p className="text-sm text-foreground leading-relaxed">{result.explanation || 'No explanation provided.'}</p>
           </div>
           
-          {result.correctedInfo && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-foreground/80">Corrected Information</h3>
-              <div className="p-4 rounded-xl bg-foreground/5 border border-foreground/10">
-                <p className="text-foreground text-base leading-relaxed">{result.correctedInfo}</p>
+          {/* Media Analysis */}
+          {result.mediaAnalysis && (
+            <div>
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-2">
+                {result.mediaAnalysis.type === 'image' && <Image className="h-4 w-4" />}
+                {result.mediaAnalysis.type === 'audio' && <Music className="h-4 w-4" />}
+                {result.mediaAnalysis.type === 'video' && <Video className="h-4 w-4" />}
+                {result.mediaAnalysis.type === 'text' && <FileText className="h-4 w-4" />}
+                Media Analysis
+              </h3>
+              <div className="p-4 bg-muted/30 rounded-lg space-y-3">
+                {result.mediaAnalysis.description && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Description</p>
+                    <p className="text-sm text-foreground leading-relaxed">{result.mediaAnalysis.description}</p>
+                  </div>
+                )}
+                {result.mediaAnalysis.transcription && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Transcription</p>
+                    <p className="text-sm text-foreground leading-relaxed bg-background/50 p-3 rounded border border-border">
+                      {result.mediaAnalysis.transcription}
+                    </p>
+                  </div>
+                )}
+                {result.mediaAnalysis.manipulationIndicators && result.mediaAnalysis.manipulationIndicators.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Manipulation Indicators</p>
+                    <ul className="space-y-1">
+                      {result.mediaAnalysis.manipulationIndicators.map((indicator, index) => (
+                        <li key={index} className="flex items-start gap-2 text-sm text-foreground">
+                          <AlertTriangle className="h-4 w-4 text-warning flex-shrink-0 mt-0.5" />
+                          <span>{indicator}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
           )}
           
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium text-foreground/80">Sources</h3>
+          {/* Corrected Info */}
+          {result.correctedInfo && (
+            <div>
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Correction</h3>
+              <div className="p-4 bg-accent/5 border border-accent/20 rounded-lg">
+                <p className="text-sm text-foreground leading-relaxed">{result.correctedInfo}</p>
+              </div>
+            </div>
+          )}
+          
+          {/* Sources */}
+          <div>
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Sources</h3>
             <div className="space-y-2">
               {result.sources && Array.isArray(result.sources) && result.sources.filter(s => s.url && s.url.startsWith('http')).length > 0 ? (
                 result.sources.filter(s => s.url && s.url.startsWith('http')).map((source, index) => (
@@ -257,36 +315,36 @@ const VerificationResult = ({ className }: VerificationResultProps) => {
                     href={source.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg bg-foreground/5 hover:bg-foreground/10 transition-colors duration-200 group"
+                    className="flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/50 rounded-lg transition-colors group"
                   >
-                    <span className="text-foreground">{source.name}</span>
-                    <ExternalLink className="h-4 w-4 text-foreground/40 group-hover:text-foreground/80 transition-colors duration-200" />
+                    <span className="text-sm text-foreground">{source.name}</span>
+                    <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                   </a>
                 ))
               ) : (
-                <p className="text-foreground/60 text-sm italic">No real sources provided.</p>
+                <p className="text-sm text-muted-foreground italic">No sources available</p>
               )}
             </div>
           </div>
-          
-          <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-2">
-            <Button 
-              onClick={handleVerifyAnother}
-              variant="outline"
-              className="flex-1 border border-foreground/10 bg-background/50 hover:bg-foreground/5"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Verify Another
-            </Button>
-            <Button
-              variant="default"
-              className="flex-1 glass-button bg-primary text-white hover:bg-primary/90"
-              onClick={handleShareResult}
-            >
-              <Share2 className="h-4 w-4 mr-2" />
-              Share Result
-            </Button>
-          </div>
+        </div>
+        
+        {/* Actions */}
+        <div className="px-6 py-4 bg-muted/20 border-t border-border flex gap-3">
+          <Button 
+            onClick={handleVerifyAnother}
+            variant="outline"
+            className="flex-1"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Verify Another
+          </Button>
+          <Button
+            onClick={handleShareResult}
+            className="flex-1"
+          >
+            <Share2 className="h-4 w-4 mr-2" />
+            Share
+          </Button>
         </div>
       </div>
     </div>

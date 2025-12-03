@@ -1,145 +1,139 @@
 
 import React from 'react';
 import Header from '@/components/Header';
+import { Link } from 'react-router-dom';
 import { 
-  FileText, Image, Mic, Video, 
-  Search, Brain, CheckCircle, ShieldCheck, 
-  ArrowRight, HelpCircle 
+  FileText, 
+  Search, 
+  CheckCircle,
+  ArrowRight,
+  Lightbulb,
+  Shield,
+  Zap
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const HowItWorks = () => {
-  return (    <div className="min-h-screen flex flex-col">
+  return (
+    <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 py-4 sm:py-8">
-        <div className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto animate-fade-in">
-            <div className="mb-6 sm:mb-8 text-center">
-              <div className="inline-flex items-center justify-center mb-3 sm:mb-4">
-                <div className="rounded-full bg-primary/10 p-2 sm:p-3">
-                  <HelpCircle className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-                </div>
-              </div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight animate-slide-down">How VerifyNews Works</h1>
-              <p className="mt-3 sm:mt-4 text-base sm:text-lg text-foreground/60 leading-relaxed animate-slide-down px-2 sm:px-0" style={{ animationDelay: '50ms' }}>
-                Our powerful AI-driven system verifies news content in seconds using trusted sources and advanced algorithms.
-              </p>
-            </div>            <div className="space-y-12 sm:space-y-16 mt-8 sm:mt-12">
-              <section>
-                <h2 className="text-xl sm:text-2xl font-medium mb-6 sm:mb-8 text-center sm:text-left">The Verification Process</h2>
-                
-                <div className="space-y-8 sm:space-y-12">
-                  {[
-                    {
-                      step: 1,
-                      title: "Submit Content",
-                      description: "Paste a news article, upload an image of social media content, or share audio/video clips.",
-                      icon: <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />,
-                      icons: [
-                        <FileText key="text" className="h-4 w-4 sm:h-5 sm:w-5" />,
-                        <Image key="image" className="h-4 w-4 sm:h-5 sm:w-5" />,
-                        <Mic key="audio" className="h-4 w-4 sm:h-5 sm:w-5" />,
-                        <Video key="video" className="h-4 w-4 sm:h-5 sm:w-5" />
-                      ]
-                    },
-                    {
-                      step: 2,
-                      title: "AI Analysis",
-                      description: "Our AI engine extracts key claims and searches across trusted sources and fact-checking websites.",
-                      icon: <Brain className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />,
-                      detail: "We use advanced natural language processing to understand context and nuance."
-                    },
-                    {
-                      step: 3,
-                      title: "Source Verification",
-                      description: "Content is cross-referenced against multiple reputable sources and fact-checking organizations.",
-                      icon: <Search className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />,
-                      detail: "We maintain partnerships with leading fact-checking services worldwide."
-                    },
-                    {
-                      step: 4,
-                      title: "Results",
-                      description: "Within seconds, you'll receive verification results with confidence scores and supporting evidence.",
-                      icon: <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />,
-                      detail: "Results are designed to be easy to understand and share."
-                    }
-                  ].map((step, index) => (
-                    <div key={index} className="relative">
-                      {index < 3 && (
-                        <div className="absolute left-5 sm:left-7 top-16 sm:top-20 h-20 sm:h-28 w-px bg-foreground/10"></div>
-                      )}
-                      <div className="flex gap-4 sm:gap-6">
-                        <div className="flex-shrink-0">
-                          <div className="flex items-center justify-center w-10 h-10 sm:w-14 sm:h-14 rounded-full glass-card">
-                            {step.icon}
-                          </div>
-                        </div>
-                        <div className="glass-card p-4 sm:p-6 flex-1">
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-                            <div className="bg-primary/10 text-primary px-2 py-1 rounded-md text-xs font-medium w-fit">
-                              Step {step.step}
-                            </div>
-                            <h3 className="text-lg sm:text-xl font-medium">{step.title}</h3>
-                          </div>
-                          <p className="text-foreground/70 mb-4 text-sm sm:text-base">{step.description}</p>
-                          
-                          {step.icons && (
-                            <div className="flex gap-3 sm:gap-4 mt-4">
-                              {step.icons.map((icon, i) => (
-                                <div key={i} className="p-2 sm:p-3 rounded-lg bg-foreground/5 flex items-center justify-center">
-                                  {icon}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          
-                          {step.detail && (
-                            <p className="text-xs sm:text-sm text-foreground/50 mt-3 italic">
-                              {step.detail}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>              <section className="glass-card p-4 sm:p-6 lg:p-8">
-                <h2 className="text-xl sm:text-2xl font-medium mb-4 sm:mb-6">Technology Behind VerifyNews</h2>
-                <p className="text-foreground/80 leading-relaxed mb-4 sm:mb-6 text-sm sm:text-base">
-                  VerifyNews combines several advanced technologies to provide accurate verification:
-                </p>
-                <ul className="space-y-3 sm:space-y-4 text-foreground/80">
-                  <li className="flex items-start gap-3">
-                    <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-sm sm:text-base">Natural Language Processing (NLP) to understand the meaning and context of text</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-sm sm:text-base">Computer vision for analyzing images and extracting text from visual content</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-sm sm:text-base">Speech-to-text conversion for analyzing audio and video content</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-sm sm:text-base">Machine learning algorithms that continually improve verification accuracy</span>
-                  </li>
-                </ul>
-              </section>
+      <main className="flex-1">
+        {/* Hero */}
+        <div className="bg-muted/30 border-b border-border/50">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
+              Simple verification,<br />powerful results
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              See how we help you separate fact from fiction in just a few steps.
+            </p>
+          </div>
+        </div>
 
-              <div className="text-center">
-                <a href="/" className="glass-button inline-flex items-center justify-center gap-2 text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3">
-                  Try VerifyNews Now
-                  <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5" />
-                </a>
+        {/* Steps */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16">
+          <div className="space-y-16">
+            {[
+              {
+                step: 1,
+                title: "Share what you want to check",
+                description: "Paste a URL, article text, social media post, or any claim you've seen. We handle all text-based content.",
+                icon: <FileText className="h-6 w-6" />,
+              },
+              {
+                step: 2,
+                title: "We search trusted sources",
+                description: "Our AI scans reputable news outlets, fact-checking organizations, and verified databases to find relevant information.",
+                icon: <Search className="h-6 w-6" />,
+              },
+              {
+                step: 3,
+                title: "Get a clear answer",
+                description: "Within seconds, you'll see whether the claim is true, false, or needs more context—with links to sources so you can verify yourself.",
+                icon: <CheckCircle className="h-6 w-6" />,
+              },
+            ].map((item, index) => (
+              <div key={index} className="flex gap-6">
+                <div className="flex-shrink-0">
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                    {item.icon}
+                  </div>
+                </div>
+                <div className="flex-1 pt-1">
+                  <div className="inline-block bg-primary/10 text-primary text-xs font-medium px-2 py-1 rounded-md mb-3">
+                    Step {item.step}
+                  </div>
+                  <h3 className="text-xl font-semibold mb-3">{item.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed">{item.description}</p>
+                </div>
               </div>
+            ))}
+          </div>
+        </div>
+
+        {/* What makes it work */}
+        <div className="bg-muted/30 border-y border-border/50">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16">
+            <h2 className="text-2xl font-semibold text-center mb-12">What makes it work</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                {
+                  icon: <Lightbulb className="h-5 w-5" />,
+                  title: "Smart understanding",
+                  description: "Our AI understands context and nuance, not just keywords"
+                },
+                {
+                  icon: <Shield className="h-5 w-5" />,
+                  title: "Trusted sources",
+                  description: "We only use verified, reputable sources for verification"
+                },
+                {
+                  icon: <Zap className="h-5 w-5" />,
+                  title: "Real-time analysis",
+                  description: "Get results in seconds, not hours of manual research"
+                },
+              ].map((feature, index) => (
+                <div key={index} className="text-center">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <span className="text-primary">{feature.icon}</span>
+                  </div>
+                  <h3 className="font-semibold mb-2">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground">{feature.description}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
+
+        {/* CTA */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 text-center">
+          <h2 className="text-2xl font-semibold mb-4">Ready to try it?</h2>
+          <p className="text-muted-foreground mb-8">Start verifying in seconds. No signup required.</p>
+          <Link to="/">
+            <Button size="lg" className="group">
+              Start verifying
+              <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+        </div>
       </main>
-      <footer className="py-4 sm:py-6 border-t border-foreground/5">
-        <div className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs sm:text-sm text-foreground/40">
-          VerifyNews &copy; {new Date().getFullYear()} — A tool for truth in the digital age
+      
+      <footer className="py-8 border-t border-border/50 bg-muted/30">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} VerifyNews
+            </p>
+            <div className="flex items-center gap-6 text-sm">
+              <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
+                About
+              </Link>
+              <Link to="/feed" className="text-muted-foreground hover:text-foreground transition-colors">
+                Feed
+              </Link>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

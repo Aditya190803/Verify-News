@@ -30,7 +30,7 @@ const NotFound = () => {
         
         <Button 
           asChild 
-          className="glass-button inline-flex items-center gap-2"
+          className="bg-primary text-primary-foreground rounded-lg px-6 py-3 inline-flex items-center gap-2 hover:bg-primary/90 active:scale-[0.98] transition-all"
         >
           <a href="/">
             <Home className="h-4 w-4" />

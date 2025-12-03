@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { ShieldCheck, LogIn, LogOut, Menu, X, User, WifiOff, Clock } from 'lucide-react';
+import { Menu, X, User, LogOut } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
-import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
-import SearchHistory from './SearchHistory';
+import Logo from '@/components/Logo';
 
 interface HeaderProps {
   className?: string;
@@ -20,227 +17,142 @@ const Header = ({ className }: HeaderProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { currentUser, logout } = useAuth();
   const { toast } = useToast();
-  const isOnline = useOnlineStatus();
   
-  // Function to check if a path is active
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
-
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
+  const isActive = (path: string) => location.pathname === path;
 
   const handleLogout = async () => {
     try {
       await logout();
       toast({
-        title: "Logged out successfully",
-        description: "You have been logged out of your account."
+        title: "Logged out",
+        description: "See you next time!"
       });
       navigate('/');
     } catch (error) {
       toast({
-        title: "Logout failed",
-        description: "There was an error logging you out.",
+        title: "Couldn't log out",
+        description: "Please try again.",
         variant: "destructive"
       });
     }
   };
+
+  const navLinks = [
+    { path: '/feed', label: 'Feed' },
+    ...(currentUser ? [{ path: '/dashboard', label: 'Dashboard' }] : []),
+    { path: '/about', label: 'About' },
+    { path: '/how-it-works', label: 'How it works' },
+  ];
+
   return (
-    <header
-      className={cn(
-        'w-full py-3 sm:py-4 lg:py-6 px-4 animate-fade-in transition-all duration-300 relative z-40 bg-background/95 backdrop-blur-sm',
-        className
-      )}
-    >
-      <div className="container max-w-6xl mx-auto flex items-center justify-between">
-        {/* Left section - Logo */}
-        <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
-          <ShieldCheck className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-primary animate-slide-in-right" />
-          <h1 className="text-lg sm:text-xl lg:text-2xl font-medium tracking-tight text-foreground animate-slide-in-right" style={{ animationDelay: '50ms' }}>
-            <span className="font-semibold">Verify</span>News
-          </h1>
-        </Link>
-
-        {/* Center section - Empty space for better layout */}
-        <div className="hidden lg:flex flex-1 justify-center mx-8">
-        </div>
-        {/* Mobile menu button */}
-        <div className="lg:hidden flex items-center gap-2 flex-shrink-0">
-          {/* Mobile search history trigger */}
-          {currentUser && (
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="p-2">
-                  <Clock className="h-4 w-4" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-80">
-                <SearchHistory showCloseButton={false} />
-              </SheetContent>
-            </Sheet>
-          )}
-          
-          <ThemeToggle />
-          <button 
-            onClick={toggleMobileMenu}
-            className="p-2 rounded-lg hover:bg-foreground/5 transition-colors duration-200"
-            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-          >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-
-        {/* Desktop navigation - Right section */}
-        <nav className="hidden lg:flex items-center space-x-1 flex-shrink-0">
-          <Link 
-            to="/about" 
-            className={cn(
-              "px-2 xl:px-4 py-2 text-sm rounded-lg hover:bg-foreground/5 transition-colors duration-200",
-              isActive('/about') 
-                ? "text-foreground bg-foreground/5" 
-                : "text-foreground/80 hover:text-foreground"
-            )}
-          >
-            About
+    <header className={cn('w-full py-4 px-4 sm:px-6 bg-background/95 backdrop-blur-sm sticky top-0 z-50 border-b border-border/40', className)}>
+      <div className="max-w-6xl mx-auto flex items-center justify-between">
+        {/* Logo */}
+        <div className="flex items-center">
+          <Link to="/" className="flex items-center">
+            <Logo size="md" showText className="hidden sm:flex" />
+            <Logo size="sm" showText={false} className="sm:hidden" />
           </Link>
-          <Link 
-            to="/how-it-works" 
-            className={cn(
-              "px-2 xl:px-4 py-2 text-sm rounded-lg hover:bg-foreground/5 transition-colors duration-200",
-              isActive('/how-it-works') 
-                ? "text-foreground bg-foreground/5" 
-                : "text-foreground/80 hover:text-foreground"
-            )}
-          >
-            How It Works
-          </Link>          <ThemeToggle className="mx-1" />
-          
-          {/* Offline indicator */}
-          {!isOnline && (
-            <div className="flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md text-xs">
-              <WifiOff className="h-3 w-3" />
-              <span className="hidden xl:inline">Offline</span>
-            </div>
-          )}
-          
+        </div>
+
+        {/* Desktop Navigation */}
+        <nav className="hidden lg:flex items-center gap-1">
+          {navLinks.map((link) => (
+            <Link 
+              key={link.path}
+              to={link.path} 
+              className={cn(
+                "px-4 py-2 text-sm rounded-lg transition-colors",
+                isActive(link.path) 
+                  ? "text-foreground bg-muted font-medium" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        {/* Desktop Auth */}
+        <div className="hidden lg:flex items-center gap-3">
           {currentUser ? (
-            <div className="flex items-center gap-2 ml-2">
-              <div className="flex items-center gap-2 px-2 xl:px-3 py-2 bg-foreground/5 rounded-lg">
-                <User className="h-4 w-4 text-primary" />
-                <span className="text-sm text-foreground/80 max-w-[100px] xl:max-w-none truncate">
-                  {currentUser.displayName || currentUser.email?.split('@')[0] || 'User'}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
+                <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center">
+                  <User className="h-3.5 w-3.5 text-primary" />
+                </div>
+                <span className="text-sm text-foreground max-w-[120px] truncate">
+                  {currentUser.displayName || currentUser.email?.split('@')[0]}
                 </span>
               </div>
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-1.5"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                <span className="hidden xl:inline">Sign Out</span>
+              <Button onClick={handleLogout} variant="ghost" size="sm" className="text-muted-foreground">
+                <LogOut className="h-4 w-4" />
               </Button>
             </div>
           ) : (
-            <Link 
-              to="/login" 
-              className="ml-2 px-2 xl:px-4 py-2 text-sm rounded-lg bg-foreground/5 hover:bg-foreground/10 transition-colors duration-200 flex items-center gap-1.5"
-            >
-              <LogIn className="h-3.5 w-3.5" />
-              <span className="hidden xl:inline">Sign In</span>
+            <Link to="/login">
+              <Button size="sm">Sign in</Button>
             </Link>
           )}
-        </nav>
+        </div>
+
+        {/* Mobile Menu Button */}
+        <div className="lg:hidden flex items-center">
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </div>
       
-      {/* Mobile navigation menu */}
+      {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-background animate-fade-in">
-          <div className="container max-w-6xl mx-auto px-4 py-6 flex flex-col h-full">
-            <div className="flex items-center justify-between mb-8">
-              <Link to="/" className="flex items-center space-x-2" onClick={() => setMobileMenuOpen(false)}>
-                <ShieldCheck className="h-8 w-8 text-primary" />
-                <h1 className="text-2xl font-medium tracking-tight text-foreground">
-                  <span className="font-semibold">Verify</span>News
-                </h1>
-              </Link>
-              <button 
-                onClick={toggleMobileMenu}
-                className="p-2 rounded-lg hover:bg-foreground/5 transition-colors duration-200"
-                aria-label="Close menu"
+        <div className="lg:hidden fixed inset-0 top-[65px] z-50 bg-background">
+          <nav className="flex flex-col p-4 gap-1">
+            {navLinks.map((link) => (
+              <Link 
+                key={link.path}
+                to={link.path}
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  "px-4 py-3 text-base rounded-lg transition-colors",
+                  isActive(link.path) 
+                    ? "bg-muted text-foreground font-medium" 
+                    : "text-muted-foreground hover:bg-muted/50"
+                )}
               >
-                <X size={24} />
-              </button>
-            </div>
+                {link.label}
+              </Link>
+            ))}
             
-            <nav className="flex flex-col space-y-4">
-              <Link 
-                to="/about" 
-                className={cn(
-                  "px-4 py-3 text-lg rounded-lg hover:bg-foreground/5 transition-colors duration-200 flex items-center",
-                  isActive('/about') 
-                    ? "text-foreground bg-foreground/5" 
-                    : "text-foreground/80 hover:text-foreground"
-                )}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                About
-              </Link>
-              <Link 
-                to="/how-it-works" 
-                className={cn(
-                  "px-4 py-3 text-lg rounded-lg hover:bg-foreground/5 transition-colors duration-200 flex items-center",
-                  isActive('/how-it-works') 
-                    ? "text-foreground bg-foreground/5" 
-                    : "text-foreground/80 hover:text-foreground"
-                )}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                How It Works
-              </Link>              <div className="flex items-center px-4 py-3">
-                <span className="text-lg mr-2">Theme:</span>
-                <ThemeToggle />
-              </div>
-              
-              {currentUser ? (
-                <>
-                  <div className="flex items-center gap-3 px-4 py-3 bg-foreground/5 rounded-lg">
-                    <User className="h-5 w-5 text-primary" />
-                    <div className="flex flex-col">
-                      <span className="text-lg text-foreground">
-                        {currentUser.displayName || 'User'}
-                      </span>
-                      <span className="text-sm text-foreground/60">
-                        {currentUser.email}
-                      </span>
-                    </div>
+            <div className="h-px bg-border my-4" />
+            
+            {currentUser ? (
+              <>
+                <div className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg">
+                  <User className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-medium">{currentUser.displayName || 'User'}</p>
+                    <p className="text-sm text-muted-foreground">{currentUser.email}</p>
                   </div>
-                  <Button
-                    onClick={() => {
-                      handleLogout();
-                      setMobileMenuOpen(false);
-                    }}
-                    variant="outline"
-                    className="mx-4 flex items-center gap-2"
-                  >
-                    <LogOut className="h-5 w-5" />
-                    Sign Out
-                  </Button>
-                </>
-              ) : (
-                <Link 
-                  to="/login" 
-                  className="px-4 py-3 text-lg rounded-lg bg-foreground/5 hover:bg-foreground/10 transition-colors duration-200 flex items-center gap-2"
-                  onClick={() => setMobileMenuOpen(false)}
+                </div>
+                <Button
+                  onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                  variant="outline"
+                  className="mt-2"
                 >
-                  <LogIn className="h-5 w-5" />
-                  Sign In
-                </Link>
-              )}
-            </nav>
-          </div>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign out
+                </Button>
+              </>
+            ) : (
+              <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                <Button className="w-full">Sign in</Button>
+              </Link>
+            )}
+          </nav>
         </div>
       )}
     </header>

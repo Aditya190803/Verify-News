@@ -1,92 +1,111 @@
 
 import React from 'react';
 import Header from '@/components/Header';
-import { Shield, Globe, Newspaper, Scale, Zap, User, Building2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Shield, Globe, Zap, User, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const About = () => {
-  return (    <div className="min-h-screen flex flex-col">
+  return (
+    <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 py-4 sm:py-8">
-        <div className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto animate-fade-in">
-            <div className="mb-6 sm:mb-8 text-center">
-              <div className="inline-flex items-center justify-center mb-3 sm:mb-4">
-                <div className="rounded-full bg-primary/10 p-2 sm:p-3">
-                  <Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-                </div>
-              </div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight animate-slide-down">About VerifyNews</h1>
-              <p className="mt-3 sm:mt-4 text-base sm:text-lg text-foreground/60 leading-relaxed animate-slide-down px-2 sm:px-0" style={{ animationDelay: '50ms' }}>
-                Our mission is to combat misinformation and help people verify the accuracy of news in the digital age.
-              </p>
-            </div>            <div className="space-y-8 sm:space-y-12 mt-8 sm:mt-12">
-              <section className="glass-card p-4 sm:p-6 lg:p-8">
-                <h2 className="text-xl sm:text-2xl font-medium mb-4 sm:mb-6">Our Story</h2>
-                <p className="text-foreground/80 leading-relaxed mb-4 sm:mb-6 text-sm sm:text-base">
-                  VerifyNews was founded with a simple but powerful goal to provide everyone with the tools to verify 
-                  information before believing or sharing it. In today's information-saturated world, distinguishing 
-                  fact from fiction has become increasingly challenging.
-                </p>
-                <p className="text-foreground/80 leading-relaxed text-sm sm:text-base">
-                  We've built a platform that leverages cutting-edge AI technology and trusted sources to help 
-                  users verify news articles, social media posts, and other content quickly and accurately.
-                </p>
-              </section>
+      <main className="flex-1">
+        {/* Hero Section */}
+        <div className="bg-muted/30 border-b border-border/50">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
+              Fighting misinformation,<br />one fact at a time
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              VerifyNews was built to give everyone the power to verify information before believing or sharing it.
+            </p>
+          </div>
+        </div>
 
-              <section>
-                <h2 className="text-xl sm:text-2xl font-medium mb-6 sm:mb-8 text-center sm:text-left">What Sets Us Apart</h2>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                  {[
-                    {
-                      icon: <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />,
-                      title: "Trustworthy Verification",
-                      description: "Our verification engine checks against multiple reliable sources for maximum accuracy."
-                    },
-                    {
-                      icon: <Zap className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />,
-                      title: "Instant Results",
-                      description: "Get verification results in seconds, not minutes or hours."                    },
-                    {
-                      icon: <Globe className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />,
-                      title: "Global Coverage",
-                      description: "We verify news from sources around the world across multiple languages."
-                    },
-                    {
-                      icon: <User className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />,
-                      title: "User Privacy",
-                      description: "We respect your privacy and don't store personal data without permission."
-                    },
-                  ].map((feature, index) => (
-                    <div key={index} className="glass-card p-4 sm:p-6 flex flex-col h-full">
-                      <div className="rounded-full bg-primary/10 p-2 w-fit mb-3 sm:mb-4">
-                        {feature.icon}
-                      </div>
-                      <h3 className="text-base sm:text-lg font-medium mb-2">{feature.title}</h3>
-                      <p className="text-foreground/70 text-sm sm:text-base">{feature.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
+        {/* Story Section */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16">
+          <div className="prose prose-lg max-w-none">
+            <h2 className="text-2xl font-semibold mb-6">Our story</h2>
+            <p className="text-muted-foreground leading-relaxed mb-6">
+              In today's world of viral content and instant sharing, it's harder than ever to know what's true. 
+              We built VerifyNews because we believe everyone deserves access to accurate information—without 
+              spending hours fact-checking on their own.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              Our platform combines AI technology with trusted sources to help you verify news articles, 
+              social media posts, and claims quickly and reliably. No expertise required.
+            </p>
+          </div>
+        </div>
 
-              <section className="glass-card p-4 sm:p-6 lg:p-8">
-                <h2 className="text-xl sm:text-2xl font-medium mb-4 sm:mb-6">Our Team</h2>
-                <p className="text-foreground/80 leading-relaxed mb-4 sm:mb-6 text-sm sm:text-base">
-                  VerifyNews is built by a passionate team of technologists, journalists, and information science experts 
-                  who believe in the power of verified information to strengthen democracy and promote truth.
-                </p>
-                <p className="text-foreground/80 leading-relaxed text-sm sm:text-base">
-                  We're constantly working to improve our verification technology and expand our capabilities to 
-                  support more types of content and sources.
-                </p>
-              </section>
+        {/* Features Grid */}
+        <div className="bg-muted/30 border-y border-border/50">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16">
+            <h2 className="text-2xl font-semibold text-center mb-12">What makes us different</h2>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {[
+                {
+                  icon: <Shield className="h-5 w-5" />,
+                  title: "Trustworthy verification",
+                  description: "We check against multiple reliable sources, not just one."
+                },
+                {
+                  icon: <Zap className="h-5 w-5" />,
+                  title: "Fast results",
+                  description: "Get answers in seconds, not hours of research."
+                },
+                {
+                  icon: <Globe className="h-5 w-5" />,
+                  title: "Global coverage",
+                  description: "We verify news from sources around the world."
+                },
+                {
+                  icon: <User className="h-5 w-5" />,
+                  title: "Privacy first",
+                  description: "Your searches are yours. We don't sell your data."
+                },
+              ].map((feature, index) => (
+                <div key={index} className="bg-card border border-border rounded-xl p-6">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                    <span className="text-primary">{feature.icon}</span>
+                  </div>
+                  <h3 className="font-semibold mb-2">{feature.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
+
+        {/* CTA Section */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 text-center">
+          <h2 className="text-2xl font-semibold mb-4">Ready to try it?</h2>
+          <p className="text-muted-foreground mb-8">Start verifying news in seconds.</p>
+          <Link to="/">
+            <Button size="lg" className="group">
+              Start verifying
+              <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+        </div>
       </main>
-      <footer className="py-4 sm:py-6 border-t border-foreground/5">
-        <div className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs sm:text-sm text-foreground/40">
-          VerifyNews &copy; {new Date().getFullYear()} — A tool for truth in the digital age
+      
+      <footer className="py-8 border-t border-border/50 bg-muted/30">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} VerifyNews
+            </p>
+            <div className="flex items-center gap-6 text-sm">
+              <Link to="/how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">
+                How it works
+              </Link>
+              <Link to="/feed" className="text-muted-foreground hover:text-foreground transition-colors">
+                Feed
+              </Link>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

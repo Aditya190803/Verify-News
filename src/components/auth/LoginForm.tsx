@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { Mail, Lock, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,10 +34,11 @@ const LoginForm = ({ email, setEmail, password, setPassword }: LoginFormProps) =
         title: "Password reset email sent",
         description: "Check your email for password reset instructions."
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as Error;
       toast({
         title: "Password reset failed",
-        description: "Unable to send password reset email. Please try again.",
+        description: err.message || "Unable to send password reset email. Please try again.",
         variant: "destructive"
       });
     }
@@ -64,12 +64,15 @@ const LoginForm = ({ email, setEmail, password, setPassword }: LoginFormProps) =
         title: "Login successful",
         description: "Welcome back to VerifyNews!"
       });
-    } catch (error: any) {
-      let message = "Login failed. Please check your credentials.";
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+    } catch (error: unknown) {
+      const err = error as Error;
+      let message = err.message || "Login failed. Please check your credentials.";
+      
+      // Make error messages more user-friendly
+      if (message.includes('Invalid') || message.includes('password')) {
         message = "Invalid email or password. Please try again.";
-      } else if (error.code === 'auth/too-many-requests') {
-        message = "Too many unsuccessful login attempts. Please try again later.";
+      } else if (message.includes('not configured')) {
+        message = "Authentication service is not available. Please try again later.";
       }
       
       toast({
@@ -83,61 +86,50 @@ const LoginForm = ({ email, setEmail, password, setPassword }: LoginFormProps) =
   };
 
   return (
-    <form onSubmit={handleLogin} className="space-y-4">
+    <form onSubmit={handleLogin} className="space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-3 h-4 w-4 text-foreground/40" />
-          <Input 
-            id="email" 
-            type="email" 
-            placeholder="your@email.com" 
-            className="pl-10"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-            required
-          />
-        </div>
+        <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+        <Input 
+          id="email" 
+          type="email" 
+          placeholder="you@example.com" 
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
+          required
+        />
       </div>
       
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password" className="text-sm font-medium">Password</Label>
           <button 
             type="button" 
             onClick={handleForgotPassword}
-            className="text-xs text-primary hover:underline"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             Forgot password?
           </button>
         </div>
-        <div className="relative">
-          <Lock className="absolute left-3 top-3 h-4 w-4 text-foreground/40" />
-          <Input 
-            id="password" 
-            type="password" 
-            placeholder="••••••••" 
-            className="pl-10"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            required
-          />
-        </div>
+        <Input 
+          id="password" 
+          type="password" 
+          placeholder="••••••••" 
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="current-password"
+          required
+        />
       </div>
       
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      <Button type="submit" className="w-full h-11" disabled={isLoading}>
         {isLoading ? (
           <div className="flex items-center gap-2">
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-            <span>Logging in...</span>
+            <span>Signing in...</span>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <LogIn className="h-4 w-4" />
-            <span>Sign In</span>
-          </div>
+          <span>Sign in</span>
         )}
       </Button>
     </form>

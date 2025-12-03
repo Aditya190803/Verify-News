@@ -1,14 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { useSearchHistoryContext } from '@/context/SearchHistoryContext';
-import { SearchHistoryItem } from '@/services/firebaseService';
+import { SearchHistoryItem } from '@/services/appwriteService';
 import { useNews } from '@/context/NewsContext';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Search, FileCheck, ExternalLink, ChevronDown, ChevronUp, X, Minimize2, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  SearchHistoryHeader,
+  SearchHistoryFilters,
+  SearchHistoryItemCard,
+  SearchHistoryEmptyState,
+  SearchHistoryLoading,
+  type HistoryFilterType,
+} from '@/components/search-history';
 
 interface SearchHistoryProps {
   className?: string;
@@ -16,22 +22,38 @@ interface SearchHistoryProps {
   showCloseButton?: boolean;
 }
 
+/**
+ * SearchHistory component displays user's search and verification history
+ * with filtering, search, and management capabilities.
+ */
 const SearchHistory = ({ className, onClose, showCloseButton = false }: SearchHistoryProps) => {
   const { currentUser } = useAuth();
   const { searchNews } = useNews();
-  const { history, loading, refreshHistory } = useSearchHistory();
+  const { history, loading, refreshHistory, deleteItem, clearHistory, total } = useSearchHistory();
   const { registerRefreshFunction, unregisterRefreshFunction } = useSearchHistoryContext();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<HistoryFilterType>('all');
   const navigate = useNavigate();
 
-  console.log('🔍 SearchHistory render:', { 
-    historyLength: history.length, 
-    loading, 
-    currentUser: currentUser?.uid,
-    history: history.slice(0, 3) // Log first 3 items
-  });
+  const filteredHistory = useMemo(() => {
+    let filtered = history;
 
-  // Register the refresh function with the context
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(item => item.resultType === typeFilter);
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(item =>
+        item.query?.toLowerCase().includes(query) ||
+        item.title?.toLowerCase().includes(query)
+      );
+    }
+
+    return filtered;
+  }, [history, searchQuery, typeFilter]);
+
   useEffect(() => {
     registerRefreshFunction(refreshHistory);
     return () => {
@@ -39,185 +61,88 @@ const SearchHistory = ({ className, onClose, showCloseButton = false }: SearchHi
     };
   }, [refreshHistory, registerRefreshFunction, unregisterRefreshFunction]);
 
-  const handleSearchClick = async (item: SearchHistoryItem) => {
+  const handleSearchClick = useCallback(async (item: SearchHistoryItem) => {
     try {
       if (item.resultType === 'verification' && item.slug) {
-        // Navigate directly to the verification result
         navigate(`/result/${item.slug}`);
       } else {
-        // For search items, re-run the search and stay on main page
-        navigate('/'); // Go to home page first
+        navigate('/');
         await searchNews(item.query);
       }
+      onClose?.();
     } catch (error) {
       console.error('Error handling history item click:', error);
     }
-  };
+  }, [navigate, searchNews, onClose]);
 
-  const toggleExpanded = () => {
-    setIsExpanded(!isExpanded);
-  };
+  const handleDeleteItem = useCallback(async (e: React.MouseEvent, itemId: string) => {
+    e.stopPropagation();
+    setDeletingId(itemId);
+    await deleteItem(itemId);
+    setDeletingId(null);
+  }, [deleteItem]);
 
-  // Determine how many items to show
-  const maxItemsWhenCollapsed = 5;
-  const displayedHistory = isExpanded ? history : history.slice(0, maxItemsWhenCollapsed);
-  const hasMoreItems = history.length > maxItemsWhenCollapsed;
+  const handleClearFilters = useCallback(() => {
+    setSearchQuery('');
+    setTypeFilter('all');
+  }, []);
 
-  const formatTimeAgo = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) return `${diffInDays}d ago`;
-    const diffInWeeks = Math.floor(diffInDays / 7);
-    return `${diffInWeeks}w ago`;
-  };  if (!currentUser) {
+  if (!currentUser) {
     return (
-      <div className={cn('w-full lg:w-80 p-4 sm:p-6 border-r border-border bg-card/50 h-full', className)}>
-        {showCloseButton && onClose && (
-          <div className="flex justify-end mb-4">
-            <Button
-              onClick={onClose}
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-        <div className="text-center">
-          <Clock className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
-          <h3 className="text-base sm:text-lg font-medium mb-2">Search History</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground mb-4">
-            Sign in to see your search history and save your verification results.
-          </p>
-        </div>
+      <div className={cn('h-full', className)}>
+        <SearchHistoryEmptyState 
+          type="not-logged-in" 
+          onClose={onClose}
+          showCloseButton={showCloseButton}
+        />
       </div>
     );
-  }  return (
-    <div className={cn('w-full lg:w-80 p-4 sm:p-6 border-r border-border bg-card/50 h-full', className)}>
-      <div className="flex items-center justify-between mb-4 sm:mb-6">
-        <h3 className="text-base sm:text-lg font-medium flex items-center gap-2">
-          <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-          Search History
-          {history.length > 0 && (
-            <span className="text-xs text-muted-foreground ml-1">
-              ({history.length})
-            </span>
-          )}
-        </h3>
-        <div className="flex items-center gap-1">
-          {history.length > 0 && (
-            <Button
-              onClick={refreshHistory}
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-              disabled={loading}
-              title="Refresh History"
-            >
-              <RotateCcw className={cn("h-3 w-3", loading && "animate-spin")} />
-            </Button>
-          )}
-          {showCloseButton && onClose && (
-            <Button
-              onClick={onClose}
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive transition-colors"
-              title="Close Search History"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </div>
+  }
+
+  return (
+    <div className={cn('p-4 h-full flex flex-col', className)}>
+      <SearchHistoryHeader
+        historyCount={history.length}
+        filteredCount={filteredHistory.length}
+        totalCount={total}
+        loading={loading}
+        onRefresh={refreshHistory}
+        onClearAll={clearHistory}
+        onClose={onClose}
+        showCloseButton={showCloseButton}
+      />
+
+      {history.length > 0 && (
+        <SearchHistoryFilters
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          typeFilter={typeFilter}
+          onTypeFilterChange={setTypeFilter}
+        />
+      )}
 
       {loading ? (
-        <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-              <div className="h-3 bg-muted rounded w-1/2"></div>
-            </div>
-          ))}
-        </div>
-      ) : history.length === 0 ? (        <div className="text-center text-muted-foreground">
-          <Search className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 sm:mb-3 opacity-50" />
-          <p className="text-xs sm:text-sm">No search history yet.</p>
-          <p className="text-xs mt-1">Start searching to see your history here.</p>
-        </div>      ) : (
-        <ScrollArea className="h-[calc(100vh-200px)] pr-2">
-          <div className="space-y-2 sm:space-y-3">
-            {displayedHistory.map((item, index) => (
-              <div
+        <SearchHistoryLoading />
+      ) : history.length === 0 ? (
+        <SearchHistoryEmptyState type="no-history" />
+      ) : filteredHistory.length === 0 ? (
+        <SearchHistoryEmptyState 
+          type="no-matches" 
+          onClearFilters={handleClearFilters}
+        />
+      ) : (
+        <ScrollArea className="flex-1 -mx-4 px-4">
+          <div className="space-y-2">
+            {filteredHistory.map((item, index) => (
+              <SearchHistoryItemCard
                 key={item.id || index}
-                className="group p-2.5 sm:p-3 rounded-lg border border-border/50 hover:border-border hover:bg-accent/50 transition-all duration-200 cursor-pointer"
-                onClick={() => handleSearchClick(item)}
-              >
-                <div className="flex items-start justify-between gap-2 mb-1.5 sm:mb-2">
-                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
-                    {item.resultType === 'verification' ? (
-                      <FileCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500 flex-shrink-0" />
-                    ) : (
-                      <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500 flex-shrink-0" />
-                    )}
-                    <p className="text-xs sm:text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                      {item.query}
-                    </p>
-                  </div>
-                  <span className="text-xs text-muted-foreground flex-shrink-0">
-                    {formatTimeAgo(item.timestamp)}
-                  </span>
-                </div>
-                
-                {item.articleTitle && (
-                  <div className="flex items-center gap-1 mt-1.5 sm:mt-2">
-                    <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground" />
-                    <p className="text-xs text-muted-foreground line-clamp-1">
-                      {item.articleTitle}
-                    </p>
-                  </div>
-                )}
-                
-                <div className="mt-1.5 sm:mt-2 flex gap-1">
-                  <span className={cn(
-                    "text-xs px-2 py-1 rounded-full",
-                    item.resultType === 'verification' 
-                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                      : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                  )}>
-                    {item.resultType === 'verification' ? 'Verified' : 'Search'}
-                  </span>
-                </div>
-              </div>
+                item={item}
+                index={index}
+                deletingId={deletingId}
+                onItemClick={handleSearchClick}
+                onDeleteItem={handleDeleteItem}
+              />
             ))}
-            
-            {/* Show More/Show Less Button */}
-            {hasMoreItems && (
-              <Button
-                onClick={toggleExpanded}
-                variant="ghost"
-                size="sm"
-                className="w-full mt-3 flex items-center justify-center gap-2 text-xs"
-              >
-                {isExpanded ? (
-                  <>
-                    <ChevronUp className="h-3 w-3" />
-                    Show Less ({maxItemsWhenCollapsed} of {history.length})
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="h-3 w-3" />
-                    Show More ({history.length - maxItemsWhenCollapsed} more)
-                  </>
-                )}
-              </Button>
-            )}
           </div>
         </ScrollArea>
       )}

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNews } from '@/context/NewsContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Newspaper, AlertCircle } from 'lucide-react';
+import { Search, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NewsSearchProps {
@@ -27,7 +27,7 @@ const NewsSearch = ({ className }: NewsSearchProps) => {
   };
   return (
     <div className={cn('w-full animate-fade-in', className)} style={{ animationDelay: '100ms' }}>
-      <div className="glass-card dark:bg-gray-800/60 dark:border-gray-700/50 p-4 sm:p-6 lg:p-8 mx-auto max-w-2xl">
+      <div className="bg-card border border-border rounded-lg p-4 sm:p-6 lg:p-8 mx-auto max-w-2xl">
         <div className="mb-4 sm:mb-6">
           <div className="inline-flex items-center px-2.5 sm:px-3 py-1 mb-2 text-xs font-medium rounded-full bg-primary/10 text-primary">
             <Search className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
@@ -46,13 +46,13 @@ const NewsSearch = ({ className }: NewsSearchProps) => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search for news (e.g., 'climate change', 'COVID-19 vaccine')"
-                className="flex-1 glass-input dark:bg-gray-700/50 dark:border-gray-600/50 text-sm sm:text-base"
+                className="flex-1 bg-background border border-input rounded-lg px-4 py-3 text-sm sm:text-base focus:ring-2 focus:ring-primary/20 focus:border-primary/30 outline-none transition-colors"
                 disabled={status === 'searching'}
               />
               <Button 
                 type="submit"
                 disabled={status === 'searching'} 
-                className="glass-button dark:bg-primary/90 dark:hover:bg-primary/80 px-3 sm:px-4"
+                className="bg-primary text-primary-foreground rounded-lg px-3 sm:px-4 hover:bg-primary/90 active:scale-[0.98] transition-all"
                 size="sm"
               >
                 {status === 'searching' ? (

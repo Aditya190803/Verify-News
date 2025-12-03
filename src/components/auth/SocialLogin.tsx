@@ -1,94 +1,80 @@
-
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { Button } from '../ui/button';
+import { stackClientApp, isStackAuthConfigured } from '../../config/stackAuth';
 
-const SocialLogin = () => {
+interface SocialLoginProps {
+  disabled?: boolean;
+}
+
+const SocialLogin: React.FC<SocialLoginProps> = ({ disabled = false }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { socialLogin } = useAuth();
-  const { toast } = useToast();
+
   const handleGoogleLogin = async () => {
+    if (!stackClientApp) {
+      console.error('Stack Auth is not configured');
+      return;
+    }
+
     setIsLoading(true);
-    
     try {
-      await socialLogin('google');
-      toast({
-        title: "Login successful",
-        description: "Welcome to VerifyNews!"
-      });
-    } catch (error: any) {
-      console.error('Google login error:', error);
-      
-      let errorMessage = "There was an error logging in with your Google account.";
-      
-      // Handle specific Firebase errors
-      if (error.code === 'auth/popup-blocked') {
-        errorMessage = "Popup was blocked. Please allow popups for this site and try again.";
-      } else if (error.code === 'auth/popup-closed-by-user') {
-        errorMessage = "Login was cancelled. Please try again.";
-      } else if (error.code === 'auth/network-request-failed') {
-        errorMessage = "Network error. Please check your connection and try again.";
-      } else if (error.message?.includes('offline')) {
-        errorMessage = "You appear to be offline. Please check your internet connection.";
-      }
-      
-      toast({
-        title: "Google login failed",
-        description: errorMessage,
-        variant: "destructive"
-      });
-    } finally {
+      // This will redirect the user to Google's OAuth page
+      // After successful auth, they'll be redirected back to /oauth/callback
+      await stackClientApp.signInWithOAuth('google');
+    } catch (error) {
+      console.error('Google OAuth error:', error);
       setIsLoading(false);
     }
   };
 
+  // Don't show social login if Stack Auth is not configured
+  if (!isStackAuthConfigured()) {
+    return null;
+  }
+
   return (
-    <div className="mt-6">
+    <div className="space-y-4">
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <Separator className="w-full" />
+          <span className="w-full border-t border-border" />
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">
-            Or continue with
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-background px-3 text-muted-foreground">
+            or
           </span>
         </div>
       </div>
 
-      <div className="mt-4">
-        <Button 
-          variant="outline" 
-          className="w-full" 
-          onClick={handleGoogleLogin}
-          disabled={isLoading}
-        >
-          <svg
-            className="mr-2 h-4 w-4"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full h-11"
+        onClick={handleGoogleLogin}
+        disabled={disabled || isLoading}
+      >
+        {isLoading ? (
+          <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+        ) : (
+          <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
             <path
-              d="M20.3081 10.2303C20.3081 9.55056 20.253 8.86711 20.1354 8.19836H12.7V12.0492H16.9693C16.8098 13.2911 16.1693 14.3898 15.1187 15.0879V17.5866H18.2017C19.9558 16.8449 21.3093 14.2783 21.3081 10.2303Z"
-              fill="#3E82F1"
+              fill="#4285F4"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
             />
             <path
-              d="M12.7 20.2701C15.1693 20.2701 17.2693 19.3941 18.2017 17.5866L15.1187 15.0879C14.3627 15.6338 13.6489 15.9578 12.7 15.9578C10.5424 15.9578 8.71147 14.4553 8.16334 12.4164H5.00334V14.9658C6.27428 18.0873 9.5592 20.2701 12.7 20.2701Z"
-              fill="#32A753"
+              fill="#34A853"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
             />
             <path
-              d="M8.16335 12.4163C8.02639 11.8683 7.9467 11.2828 7.9467 10.697C7.9467 9.80564 8.09502 8.95478 8.32168 8.15674V5.60718H5.00334C4.35168 7.18637 4 8.90654 4 10.697C4 12.1895 4.25079 13.6564 4.72423 15.0064L8.16335 12.4163Z"
-              fill="#F9BB00"
+              fill="#FBBC05"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
             />
             <path
-              d="M12.7 5.42822C14.1331 5.42822 15.4148 5.98632 16.3933 6.91304L19.1037 4.20339C17.2647 2.50507 15.1693 1.5 12.7 1.5C9.5592 1.5 6.27428 3.68285 5.00334 6.80565L8.32168 9.35522C8.7775 7.31623 10.5987 5.42822 12.7 5.42822Z"
-              fill="#E74133"
+              fill="#EA4335"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          {isLoading ? "Signing in..." : "Continue with Google"}
-        </Button>
-      </div>
+        )}
+        Continue with Google
+      </Button>
     </div>
   );
 };

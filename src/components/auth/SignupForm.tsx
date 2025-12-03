@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { Mail, Lock, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -58,15 +57,19 @@ const SignupForm = ({ email, setEmail, password, setPassword }: SignupFormProps)
         title: "Account created successfully",
         description: "Welcome to VerifyNews!"
       });
-    } catch (error: any) {
-      let message = "Failed to create account.";
+    } catch (error: unknown) {
+      const err = error as Error;
+      let message = err.message || "Failed to create account.";
       
-      if (error.code === 'auth/email-already-in-use') {
+      // Make error messages more user-friendly
+      if (message.includes('already') || message.includes('exists')) {
         message = "This email is already registered. Try logging in instead.";
-      } else if (error.code === 'auth/invalid-email') {
+      } else if (message.includes('invalid') && message.toLowerCase().includes('email')) {
         message = "Please enter a valid email address.";
-      } else if (error.code === 'auth/weak-password') {
+      } else if (message.includes('password') && message.includes('weak')) {
         message = "Your password is too weak. Please use a stronger password.";
+      } else if (message.includes('not configured')) {
+        message = "Authentication service is not available. Please try again later.";
       }
       
       toast({
@@ -80,69 +83,54 @@ const SignupForm = ({ email, setEmail, password, setPassword }: SignupFormProps)
   };
 
   return (
-    <form onSubmit={handleSignup} className="space-y-4">
+    <form onSubmit={handleSignup} className="space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="signup-email">Email</Label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-3 h-4 w-4 text-foreground/40" />
-          <Input 
-            id="signup-email" 
-            type="email" 
-            placeholder="your@email.com" 
-            className="pl-10"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-            required
-          />
-        </div>
+        <Label htmlFor="signup-email" className="text-sm font-medium">Email</Label>
+        <Input 
+          id="signup-email" 
+          type="email" 
+          placeholder="you@example.com" 
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
+          required
+        />
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="signup-password">Password</Label>
-        <div className="relative">
-          <Lock className="absolute left-3 top-3 h-4 w-4 text-foreground/40" />
-          <Input 
-            id="signup-password" 
-            type="password" 
-            placeholder="••••••••" 
-            className="pl-10"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="new-password"
-            required
-          />
-        </div>
+        <Label htmlFor="signup-password" className="text-sm font-medium">Password</Label>
+        <Input 
+          id="signup-password" 
+          type="password" 
+          placeholder="••••••••" 
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="new-password"
+          required
+        />
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="confirm-password">Confirm Password</Label>
-        <div className="relative">
-          <Lock className="absolute left-3 top-3 h-4 w-4 text-foreground/40" />
-          <Input 
-            id="confirm-password" 
-            type="password" 
-            placeholder="••••••••" 
-            className="pl-10"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            autoComplete="new-password"
-            required
-          />
-        </div>
+        <Label htmlFor="confirm-password" className="text-sm font-medium">Confirm Password</Label>
+        <Input 
+          id="confirm-password" 
+          type="password" 
+          placeholder="••••••••" 
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          autoComplete="new-password"
+          required
+        />
       </div>
       
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      <Button type="submit" className="w-full h-11" disabled={isLoading}>
         {isLoading ? (
           <div className="flex items-center gap-2">
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
             <span>Creating account...</span>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <LogIn className="h-4 w-4" />
-            <span>Create Account</span>
-          </div>
+          <span>Create account</span>
         )}
       </Button>
     </form>
