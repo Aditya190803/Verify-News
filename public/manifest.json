@@ -1,12 +1,18 @@
 {
   "name": "VerifyNews",
   "short_name": "VerifyNews",
-  "description": "AI-powered news verification platform",
+  "description": "AI-powered news verification and fact-checking platform",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#faf8f5",
+  "theme_color": "#e85d30",
   "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
     {
       "src": "/favicon.ico",
       "sizes": "16x16 32x32",

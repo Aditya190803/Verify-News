@@ -113,3 +113,5 @@ firestore-debug.log
 
 # Vite
 .vite
+.vercel
+.env*.local

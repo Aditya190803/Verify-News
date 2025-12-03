@@ -1,5 +1,6 @@
 
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from 'tailwindcss-animate';
 
 export default {
 	darkMode: ["class"],
@@ -61,9 +62,25 @@ export default {
           DEFAULT: 'hsl(var(--falsehood))',
           foreground: 'hsl(var(--falsehood-foreground))'
         },
+        uncertain: {
+          DEFAULT: 'hsl(var(--uncertain))',
+          foreground: 'hsl(var(--uncertain-foreground))'
+        },
         neutral: {
           DEFAULT: 'hsl(var(--neutral))',
           foreground: 'hsl(var(--neutral-foreground))'
+        },
+        success: {
+          DEFAULT: 'hsl(var(--success))',
+          foreground: 'hsl(var(--success-foreground))'
+        },
+        warning: {
+          DEFAULT: 'hsl(var(--warning))',
+          foreground: 'hsl(var(--warning-foreground))'
+        },
+        info: {
+          DEFAULT: 'hsl(var(--info))',
+          foreground: 'hsl(var(--info-foreground))'
         },
 			},
 			borderRadius: {
@@ -126,11 +143,10 @@ export default {
         'loading-shimmer': 'loading-shimmer 2s infinite linear',
 			},
       boxShadow: {
-        'glass': '0 4px 30px rgba(0, 0, 0, 0.05)',
-        'glass-hover': '0 10px 30px rgba(0, 0, 0, 0.07)',
-        'subtle': '0 2px 10px rgba(0, 0, 0, 0.03)',
-        'card': '0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 15px -5px rgba(0, 0, 0, 0.03)',
-        'card-hover': '0 1px 3px rgba(0, 0, 0, 0.05), 0 12px 20px -5px rgba(0, 0, 0, 0.06)',
+        'sm': '0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05)',
+        'DEFAULT': '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
+        'md': '0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05)',
+        'lg': '0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05)',
       },
       transitionTimingFunction: {
         'in-expo': 'cubic-bezier(0.95, 0.05, 0.795, 0.035)',
@@ -139,5 +155,5 @@ export default {
       },
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [tailwindcssAnimate],
 } satisfies Config;
