@@ -13,8 +13,8 @@ VerifyNews is a modern, AI-powered news verification platform built with React a
 - ✅ **Credibility Scoring** - Provides detailed credibility assessments with confidence levels
 - 📝 **Corrected Information** - Offers accurate information when misinformation is detected
 - 📱 **Social Sharing** - Share verified results across social media platforms
-- 💾 **History Tracking** - Stores past verifications in Firebase Firestore
-- 🔐 **User Authentication** - Secure login with Firebase Auth (Email/Password + Google)
+- 💾 **History Tracking** - Stores past verifications in Appwrite Database
+- 🔐 **User Authentication** - Secure login with Appwrite Auth (Email/Password + Google OAuth)
 - 🌙 **Theme Support** - Dark/Light mode toggle for better user experience
 - 📊 **Analytics Dashboard** - Track verification history and patterns
 - ⚡ **Real-time Updates** - Instant verification results with loading states
@@ -25,7 +25,7 @@ VerifyNews is a modern, AI-powered news verification platform built with React a
 ### Prerequisites
 - **Node.js** (v18 or higher)
 - **npm** or **yarn**
-- **Firebase account** (free tier available)
+- **Appwrite account** (free tier available) - handles both database and authentication
 - **Google AI Studio account** - Get your free API key at [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
 
 ### Installation
@@ -50,18 +50,18 @@ VerifyNews is a modern, AI-powered news verification platform built with React a
    
    Update the `.env` file with your own API keys:
    ```env
-   # Firebase Configuration
-   # Get these from: https://console.firebase.google.com/
-   VITE_FIREBASE_API_KEY=your-firebase-api-key
-   VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-   VITE_FIREBASE_PROJECT_ID=your-project-id
-   VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-   VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
-   VITE_FIREBASE_APP_ID=your-app-id
+   # Appwrite Configuration (Database & Authentication)
+   # Get these from: https://cloud.appwrite.io/
+   VITE_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+   VITE_APPWRITE_PROJECT_ID=your-project-id
+   VITE_APPWRITE_DATABASE_ID=your-database-id
    
    # Gemini AI Configuration
    # Get your API key from: https://aistudio.google.com/app/apikey
    VITE_GEMINI_API_KEY=your-gemini-api-key
+   
+   # LangSearch Configuration (optional)
+   VITE_LANGSEARCH_API_KEY=your-langsearch-api-key
    ```
 
 4. **Start the development server:**
@@ -77,11 +77,17 @@ npm run build
 npm run preview  # Preview production build locally
 ```
 
+### 🧪 Run Tests
+```bash
+npm test           # Watch mode
+npm run test:run   # Single run
+npm run test:coverage  # With coverage
+```
+
 ### Current Services Enabled:
-✅ **Authentication** - Email/Password + Google Sign-in  
-✅ **Firestore Database** - User data and verification history  
-✅ **Hosting** - Static web hosting  
-✅ **Analytics** - Google Analytics integration  
+✅ **Authentication** - Email/Password + Google Sign-in (Stack Auth)  
+✅ **Database** - User data and verification history (Appwrite)  
+✅ **Hosting** - Static web hosting (Vercel)  
 
 ## 📱 Usage Guide
 
@@ -113,14 +119,15 @@ npm run preview  # Preview production build locally
 - **Frontend:** React 18, TypeScript, Vite
 - **UI Framework:** Tailwind CSS, shadcn/ui components
 - **State Management:** React Context API, React Query
-- **Authentication:** Firebase Auth
-- **Database:** Firebase Firestore
+- **Authentication:** Stack Auth
+- **Database:** Appwrite
 - **AI/ML:** Google Gemini AI for fact-checking
 - **Search:** LangSearch API integration
 - **Routing:** React Router DOM
 - **Form Handling:** React Hook Form with Zod validation
 - **Icons:** Lucide React
-- **Deployment:** Optimized for modern web deployment
+- **Testing:** Vitest, React Testing Library
+- **Deployment:** Vercel
 
 ## Future Enhancements
 - Real-time misinformation alerts
