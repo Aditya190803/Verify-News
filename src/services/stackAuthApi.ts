@@ -1,4 +1,5 @@
 import { API_ENDPOINTS, STORAGE_KEYS, ERROR_MESSAGES } from '@/lib/constants';
+import { logger } from '@/lib/logger';
 
 const STACK_API_BASE_URL = API_ENDPOINTS.STACK_AUTH;
 
@@ -8,7 +9,7 @@ const getConfig = () => {
   const publishableKey = import.meta.env.VITE_STACK_PUBLISHABLE_CLIENT_KEY;
   
   if (!projectId || !publishableKey) {
-    console.warn('Stack Auth is not configured. Set VITE_STACK_PROJECT_ID and VITE_STACK_PUBLISHABLE_CLIENT_KEY');
+    logger.warn('Stack Auth is not configured. Set VITE_STACK_PROJECT_ID and VITE_STACK_PUBLISHABLE_CLIENT_KEY');
     return null;
   }
   
@@ -173,7 +174,7 @@ export const signOut = async (): Promise<void> => {
       });
     } catch (error) {
       // Ignore errors on sign out - we'll clear tokens anyway
-      console.warn('Error signing out:', error);
+      logger.warn('Error signing out:', error);
     }
   }
   
@@ -218,7 +219,7 @@ export const getCurrentUser = async (): Promise<StackUser | null> => {
     
     return await response.json();
   } catch (error) {
-    console.error('Error getting current user:', error);
+    logger.error('Error getting current user:', error);
     return null;
   }
 };
@@ -263,7 +264,7 @@ export const refreshAccessToken = async (): Promise<boolean> => {
     
     return false;
   } catch (error) {
-    console.error('Error refreshing token:', error);
+    logger.error('Error refreshing token:', error);
     clearTokens();
     return false;
   }

@@ -30,12 +30,12 @@ describe('searchUtils utilities', () => {
     });
 
     it('returns empty array for null results', () => {
-      const articles = extractNewsFromSearch(null, 'test');
+      const articles = extractNewsFromSearch(null as any, 'test');
       expect(articles).toHaveLength(0);
     });
 
     it('returns empty array for results without webPages', () => {
-      const articles = extractNewsFromSearch({}, 'test');
+      const articles = extractNewsFromSearch({} as any, 'test');
       expect(articles).toHaveLength(0);
     });
 

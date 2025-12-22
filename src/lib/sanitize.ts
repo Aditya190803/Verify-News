@@ -1,3 +1,5 @@
+import { logger } from './logger';
+
 /**
  * Input sanitization utilities to prevent XSS and other injection attacks
  * These functions sanitize user input before display or storage
@@ -82,7 +84,7 @@ export function sanitizeUrl(url: string): string {
   const dangerousProtocols = ['javascript:', 'data:', 'vbscript:', 'file:'];
   for (const protocol of dangerousProtocols) {
     if (trimmed.startsWith(protocol)) {
-      console.warn(`Blocked dangerous URL protocol: ${protocol}`);
+      logger.warn(`Blocked dangerous URL protocol: ${protocol}`);
       return '';
     }
   }

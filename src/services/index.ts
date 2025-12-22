@@ -4,5 +4,5 @@
  * Re-exports all service functions and types
  */
 
-export * from './appwriteService';
+export * from './appwrite';
 export * from './stackAuthApi';

@@ -1,6 +1,7 @@
 /**
  * Utility functions for extracting content from URLs
  */
+import { logger } from '@/lib/logger';
 
 /**
  * Extract headline/title from a URL
@@ -46,13 +47,13 @@ export const extractHeadlineFromUrl = async (url: string): Promise<string> => {
         }
       }
     } catch (fetchError) {
-      console.warn('Could not fetch URL content:', fetchError);
+      logger.warn('Could not fetch URL content:', fetchError);
     }
 
     // Fallback to URL pattern extraction
     return extractTitleFromUrlPattern(url);
   } catch (error) {
-    console.error('Error extracting headline from URL:', error);
+    logger.error('Error extracting headline from URL:', error);
     return url; // Return original URL as fallback
   }
 };
@@ -65,7 +66,36 @@ export const extractHeadlineFromUrl = async (url: string): Promise<string> => {
 const extractTitleFromUrlPattern = (url: string): string => {
   try {
     const urlObj = new URL(url);
+    const hostname = urlObj.hostname.replace(/^www\./, '');
     const pathname = urlObj.pathname;
+    
+    // Special handling for common sites
+    if (hostname === 'news.ycombinator.com') {
+      if (pathname === '/item') {
+        const id = urlObj.searchParams.get('id');
+        return id ? `Hacker News Item ${id}` : 'Hacker News';
+      }
+      return 'Hacker News';
+    }
+
+    if (hostname === 'twitter.com' || hostname === 'x.com') {
+      const parts = pathname.split('/').filter(Boolean);
+      if (parts.length >= 2 && parts[1] === 'status') {
+        return `Tweet by @${parts[0]}`;
+      }
+      if (parts.length === 1) {
+        return `@${parts[0]} on X`;
+      }
+      return 'X / Twitter';
+    }
+
+    if (hostname === 'reddit.com') {
+      const parts = pathname.split('/').filter(Boolean);
+      if (parts.length >= 2 && parts[0] === 'r') {
+        return `Reddit: r/${parts[1]}`;
+      }
+      return 'Reddit';
+    }
     
     // Remove common file extensions
     let path = pathname.replace(/\.(html|htm|php|aspx|jsp)$/i, '');
@@ -78,7 +108,7 @@ const extractTitleFromUrlPattern = (url: string): string => {
     
     // If path is empty, use domain
     if (!path) {
-      return urlObj.hostname.replace(/^www\./, '');
+      return hostname;
     }
     
     // Split by slash and take the last meaningful part
@@ -93,7 +123,7 @@ const extractTitleFromUrlPattern = (url: string): string => {
     // Replace hyphens and underscores with spaces
     title = title.replace(/[-_]/g, ' ');
     
-    // Remove query parameters and fragments
+    // Remove query parameters and fragments (already handled by URL object but just in case)
     title = title.split('?')[0].split('#')[0];
     
     // Capitalize first letter of each word
@@ -101,12 +131,12 @@ const extractTitleFromUrlPattern = (url: string): string => {
     
     // If title is still not good, return domain
     if (!title || title.length < 3) {
-      return urlObj.hostname.replace(/^www\./, '');
+      return hostname;
     }
     
     return title.trim();
   } catch (error) {
-    console.error('Error extracting title from URL pattern:', error);
+    logger.error('Error extracting title from URL pattern:', error);
     return url;
   }
 };
@@ -123,4 +153,14 @@ export const isValidUrl = (string: string): boolean => {
   } catch (_) {
     return false;
   }
+};
+
+/**
+ * Extract all URLs from a string
+ * @param text The text to extract URLs from
+ * @returns string[] An array of found URLs
+ */
+export const urlExtractor = (text: string): string[] => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.match(urlRegex) || [];
 };

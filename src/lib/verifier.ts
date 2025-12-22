@@ -4,9 +4,11 @@
  * @module lib/verifier
  */
 
-import { verifyNewsWithGemini, getMockVerificationResult } from '@/utils/geminiApi';
+import { verifyWithFallback } from '@/services/aiProviders';
 import { comprehensiveNewsSearch } from '@/utils/searchUtils';
-import { VerificationResult } from '@/types/news';
+import { VerificationResult, SearchResponse } from '@/types/news';
+import { verificationTextCache } from '@/lib/verificationCache';
+import { logger } from '@/lib/logger';
 
 /**
  * Verifies news content for authenticity and accuracy.
@@ -42,36 +44,55 @@ export const verifyNewsContent = async (
       };
     }
 
+    // Check cache first
+    const cacheKey = `${content}:${articleUrl || ''}`;
+    const cachedResult = verificationTextCache.get<VerificationResult>(cacheKey, 'news');
+    if (cachedResult) {
+      logger.info('📦 Using cached verification result');
+      return {
+        success: true,
+        data: cachedResult,
+      };
+    }
+
     // Perform comprehensive search for context
-    let searchResults;
+    let searchResults: SearchResponse[] = [];
     try {
       searchResults = await comprehensiveNewsSearch(content);
     } catch (searchError) {
-      console.warn('Search failed, proceeding with AI verification only:', searchError);
+      logger.warn('Search failed, proceeding with AI verification only:', searchError);
       searchResults = [];
     }
 
-    // Verify with Gemini AI
-    const result = await verifyNewsWithGemini(
+    // Verify with AI
+    const result = await verifyWithFallback(
       content,
-      content.substring(0, 100), // Use first 100 chars as search query
-      articleUrl,
       searchResults
     );
+
+    // If we have an article URL, ensure it's in the sources
+    if (articleUrl && !result.sources.some(s => s.url === articleUrl)) {
+      result.sources.unshift({ name: 'Original Article', url: articleUrl });
+    }
+
+    // Store in cache
+    verificationTextCache.set(cacheKey, result, 'news');
 
     return {
       success: true,
       data: result,
     };
   } catch (error) {
-    console.error('Verification failed:', error);
+    logger.error('Verification failed:', error);
     
-    // Return mock result as fallback
+    // Return unverified result as fallback
     return {
       success: true,
       data: {
-        ...getMockVerificationResult(articleUrl),
-        explanation: 'Verification service temporarily unavailable. This is a demo result. Please verify manually using trusted sources.',
+        veracity: 'unverified',
+        confidence: 0,
+        explanation: 'Verification service temporarily unavailable. Please verify manually using trusted sources.',
+        sources: articleUrl ? [{ name: 'Original Article', url: articleUrl }] : [],
       },
     };
   }

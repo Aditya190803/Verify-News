@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock the appwrite config
-vi.mock('../config/appwrite', () => ({
+vi.mock('../../config/appwrite', () => ({
   databases: {
     listDocuments: vi.fn(),
     createDocument: vi.fn(),
@@ -31,8 +31,8 @@ import {
   getVerificationBySlug,
   getUserSearchHistory,
   deleteSearchHistoryItem,
-} from './appwriteService';
-import { databases } from '../config/appwrite';
+} from './index';
+import { databases } from '../../config/appwrite';
 
 describe('appwriteService', () => {
   beforeEach(() => {
@@ -63,7 +63,7 @@ describe('appwriteService', () => {
       vi.mocked(databases.listDocuments).mockResolvedValueOnce({
         documents: [],
         total: 0,
-      } as unknown as { documents: unknown[]; total: number });
+      } as any);
       
       const result = await getVerificationBySlug('nonexistent');
       expect(result).toBeNull();
@@ -91,7 +91,7 @@ describe('appwriteService', () => {
           },
         ],
         total: 1,
-      } as unknown as { documents: unknown[]; total: number });
+      } as any);
 
       const result = await getUserSearchHistory('user123');
       

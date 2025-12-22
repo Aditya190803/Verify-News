@@ -7,16 +7,6 @@
 
 import { StackClientApp } from "@stackframe/js";
 
-// Declare Vite's import.meta.env types
-declare global {
-  interface ImportMeta {
-    env: {
-      VITE_STACK_PROJECT_ID: string;
-      VITE_STACK_PUBLISHABLE_CLIENT_KEY: string;
-    };
-  }
-}
-
 // Check if Stack Auth is configured
 const isConfigured = Boolean(
   import.meta.env.VITE_STACK_PROJECT_ID && 

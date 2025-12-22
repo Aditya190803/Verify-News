@@ -3,6 +3,7 @@
  * These provide runtime type checking at application boundaries
  */
 import { z } from 'zod';
+import { logger } from './logger';
 
 // ============================================
 // News Types Schemas
@@ -188,7 +189,7 @@ export function safeParse<T>(schema: z.ZodSchema<T>, data: unknown): T | null {
   if (result.success) {
     return result.data;
   }
-  console.warn('Schema validation failed:', result.error.errors);
+  logger.warn('Schema validation failed:', result.error.errors);
   return null;
 }
 

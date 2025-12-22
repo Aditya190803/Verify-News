@@ -157,4 +157,34 @@ export const COLLECTIONS = {
   USERS: 'users',
   VERIFICATIONS: 'verifications',
   SEARCH_HISTORY: 'search_history',
+  USER_SETTINGS: 'user_settings',
 } as const;
+
+// ============================================
+// Reliable Sources for Verification Badges
+// ============================================
+export const RELIABLE_SOURCES = [
+  'Reuters',
+  'Associated Press',
+  'AP News',
+  'BBC',
+  'BBC News',
+  'The New York Times',
+  'NYT',
+  'The Wall Street Journal',
+  'WSJ',
+  'The Guardian',
+  'Al Jazeera',
+  'NPR',
+  'PBS NewsHour',
+  'The Economist',
+  'Bloomberg',
+  'Financial Times',
+  'FT',
+  'Snopes',
+  'PolitiFact',
+  'FactCheck.org',
+  'Full Fact',
+  'AFP Fact Check',
+  'Reuters Fact Check'
+] as const;

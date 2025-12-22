@@ -5,7 +5,8 @@
  * @module utils/errorHandling
  */
 
-import { RATE_LIMITS, ERROR_MESSAGES } from '@/lib/constants';
+import { RATE_LIMITS } from '@/lib/constants';
+import { logger } from '@/lib/logger';
 
 /**
  * Checks if an error is caused by network connectivity issues.
@@ -149,12 +150,12 @@ export const getUserFriendlyErrorMessage = (error: unknown): string => {
  * ```
  */
 export const handleAppwriteError = (error: unknown, operation: string): void => {
-  console.warn(`📱 Appwrite ${operation} failed:`, error);
+  logger.warn(`Appwrite ${operation} failed:`, error);
   
   if (isNetworkError(error)) {
-    console.warn('🚫 Appwrite blocked by ad blocker or network filter');
+    logger.warn('Appwrite blocked by ad blocker or network filter');
   } else {
-    console.error(`🔥 Appwrite ${operation} error:`, error);
+    logger.error(`Appwrite ${operation} error:`, error);
   }
   
   // Don't throw - allow verification to continue
@@ -177,7 +178,13 @@ export const handleFirebaseError = handleAppwriteError;
  * }
  * ```
  */
-export const handleGeminiError = (error: unknown): string => {
+/**
+ * Handles errors from AI providers (Gemini, OpenRouter, Groq).
+ * 
+ * @param {unknown} error - The error to handle
+ * @returns {string} A user-friendly error message
+ */
+export const handleAIError = (error: unknown): string => {
   if (isNetworkError(error)) {
     return 'Network connectivity issue - verification service temporarily unavailable';
   }
@@ -203,9 +210,15 @@ export const handleGeminiError = (error: unknown): string => {
   if (errorMessage.includes('safety')) {
     return 'Content blocked by safety filters';
   }
+
+  if (errorMessage.includes('All AI providers failed')) {
+    return 'All verification services are currently unavailable';
+  }
   
   return 'Verification service temporarily unavailable';
 };
+
+export const handleGeminiError = handleAIError;
 
 /**
  * Retries an async operation with exponential backoff.
@@ -252,7 +265,7 @@ export const retryWithBackoff = async <T>(
       
       // Wait before retrying with exponential backoff
       const delay = baseDelay * Math.pow(2, attempt);
-      console.log(`🔄 Retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+      logger.info(`Retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
