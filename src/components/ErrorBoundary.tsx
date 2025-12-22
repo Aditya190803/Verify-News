@@ -12,6 +12,7 @@ interface State {
   hasError: boolean;
   error: Error | null;
   errorInfo: ErrorInfo | null;
+  isChunkError: boolean;
 }
 
 /**
@@ -32,11 +33,14 @@ class ErrorBoundary extends Component<Props, State> {
       hasError: false,
       error: null,
       errorInfo: null,
+      isChunkError: false,
     };
   }
 
   static getDerivedStateFromError(error: Error): Partial<State> {
-    return { hasError: true, error };
+    const isChunkError = error.message.includes('fetch dynamically imported module') || 
+                        error.message.includes('Loading chunk');
+    return { hasError: true, error, isChunkError };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
@@ -91,10 +95,12 @@ class ErrorBoundary extends Component<Props, State> {
                 <AlertTriangle className="h-8 w-8 text-destructive" />
               </div>
               <h1 className="text-2xl font-bold text-foreground mb-2">
-                Something went wrong
+                {this.state.isChunkError ? 'New Version Available' : 'Something went wrong'}
               </h1>
               <p className="text-muted-foreground">
-                We're sorry, but something unexpected happened. Please try refreshing the page.
+                {this.state.isChunkError 
+                  ? 'A new version of the application has been deployed. Please refresh to get the latest updates.'
+                  : "We're sorry, but something unexpected happened. Please try refreshing the page."}
               </p>
             </div>
 
