@@ -8,7 +8,6 @@ interface EnvConfig {
   APPWRITE_ENDPOINT: string;
   GEMINI_API_KEY?: string;
   OPENROUTER_API_KEY?: string;
-  GROQ_API_KEY?: string;
   LANGSEARCH_API_KEY?: string;
   TAVILY_API_KEY?: string;
   SITE_URL: string;
@@ -67,7 +66,6 @@ export const validateEnv = () => {
   const optionalVars = [
     'VITE_GEMINI_API_KEY',
     'VITE_OPENROUTER_API_KEY',
-    'VITE_GROQ_API_KEY',
     'VITE_LANGSEARCH_API_KEY',
     'VITE_TAVILY_API_KEY',
   ];
@@ -95,7 +93,6 @@ export const env: EnvConfig = {
   APPWRITE_ENDPOINT: import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1',
   GEMINI_API_KEY: import.meta.env.VITE_GEMINI_API_KEY,
   OPENROUTER_API_KEY: import.meta.env.VITE_OPENROUTER_API_KEY,
-  GROQ_API_KEY: import.meta.env.VITE_GROQ_API_KEY,
   LANGSEARCH_API_KEY: import.meta.env.VITE_LANGSEARCH_API_KEY,
   TAVILY_API_KEY: import.meta.env.VITE_TAVILY_API_KEY,
   SITE_URL: import.meta.env.VITE_SITE_URL || window.location.origin,
