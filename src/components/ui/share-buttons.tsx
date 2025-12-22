@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import QRCode from 'qrcode';
+import { logger } from '@/lib/logger';
 
 interface ShareButtonsProps {
   url: string;
@@ -77,7 +78,7 @@ export const ShareButtons = ({ url, title, description, className }: ShareButton
         });
       } catch {
         // User cancelled share or error occurred
-        console.log('Share cancelled or failed');
+        logger.info('Share cancelled or failed');
       }
     } else {
       setOpen(true);
@@ -210,7 +211,7 @@ export const CompactShareButton = ({ url, title, description, className }: Compa
           url: fullUrl,
         });
       } catch {
-        console.log('Share cancelled or failed');
+        logger.info('Share cancelled or failed');
       }
     } else {
       try {

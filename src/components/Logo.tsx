@@ -1,3 +1,4 @@
+import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface LogoProps {
@@ -12,7 +13,7 @@ interface LogoProps {
  * A modern logo featuring a stylized checkmark within a news/document shape,
  * representing verification and trust in news.
  */
-const Logo = ({ size = 'md', showText = true, className }: LogoProps) => {
+const Logo = React.memo(({ size = 'md', showText = true, className }: LogoProps) => {
   const sizes = {
     sm: { icon: 24, text: 'text-base' },
     md: { icon: 32, text: 'text-lg' },
@@ -95,6 +96,6 @@ const Logo = ({ size = 'md', showText = true, className }: LogoProps) => {
       )}
     </div>
   );
-};
+});
 
 export default Logo;

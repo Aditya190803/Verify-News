@@ -1,15 +1,14 @@
-
+import { useEffect, useState, memo, KeyboardEvent } from "react";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
 
 interface ThemeToggleProps {
   className?: string;
 }
 
-export function ThemeToggle({ className }: ThemeToggleProps) {
+export const ThemeToggle = memo(({ className }: ThemeToggleProps) => {
   const { theme, setTheme } = useTheme();
   const [systemTheme, setSystemTheme] = useState<"light" | "dark">("dark");
 
@@ -63,11 +62,18 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
+      onKeyDown={(e: KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleTheme();
+        }
+      }}
       className={cn("rounded-full", className)}
       aria-label={getLabel()}
       title={getLabel()}
+      tabIndex={0}
     >
       <Icon className="h-5 w-5" />
     </Button>
   );
-}
+});

@@ -4,8 +4,9 @@ import { Button } from './button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './dialog';
 import { Badge } from './badge';
 import { useToast } from '@/hooks/use-toast';
-import { updateVerificationPrivacy } from '@/services/appwriteService';
+import { updateVerificationPrivacy } from '@/services/appwrite';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 interface PrivacyToggleProps {
   slug: string;
@@ -49,7 +50,7 @@ export const PrivacyToggle = ({
         });
       }
     } catch (error) {
-      console.error('Error updating privacy:', error);
+      logger.error('Error updating privacy:', error);
       toast({
         title: 'Error',
         description: 'An unexpected error occurred.',
