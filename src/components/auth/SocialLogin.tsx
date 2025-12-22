@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { stackClientApp, isStackAuthConfigured } from '../../config/stackAuth';
+import { logger } from '@/lib/logger';
 
 interface SocialLoginProps {
   disabled?: boolean;
@@ -11,7 +12,7 @@ const SocialLogin: React.FC<SocialLoginProps> = ({ disabled = false }) => {
 
   const handleGoogleLogin = async () => {
     if (!stackClientApp) {
-      console.error('Stack Auth is not configured');
+      logger.error('Stack Auth is not configured');
       return;
     }
 
@@ -21,7 +22,7 @@ const SocialLogin: React.FC<SocialLoginProps> = ({ disabled = false }) => {
       // After successful auth, they'll be redirected back to /oauth/callback
       await stackClientApp.signInWithOAuth('google');
     } catch (error) {
-      console.error('Google OAuth error:', error);
+      logger.error('Google OAuth error:', error);
       setIsLoading(false);
     }
   };

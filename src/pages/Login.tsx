@@ -1,14 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/context/AuthContext';
-
 import WelcomeHeader from '@/components/auth/WelcomeHeader';
 import LoginForm from '@/components/auth/LoginForm';
 import SignupForm from '@/components/auth/SignupForm';
 import SocialLogin from '@/components/auth/SocialLogin';
+import RateLimitStatus from '@/components/RateLimitStatus';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -29,6 +29,9 @@ const Login = () => {
         <div className="w-full max-w-md">
           <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
             <WelcomeHeader />
+            
+            {/* Show rate limit status for login attempts */}
+            <RateLimitStatus />
 
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-8 bg-muted/50 p-1 rounded-xl">

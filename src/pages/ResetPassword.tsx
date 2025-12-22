@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { resetPasswordWithCode } from '@/services/stackAuthApi';
+import { logger } from '@/lib/logger';
 
 /**
  * Reset Password Page
@@ -79,7 +80,7 @@ const ResetPassword = () => {
         navigate('/login', { replace: true });
       }, 3000);
     } catch (err) {
-      console.error('Password reset error:', err);
+      logger.error('Password reset error:', err);
       const errorMessage = err instanceof Error 
         ? err.message 
         : 'Failed to reset password. The link may have expired.';

@@ -1,5 +1,5 @@
 
-import React from 'react';
+
 
 const WelcomeHeader = () => (
   <div className="text-center mb-8">

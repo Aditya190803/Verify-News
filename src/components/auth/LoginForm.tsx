@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { authRateLimiter, isRateLimitError } from '@/lib/rateLimiter';
 
 type LoginFormProps = {
   email: string;
@@ -59,7 +60,11 @@ const LoginForm = ({ email, setEmail, password, setPassword }: LoginFormProps) =
     setIsLoading(true);
     
     try {
-      await login(email, password);
+      // Apply rate limiting to prevent brute force attacks
+      await authRateLimiter.execute(async () => {
+        await login(email, password);
+      });
+      
       toast({
         title: "Login successful",
         description: "Welcome back to VerifyNews!"
@@ -68,8 +73,13 @@ const LoginForm = ({ email, setEmail, password, setPassword }: LoginFormProps) =
       const err = error as Error;
       let message = err.message || "Login failed. Please check your credentials.";
       
+      // Handle rate limit errors specifically
+      if (isRateLimitError(error)) {
+        const rateLimitError = error as any;
+        message = rateLimitError.message || "Too many login attempts. Please wait and try again.";
+      }
       // Make error messages more user-friendly
-      if (message.includes('Invalid') || message.includes('password')) {
+      else if (message.includes('Invalid') || message.includes('password')) {
         message = "Invalid email or password. Please try again.";
       } else if (message.includes('not configured')) {
         message = "Authentication service is not available. Please try again later.";

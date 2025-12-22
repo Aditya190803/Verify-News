@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { stackClientApp } from '../config/stackAuth';
 import { Button } from '@/components/ui/button';
+import { logger } from '@/lib/logger';
 
 /**
  * OAuth Callback Page
@@ -26,7 +27,7 @@ const OAuthCallback = () => {
           const message = urlParams.get('message');
           const details = urlParams.get('details');
           
-          console.error('Stack Auth error:', { errorCode, message, details });
+          logger.error('Stack Auth error:', { errorCode, message, details });
           
           // Parse the error message for user-friendly display
           let userMessage = message || 'Authentication failed';
@@ -57,7 +58,6 @@ const OAuthCallback = () => {
           if (stackClientApp) {
             const user = await stackClientApp.getUser();
             if (user) {
-              console.log('✅ User already authenticated:', user.primaryEmail);
               window.dispatchEvent(new CustomEvent('stackAuthStateChange'));
               navigate('/', { replace: true });
               return;
@@ -92,7 +92,6 @@ const OAuthCallback = () => {
         const user = await stackClientApp.getUser();
         
         if (user) {
-          console.log('✅ OAuth authentication successful:', user.primaryEmail);
           window.dispatchEvent(new CustomEvent('stackAuthStateChange'));
           navigate('/', { replace: true });
         } else {
@@ -100,7 +99,7 @@ const OAuthCallback = () => {
           setTimeout(() => navigate('/login', { replace: true }), 3000);
         }
       } catch (err) {
-        console.error('OAuth callback error:', err);
+        logger.error('OAuth callback error:', err);
         setError(err instanceof Error ? err.message : 'Authentication failed');
         setTimeout(() => navigate('/login', { replace: true }), 3000);
       }
