@@ -50,18 +50,50 @@ async function main() {
     }
   }
   
-  /**
-   * IMPROVED COLLECTION DEFINITIONS
-   * 
-   * verifications: Stores shareable verification results (public)
-   * - Optimized for public sharing and quick lookups by slug
-   * - Includes denormalized veracity/confidence for filtering
-   * 
-   * search_history: Stores user's personal history (private)
-   * - Linked to verifications via slug for full results
-   * - Lightweight - doesn't duplicate full result data
-   */
   const collections = [
+    {
+      id: 'users',
+      name: 'Users',
+      description: 'User profiles synchronized from Stack Auth',
+      permissions: [
+        'read("any")',      // Allow read access for analytics
+        'create("any")',    // Allow anyone to create (during signup)
+        'update("any")',    // Allow updates (profile changes)
+        'delete("any")',    // Allow deletions (account deletion)
+      ],
+      attributes: [
+        // Core identification
+        { key: 'userId', type: 'string', size: 128, required: true }, // Stack Auth user ID
+        { key: 'email', type: 'string', size: 255, required: true },
+        { key: 'displayName', type: 'string', size: 255, required: false },
+        { key: 'photoURL', type: 'string', size: 2048, required: false },
+        
+        // Authentication info
+        { key: 'emailVerified', type: 'boolean', required: false, default: false },
+        { key: 'signedUpAt', type: 'datetime', required: true },
+        { key: 'lastSync', type: 'datetime', required: true },
+        { key: 'isAnonymous', type: 'boolean', required: false, default: false },
+        
+        // Additional metadata
+        { key: 'metadata', type: 'string', size: 10000, required: false }, // JSON string
+      ],
+      indexes: [
+        // Primary lookup by Stack Auth user ID
+        { key: 'idx_userId', type: 'unique', attributes: ['userId'] },
+        
+        // Email lookup (for admin)
+        { key: 'idx_email', type: 'key', attributes: ['email'] },
+        
+        // Recent users
+        { key: 'idx_signedUpAt', type: 'key', attributes: ['signedUpAt'], orders: ['DESC'] },
+        
+        // Active users (recently synced)
+        { key: 'idx_lastSync', type: 'key', attributes: ['lastSync'], orders: ['DESC'] },
+        
+        // Email verification status
+        { key: 'idx_emailVerified', type: 'key', attributes: ['emailVerified'] },
+      ],
+    },
     {
       id: 'verifications',
       name: 'Verifications',
@@ -91,10 +123,17 @@ async function main() {
         { key: 'confidence', type: 'integer', required: false, min: 0, max: 100 },
         { key: 'result', type: 'string', size: 50000, required: false }, // Full JSON result
         
+        // Media
+        { key: 'mediaId', type: 'string', size: 128, required: false },
+        { key: 'mediaUrl', type: 'string', size: 2048, required: false },
+        { key: 'mediaType', type: 'string', size: 50, required: false },
+        
         // Metadata
         { key: 'timestamp', type: 'datetime', required: true },
         { key: 'isPublic', type: 'boolean', required: false, default: true },
         { key: 'viewCount', type: 'integer', required: false, min: 0, default: 0 },
+        { key: 'upvotes', type: 'integer', required: false, min: 0, default: 0 },
+        { key: 'downvotes', type: 'integer', required: false, min: 0, default: 0 },
       ],
       indexes: [
         // Primary lookup
@@ -108,6 +147,10 @@ async function main() {
         
         // Filter by veracity
         { key: 'idx_veracity', type: 'key', attributes: ['veracity'] },
+        
+        // Popularity sorting
+        { key: 'idx_views', type: 'key', attributes: ['viewCount'], orders: ['DESC'] },
+        { key: 'idx_votes', type: 'key', attributes: ['upvotes'], orders: ['DESC'] },
         
         // Composite: User's recent verifications
         { key: 'idx_user_time', type: 'key', attributes: ['userId', 'timestamp'], orders: ['ASC', 'DESC'] },
@@ -247,6 +290,14 @@ async function main() {
   console.log('📊 SCHEMA SUMMARY');
   console.log('='.repeat(60));
   
+  console.log('\n📁 users (User profiles from Stack Auth)');
+  console.log('   ├── userId (unique) - Stack Auth user ID');
+  console.log('   ├── email, displayName, photoURL - User profile');
+  console.log('   ├── emailVerified, signedUpAt - Auth status');
+  console.log('   ├── lastSync - When last synced from Stack Auth');
+  console.log('   ├── isAnonymous - Anonymous user flag');
+  console.log('   └── metadata - Additional user data (JSON)');
+  
   console.log('\n📁 verifications (Public shareable results)');
   console.log('   ├── slug (unique) - 8-char identifier for sharing');
   console.log('   ├── userId - Creator (null for anonymous)');
@@ -273,6 +324,20 @@ async function main() {
   console.log('   1. Update appwriteService.ts to use new schema');
   console.log('   2. Run migration script if there\'s existing data');
   console.log('   3. Test the application');
+  console.log('\n🔄 User Synchronization:');
+  console.log('   - Users will be automatically synced from Stack Auth to Appwrite');
+  console.log('   - Run `bun run sync-users` to sync existing users');
+}
+
+// Add a user sync function that can be called separately
+async function syncExistingUsers() {
+  console.log('\n🔄 Syncing existing users from Stack Auth to Appwrite...');
+  
+  // This would be implemented in a separate script
+  // For now, just show the information
+  console.log('   📝 User sync functionality is implemented in the AuthContext');
+  console.log('   📝 Users are automatically synced on login/signup');
+  console.log('   📝 Use the userService.ts for manual sync operations');
 }
 
 async function createAttribute(databases, databaseId, collectionId, attr) {
