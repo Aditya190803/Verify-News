@@ -112,7 +112,7 @@ export function useDebouncedCallback<T extends (...args: Parameters<T>) => Retur
  * );
  * ```
  */
-export function useDebouncedCallbackAdvanced<T extends (...args: Parameters<T>) => ReturnType<T>>(
+export function useDebouncedCallbackAdvanced<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number = 300,
   leading: boolean = false,
@@ -210,7 +210,7 @@ export function useDebouncedCallbackAdvanced<T extends (...args: Parameters<T>) 
  * window.addEventListener('scroll', throttledScroll);
  * ```
  */
-export function useThrottledCallback<T extends (...args: Parameters<T>) => ReturnType<T>>(
+export function useThrottledCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number = 300
 ): (...args: Parameters<T>) => void {
@@ -250,7 +250,7 @@ export function useThrottledCallback<T extends (...args: Parameters<T>) => Retur
         timeoutRef.current = setTimeout(() => {
           lastExecutedRef.current = Date.now();
           if (lastArgsRef.current) {
-            callbackRef.current(...lastArgsRef.current);
+            callbackRef.current(...(lastArgsRef.current as unknown[]));
           }
         }, delay - timeSinceLastExecution);
       }

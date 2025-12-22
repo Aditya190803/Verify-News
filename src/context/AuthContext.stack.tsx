@@ -1,14 +1,9 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import {
-  signUp as stackSignUp,
-  signIn as stackSignIn,
-  signOut as stackSignOut,
-  getCurrentUser as stackGetCurrentUser,
-  isStackAuthConfigured as restApiConfigured,
-  sendPasswordResetCode,
-  StackUser,
-} from '../services/stackAuthApi';
-import { stackClientApp, isStackAuthConfigured as sdkConfigured } from '../config/stackAuth';
+import { stackClientApp, isStackAuthConfigured } from '../config/stackAuth';
+import { logger } from '@/lib/logger';
+import { signOut as apiSignOut } from '../services/stackAuthApi';
+import { syncUserToAppwrite } from '@/services/appwrite/userService';
 
 // Type definitions for compatibility with the existing app structure
 interface AppUser {
@@ -41,41 +36,22 @@ export const useAuth = (): AuthContextType => {
   return context;
 };
 
-// Check if Stack Auth is configured (either via SDK or REST API)
-const isStackAuthConfigured = (): boolean => {
-  return sdkConfigured() || restApiConfigured();
-};
-
-// Convert Stack Auth user to our AppUser format for backwards compatibility
-const convertToAppUser = (user: StackUser | null): AppUser | null => {
+// Convert SDK user type to our AppUser format
+const convertToAppUser = (user: {
+  id: string;
+  displayName?: string | null;
+  primaryEmail?: string | null;
+  primaryEmailVerified?: boolean;
+  profileImageUrl?: string | null;
+} | null): AppUser | null => {
   if (!user) return null;
   return {
     id: user.id,
-    uid: user.id, // alias for backwards compatibility
-    displayName: user.display_name || null,
-    email: user.primary_email || null,
-    emailVerified: user.primary_email_verified,
-    photoURL: user.profile_image_url || null,
-  };
-};
-
-// Convert SDK user type to our AppUser format
-const convertSdkUserToAppUser = (user: unknown): AppUser | null => {
-  if (!user) return null;
-  const u = user as {
-    id?: string;
-    displayName?: string | null;
-    primaryEmail?: string | null;
-    primaryEmailVerified?: boolean;
-    profileImageUrl?: string | null;
-  };
-  return {
-    id: u.id || '',
-    uid: u.id || '',
-    displayName: u.displayName || null,
-    email: u.primaryEmail || null,
-    emailVerified: u.primaryEmailVerified || false,
-    photoURL: u.profileImageUrl || null,
+    uid: user.id,
+    displayName: user.displayName || null,
+    email: user.primaryEmail || null,
+    emailVerified: user.primaryEmailVerified || false,
+    photoURL: user.profileImageUrl || null,
   };
 };
 
@@ -83,30 +59,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Function to refresh user state from the SDK/API
+  // Function to refresh user state from the SDK and sync with Appwrite
   const refreshUser = useCallback(async () => {
-    if (!isStackAuthConfigured()) {
+    if (!isStackAuthConfigured() || !stackClientApp) {
       return;
     }
 
     try {
-      // First try to get user from SDK (for OAuth sessions)
-      if (stackClientApp) {
-        const sdkUser = await stackClientApp.getUser();
-        if (sdkUser) {
-          setCurrentUser(convertSdkUserToAppUser(sdkUser));
-          return;
-        }
+      const sdkUser = await stackClientApp.getUser();
+      const appUser = convertToAppUser(sdkUser);
+      setCurrentUser(appUser);
+      
+      // Sync user to Appwrite in the background (don't block UI)
+      if (appUser && sdkUser) {
+        syncUserToAppwrite(sdkUser as any).catch(error => {
+          logger.error('Failed to sync user to Appwrite:', error);
+        });
       }
-
-      // Fall back to REST API (for email/password sessions)
-      const user = await stackGetCurrentUser();
-      setCurrentUser(convertToAppUser(user));
     } catch (error: unknown) {
       // User is not logged in - this is expected
       const err = error as { code?: number };
       if (err?.code !== 401) {
-        console.error('Error checking auth state:', error);
+        logger.error('Error checking auth state:', error);
       }
       setCurrentUser(null);
     }
@@ -116,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check current auth state on mount
     const checkAuth = async () => {
       if (!isStackAuthConfigured()) {
-        console.warn('Stack Auth is not configured - auth disabled');
+        logger.warn('Stack Auth is not configured - auth disabled');
         setLoading(false);
         return;
       }
@@ -127,44 +101,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     checkAuth();
 
-    // Listen for auth state changes (e.g., from OAuth callback)
-    const handleStorageChange = (e: StorageEvent) => {
-      // Stack Auth stores tokens in cookies, but we can detect changes
-      if (e.key?.includes('stack') || e.key === null) {
-        refreshUser();
-      }
-    };
-
-    // Listen for custom events from OAuth callback
+    // Listen for custom events from OAuth callback or other parts of the app
     const handleAuthChange = () => {
       refreshUser();
     };
 
-    window.addEventListener('storage', handleStorageChange);
     window.addEventListener('stackAuthStateChange', handleAuthChange);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('stackAuthStateChange', handleAuthChange);
     };
   }, [refreshUser]);
 
   // Sign up with email and password
   const signup = async (email: string, password: string): Promise<AppUser> => {
-    if (!isStackAuthConfigured()) {
+    if (!stackClientApp) {
       throw new Error('Authentication is not configured');
     }
     
-    // Create user account and get tokens
-    await stackSignUp(email, password);
+    const result = await stackClientApp.signUpWithCredential({ email, password });
     
-    // Get the full user object
-    const user = await stackGetCurrentUser();
+    if (result.status === 'error') {
+      throw new Error(result.error.message);
+    }
+    
+    const user = await stackClientApp.getUser();
     const appUser = convertToAppUser(user);
     
     if (!appUser) {
       throw new Error('Failed to get user after signup');
     }
+    
+    // Sync user to Appwrite
+    await syncUserToAppwrite(user as any).catch(error => {
+      logger.error('Failed to sync user to Appwrite after signup:', error);
+    });
     
     setCurrentUser(appUser);
     return appUser;
@@ -172,18 +143,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Login with email and password
   const login = async (email: string, password: string): Promise<AppUser> => {
-    if (!isStackAuthConfigured()) {
+    if (!stackClientApp) {
       throw new Error('Authentication is not configured');
     }
     
-    await stackSignIn(email, password);
+    const result = await stackClientApp.signInWithCredential({ email, password });
     
-    const user = await stackGetCurrentUser();
+    if (result.status === 'error') {
+      throw new Error(result.error.message);
+    }
+    
+    const user = await stackClientApp.getUser();
     const appUser = convertToAppUser(user);
     
     if (!appUser) {
       throw new Error('Failed to get user after login');
     }
+    
+    // Sync user to Appwrite
+    await syncUserToAppwrite(user as any).catch(error => {
+      logger.error('Failed to sync user to Appwrite after login:', error);
+    });
     
     setCurrentUser(appUser);
     return appUser;
@@ -191,22 +171,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Logout
   const logout = async (): Promise<void> => {
-    if (!isStackAuthConfigured()) {
+    if (!stackClientApp) {
       throw new Error('Authentication is not configured');
     }
     
     try {
-      // Try to sign out from both SDK and REST API
-      if (stackClientApp) {
-        try {
-          await stackClientApp.signOut();
-        } catch (e) {
-          console.warn('SDK signOut error:', e);
-        }
-      }
-      await stackSignOut();
+      await apiSignOut();
     } catch (error) {
-      console.error('Error logging out:', error);
+      logger.error('Error logging out:', error);
     }
     setCurrentUser(null);
   };
@@ -222,22 +194,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     // This will redirect the user to Google's OAuth page
-    // After redirect back to /oauth/callback, the OAuthCallback page handles the token exchange
     await stackClientApp.signInWithOAuth('google');
     
-    // This code won't execute immediately since we're redirecting
-    // Return a pending promise that will never resolve
-    // (the page will redirect before this matters)
     return new Promise(() => {});
   };
 
   // Reset password
   const resetPassword = async (email: string): Promise<void> => {
-    if (!isStackAuthConfigured()) {
+    if (!stackClientApp) {
       throw new Error('Authentication is not configured');
     }
     
-    await sendPasswordResetCode(email);
+    const result = await stackClientApp.sendForgotPasswordEmail(email);
+    if (result.status === 'error') {
+      throw new Error(result.error.message);
+    }
   };
 
   const value = {

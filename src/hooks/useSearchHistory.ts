@@ -3,9 +3,10 @@ import { useAuth } from '@/context/AuthContext';
 import { 
   getUserSearchHistory, 
   deleteSearchHistoryItem, 
-  clearUserSearchHistory,
-  SearchHistoryItem 
-} from '@/services/appwriteService';
+  clearUserSearchHistory
+} from '@/services/appwrite';
+import { logger } from '@/lib/logger';
+import { SearchHistoryItem } from '@/types/news';
 
 export const useSearchHistory = () => {
   const { currentUser } = useAuth();
@@ -16,9 +17,7 @@ export const useSearchHistory = () => {
   const pageSize = 50;
 
   const loadSearchHistory = useCallback(async (pageNum: number = 0) => {
-    console.log('🔄 loadSearchHistory called, currentUser:', currentUser?.uid);
     if (!currentUser) {
-      console.log('❌ No current user, setting empty history');
       setHistory([]);
       setTotal(0);
       return;
@@ -26,14 +25,12 @@ export const useSearchHistory = () => {
     
     setLoading(true);
     try {
-      console.log('📡 Fetching search history...');
       const result = await getUserSearchHistory(currentUser.uid, pageSize, pageNum * pageSize);
-      console.log('📚 Received history:', result.items);
       setHistory(result.items);
       setTotal(result.total);
       setPage(pageNum);
     } catch (error) {
-      console.error('❌ Error loading search history:', error);
+      logger.error('Error loading search history:', error);
     } finally {
       setLoading(false);
     }

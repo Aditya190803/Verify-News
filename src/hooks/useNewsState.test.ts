@@ -23,25 +23,25 @@ vi.mock('../utils/searchUtils', () => ({
   comprehensiveNewsSearch: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock('../utils/geminiApi', () => ({
-  verifyNewsWithGemini: vi.fn().mockResolvedValue({
+vi.mock('../services/aiProviders', () => ({
+  verifyWithFallback: vi.fn().mockResolvedValue({
     veracity: 'true',
     confidence: 85,
     explanation: 'Test explanation',
     sources: [],
-  }),
-  getMockVerificationResult: vi.fn().mockReturnValue({
-    veracity: 'unverified',
-    confidence: 0,
-    explanation: 'Mock result',
-    sources: [],
+    provider: 'Groq'
   }),
   verifyMediaWithGemini: vi.fn().mockResolvedValue({
     veracity: 'true',
     confidence: 80,
     explanation: 'Media verified',
     sources: [],
+    provider: 'Gemini'
   }),
+  rankSearchResultsWithFallback: vi.fn().mockImplementation((_, results) => Promise.resolve(results)),
+  generateTitleWithFallback: vi.fn().mockResolvedValue('Test Title'),
+  fileToBase64: vi.fn().mockResolvedValue('base64data'),
+  getMediaTypeFromMime: vi.fn().mockReturnValue('image')
 }));
 
 vi.mock('../services/appwriteService', () => ({

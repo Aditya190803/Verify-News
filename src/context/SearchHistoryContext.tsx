@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useCallback, ReactNode, useRef } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useCallback, ReactNode, useRef } from 'react';
 
 interface SearchHistoryContextType {
   refreshSearchHistory: () => void;
