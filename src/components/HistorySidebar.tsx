@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, memo } from 'react';
 import { cn } from '@/lib/utils';
 import { History, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,7 @@ interface HistorySidebarProps {
  * - Backdrop overlay on mobile
  * - Keyboard accessible (Escape to close)
  */
-const HistorySidebar = ({ isOpen, onClose, onOpen }: HistorySidebarProps) => {
+const HistorySidebar = memo(({ isOpen, onClose, onOpen }: HistorySidebarProps) => {
   const { currentUser } = useAuth();
 
   // Handle escape key to close
@@ -137,6 +137,8 @@ const HistorySidebar = ({ isOpen, onClose, onOpen }: HistorySidebarProps) => {
       </aside>
     </>
   );
-};
+});
+
+HistorySidebar.displayName = 'HistorySidebar';
 
 export default HistorySidebar;

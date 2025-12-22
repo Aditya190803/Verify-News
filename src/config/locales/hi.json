@@ -1,0 +1,65 @@
+{
+  "common": {
+    "appName": "VerifyNews",
+    "home": "होम",
+    "about": "परिचय",
+    "contact": "संपर्क करें",
+    "settings": "सेटिंग्स",
+    "logout": "लॉगआउट",
+    "login": "लॉगिन करें",
+    "signup": "साइन अप करें",
+    "search": "खोज करें",
+    "verify": "सत्यापित करें",
+    "results": "परिणाम",
+    "loading": "लोड हो रहा है...",
+    "error": "त्रुटि",
+    "success": "सफल",
+    "cancel": "रद्द करें",
+    "submit": "जमा करें",
+    "save": "सहेजें",
+    "delete": "हटाएं",
+    "edit": "संपादित करें",
+    "back": "वापस जाएं",
+    "next": "अगला",
+    "previous": "पिछला"
+  },
+  "verification": {
+    "title": "समाचार सत्यापित करें",
+    "description": "जांचें कि समाचार सच है या झूठ",
+    "placeholder": "सत्यापित करने के लिए समाचार शीर्षक या सामग्री दर्ज करें...",
+    "verified": "सत्यापित",
+    "notVerified": "सत्यापित नहीं",
+    "true": "सच",
+    "false": "झूठ",
+    "uncertain": "अनिश्चित",
+    "confidence": "विश्वास",
+    "explanation": "व्याख्या",
+    "sources": "स्रोत",
+    "result": "सत्यापन परिणाम"
+  },
+  "dashboard": {
+    "title": "डैशबोर्ड",
+    "stats": "आंकड़े",
+    "recentVerifications": "हाल के सत्यापन",
+    "totalVerifications": "कुल सत्यापन",
+    "trueCount": "सच",
+    "falseCount": "झूठ",
+    "uncertainCount": "अनिश्चित"
+  },
+  "settings": {
+    "title": "सेटिंग्स",
+    "appearance": "रूपरेखा",
+    "theme": "थीम",
+    "language": "भाषा",
+    "notifications": "सूचनाएं",
+    "privacy": "गोपनीयता",
+    "account": "खाता"
+  },
+  "errors": {
+    "required": "यह फील्ड आवश्यक है",
+    "invalidEmail": "कृपया वैध ईमेल दर्ज करें",
+    "passwordMismatch": "पासवर्ड मेल नहीं खाते",
+    "networkError": "नेटवर्क त्रुटि। कृपया पुनः प्रयास करें।",
+    "serverError": "सर्वर त्रुटि। कृपया पुनः प्रयास करें।"
+  }
+}

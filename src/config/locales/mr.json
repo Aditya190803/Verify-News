@@ -1,0 +1,65 @@
+{
+  "common": {
+    "appName": "VerifyNews",
+    "home": "घर",
+    "about": "बद्दल",
+    "contact": "संपर्क",
+    "settings": "सेटिंग्स",
+    "logout": "लॉगआउट करा",
+    "login": "लॉगिन करा",
+    "signup": "साइन अप करा",
+    "search": "शोध करा",
+    "verify": "तपासा",
+    "results": "निकाल",
+    "loading": "लोड होत आहे...",
+    "error": "त्रुटी",
+    "success": "यशस्वी",
+    "cancel": "रद्द करा",
+    "submit": "सबमिट करा",
+    "save": "जतन करा",
+    "delete": "हटवा",
+    "edit": "संपादित करा",
+    "back": "परत जा",
+    "next": "पुढे",
+    "previous": "मागे"
+  },
+  "verification": {
+    "title": "बातमी तपासा",
+    "description": "बातमी खरी आहे की खोटी हे तपासा",
+    "placeholder": "तपासण्यासाठी बातमी शीर्षक किंवा सामग्री प्रविष्ट करा...",
+    "verified": "तपासलेली",
+    "notVerified": "तपासलेली नाही",
+    "true": "खरी",
+    "false": "खोटी",
+    "uncertain": "अनिश्चित",
+    "confidence": "आत्मविश्वास",
+    "explanation": "स्पष्टीकरण",
+    "sources": "स्रोत",
+    "result": "तपासणी निकाल"
+  },
+  "dashboard": {
+    "title": "डॅशबोर्ड",
+    "stats": "आकडेवारी",
+    "recentVerifications": "अलिकडील तपासण्या",
+    "totalVerifications": "एकूण तपासण्या",
+    "trueCount": "खरी",
+    "falseCount": "खोटी",
+    "uncertainCount": "अनिश्चित"
+  },
+  "settings": {
+    "title": "सेटिंग्स",
+    "appearance": "दिसावट",
+    "theme": "थीम",
+    "language": "भाषा",
+    "notifications": "सूचना",
+    "privacy": "गोपनीयता",
+    "account": "खाता"
+  },
+  "errors": {
+    "required": "हे क्षेत्र आवश्यक आहे",
+    "invalidEmail": "कृपया वैध ईमेल प्रविष्ट करा",
+    "passwordMismatch": "पासवर्ड जुळत नाहीत",
+    "networkError": "नेटवर्क त्रुटी. कृपया पुन्हा प्रयत्न करा.",
+    "serverError": "सर्व्हर त्रुटी. कृपया पुन्हा प्रयत्न करा."
+  }
+}

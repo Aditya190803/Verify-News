@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { useSearchHistoryContext } from '@/context/SearchHistoryContext';
-import { SearchHistoryItem } from '@/services/appwriteService';
+import { SearchHistoryItem } from '@/types/news';
 import { useNews } from '@/context/NewsContext';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,7 @@ import {
   SearchHistoryLoading,
   type HistoryFilterType,
 } from '@/components/search-history';
+import { logger } from '@/lib/logger';
 
 interface SearchHistoryProps {
   className?: string;
@@ -71,7 +72,7 @@ const SearchHistory = ({ className, onClose, showCloseButton = false }: SearchHi
       }
       onClose?.();
     } catch (error) {
-      console.error('Error handling history item click:', error);
+      logger.error('Error handling history item click:', error);
     }
   }, [navigate, searchNews, onClose]);
 

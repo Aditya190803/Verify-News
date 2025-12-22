@@ -1,8 +1,7 @@
-import React from 'react';
 import { CheckCircle, Search, X, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { SearchHistoryItem } from '@/services/appwriteService';
+import { SearchHistoryItem } from '@/types/news';
 
 interface SearchHistoryItemCardProps {
   item: SearchHistoryItem;

@@ -1,5 +1,5 @@
 
-import React from 'react';
+
 import { useNews } from '@/context/NewsContext';
 import { cn } from '@/lib/utils';
 import { ExternalLink, CheckCircle, Link as LinkIcon } from 'lucide-react';

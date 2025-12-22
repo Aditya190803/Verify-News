@@ -1,18 +1,21 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { useNews } from '@/context/NewsContext';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, ArrowRight, Link as LinkIcon, ImageIcon, Paperclip, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import MediaUpload from './MediaUpload';
 import { MediaFile } from '@/types/news';
+import { useTranslation } from 'react-i18next';
+import { logger } from '@/lib/logger';
 
-const UnifiedNewsInput = ({ className }: { className?: string }) => {
+const UnifiedNewsInput = memo(({ className }: { className?: string }) => {
   const { handleUnifiedInput, status, mediaFile, setMediaFile } = useNews();
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMediaUpload, setShowMediaUpload] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -29,14 +32,14 @@ const UnifiedNewsInput = ({ className }: { className?: string }) => {
     };
   }, []);
 
-  const handleMediaSelect = (media: MediaFile | null) => {
+  const handleMediaSelect = useCallback((media: MediaFile | null) => {
     setMediaFile(media);
     if (media) {
       setShowMediaUpload(false);
     }
-  };
+  }, [setMediaFile]);
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
     
     if (isSubmitting || status === 'verifying' || status === 'searching') {
@@ -47,7 +50,7 @@ const UnifiedNewsInput = ({ className }: { className?: string }) => {
     
     // Allow submission if there's text OR media
     if (!value && !mediaFile) {
-      setError('Enter something to verify or upload media');
+      setError(t('verification.placeholder'));
       return;
     }
     
@@ -55,13 +58,15 @@ const UnifiedNewsInput = ({ className }: { className?: string }) => {
     setIsSubmitting(true);
     
     try {
-      await handleUnifiedInput(value, mediaFile || undefined);
+      if (handleUnifiedInput) {
+        await handleUnifiedInput(value, mediaFile || undefined);
+      }
     } catch (error) {
-      console.error('Error in handleUnifiedInput:', error);
-      setError('Something went wrong. Try again.');
+      logger.error('Error in handleUnifiedInput:', error);
+      setError(t('errors.serverError'));
       setIsSubmitting(false);
     }
-  };
+  }, [input, mediaFile, isSubmitting, status, handleUnifiedInput, t]);
 
   useEffect(() => {
     if (status === 'idle' || status === 'error') {
@@ -150,11 +155,12 @@ const UnifiedNewsInput = ({ className }: { className?: string }) => {
             )}
             
             <textarea
+              id="search-input"
               ref={textareaRef}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={mediaFile ? "Add context about this media (optional)..." : "Paste a link, article, claim, or upload media to verify..."}
+              placeholder={mediaFile ? t('verification.placeholder') : t('verification.placeholder')}
               className="w-full min-h-[140px] px-5 py-4 text-base bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/60"
               disabled={isProcessing}
             />
@@ -194,11 +200,14 @@ const UnifiedNewsInput = ({ className }: { className?: string }) => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Checking...
+                    {status === 'searching' ? t('common.searching') : 
+                     status === 'ranking' ? t('common.ranking') : 
+                     status === 'verifying' ? t('common.verifying') : 
+                     t('common.loading')}
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    Verify
+                    {t('common.verify')}
                     <ArrowRight className="h-4 w-4" />
                   </span>
                 )}
@@ -217,6 +226,6 @@ const UnifiedNewsInput = ({ className }: { className?: string }) => {
       </form>
     </div>
   );
-};
+});
 
 export default UnifiedNewsInput;

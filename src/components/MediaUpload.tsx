@@ -3,7 +3,8 @@ import { Upload, X, Image, Music, Video, FileWarning } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { MediaFile, MediaType } from '@/types/news';
-import { fileToBase64, getMediaTypeFromMime } from '@/utils/geminiApi';
+import { fileToBase64, getMediaTypeFromMime } from '@/services/aiProviders';
+import { logger } from '@/lib/logger';
 
 interface MediaUploadProps {
   onMediaSelect: (media: MediaFile | null) => void;
@@ -85,7 +86,7 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
 
       onMediaSelect(mediaFile);
     } catch (err) {
-      console.error('Error processing file:', err);
+      logger.error('Error processing file:', err);
       setError('Failed to process file. Please try again.');
     }
   }, [onMediaSelect]);
