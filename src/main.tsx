@@ -1,5 +1,15 @@
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
 import './index.css'
+import './config/i18n'
+import { validateEnv } from './config/env'
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Validate environment variables at startup
+validateEnv();
+
+createRoot(document.getElementById("root")!).render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
+);
