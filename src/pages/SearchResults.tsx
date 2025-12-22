@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { useNews } from '@/context/NewsContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';

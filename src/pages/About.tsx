@@ -1,5 +1,5 @@
 
-import React from 'react';
+
 import Header from '@/components/Header';
 import { Link } from 'react-router-dom';
 import { Shield, Globe, Zap, User, ArrowRight } from 'lucide-react';

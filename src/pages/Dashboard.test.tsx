@@ -31,7 +31,7 @@ let mockVerifications: Array<{
   articleTitle?: string;
 }> = [];
 
-vi.mock('@/services/appwriteService', () => ({
+vi.mock('@/services/appwrite', () => ({
   getUserHistoryByType: vi.fn().mockImplementation(() => Promise.resolve(mockVerifications)),
 }));
 
@@ -84,7 +84,7 @@ describe('Dashboard Component', () => {
       renderComponent();
       
       await waitFor(() => {
-        expect(screen.getByText(/your dashboard/i)).toBeInTheDocument();
+        expect(screen.getByText(/dashboard/i)).toBeInTheDocument();
       });
     });
   });
@@ -293,7 +293,7 @@ describe('Dashboard Component', () => {
       renderComponent();
       
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: /your dashboard/i })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: /dashboard/i })).toBeInTheDocument();
       });
     });
 

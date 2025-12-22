@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Filter, Clock, Eye, CheckCircle, XCircle, HelpCircle } from 'lucide-react';
 import Header from '@/components/Header';
@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getRecentVerifications, VerificationDocument } from '@/services/appwriteService';
+import { getRecentVerifications, VerificationDocument } from '@/services/appwrite';
 import { SkeletonVerificationCard } from '@/components/ui/skeleton-loaders';
 import { NoContentEmptyState } from '@/components/ui/empty-states';
 import { ErrorState } from '@/components/ui/error-states';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
+import { logger } from '@/lib/logger';
 
 const Feed = () => {
   const navigate = useNavigate();
@@ -19,33 +20,40 @@ const Feed = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [veracityFilter, setVeracityFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'recent' | 'views'>('recent');
+  const [sortBy, setSortBy] = useState<'recent' | 'views' | 'votes'>('recent');
+  const [timeRange, setTimeRange] = useState<string>('all');
 
-  useEffect(() => {
-    loadVerifications();
-  }, [veracityFilter]);
-
-  const loadVerifications = async () => {
+  const loadVerifications = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const filter = veracityFilter === 'all' ? undefined : veracityFilter;
-      const data = await getRecentVerifications(20, filter);
+      
+      let dateRange;
+      if (timeRange !== 'all') {
+        const now = new Date();
+        const start = new Date();
+        if (timeRange === '24h') start.setHours(now.getHours() - 24);
+        if (timeRange === '7d') start.setDate(now.getDate() - 7);
+        if (timeRange === '30d') start.setDate(now.getDate() - 30);
+        dateRange = { start: start.toISOString(), end: now.toISOString() };
+      }
+
+      const data = await getRecentVerifications(20, filter, sortBy, dateRange);
       setVerifications(data);
     } catch (err) {
       setError('Failed to load verifications');
-      console.error(err);
+      logger.error('Error loading verifications:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [veracityFilter, sortBy, timeRange]);
 
-  const sortedVerifications = [...verifications].sort((a, b) => {
-    if (sortBy === 'views') {
-      return (b.viewCount || 0) - (a.viewCount || 0);
-    }
-    return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-  });
+  useEffect(() => {
+    loadVerifications();
+  }, [loadVerifications]);
+
+  const sortedVerifications = verifications; // Already sorted by API
 
   const getVeracityIcon = (veracity?: string) => {
     switch (veracity?.toLowerCase()) {
@@ -91,20 +99,35 @@ const Feed = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
           {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
-            <Select value={veracityFilter} onValueChange={setVeracityFilter}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="All results" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All results</SelectItem>
-                <SelectItem value="true">True</SelectItem>
-                <SelectItem value="mostly true">Mostly true</SelectItem>
-                <SelectItem value="false">False</SelectItem>
-                <SelectItem value="mostly false">Mostly false</SelectItem>
-                <SelectItem value="uncertain">Uncertain</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap gap-3 flex-1">
+              <Select value={veracityFilter} onValueChange={setVeracityFilter}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="All results" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All results</SelectItem>
+                  <SelectItem value="true">True</SelectItem>
+                  <SelectItem value="mostly true">Mostly true</SelectItem>
+                  <SelectItem value="false">False</SelectItem>
+                  <SelectItem value="mostly false">Mostly false</SelectItem>
+                  <SelectItem value="uncertain">Uncertain</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger className="w-full sm:w-[160px]">
+                  <Clock className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Time Range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="24h">Last 24 Hours</SelectItem>
+                  <SelectItem value="7d">Last 7 Days</SelectItem>
+                  <SelectItem value="30d">Last 30 Days</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             
             <div className="flex gap-2">
               <Button
@@ -122,6 +145,14 @@ const Feed = () => {
               >
                 <Eye className="h-4 w-4 mr-2" />
                 Popular
+              </Button>
+              <Button
+                variant={sortBy === 'votes' ? 'default' : 'outline'}
+                onClick={() => setSortBy('votes')}
+                size="sm"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Helpful
               </Button>
             </div>
           </div>
