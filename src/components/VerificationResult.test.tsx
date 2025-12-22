@@ -39,7 +39,7 @@ vi.mock('@/hooks/use-toast', () => ({
   }),
 }));
 
-vi.mock('@/services/appwriteService', () => ({
+vi.mock('@/services/appwrite', () => ({
   getVerificationBySlug: vi.fn().mockResolvedValue(null),
 }));
 

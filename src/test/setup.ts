@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 
 // Mock window.matchMedia for components that use media queries
 Object.defineProperty(window, 'matchMedia', {
@@ -45,3 +46,32 @@ class IntersectionObserverMock {
   takeRecords = () => [];
 }
 window.IntersectionObserver = IntersectionObserverMock as unknown as typeof IntersectionObserver;
+
+// Mock react-i18next
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'common.verify': 'Verify',
+        'common.verifying': 'Checking...',
+        'verification.placeholder': 'Paste a link or type news to verify...',
+        'errors.serverError': 'Server error. Please try again.',
+        'verification.urlDetected': 'URL detected',
+        'verification.imageAttached': 'Image attached',
+        'verification.videoAttached': 'Video attached',
+        'errors.enterSomething': 'Please enter something to verify',
+        'common.media': 'Media',
+        'common.enter': 'Enter',
+      };
+      return translations[key] || key;
+    },
+    i18n: {
+      changeLanguage: () => Promise.resolve(),
+      language: 'en',
+    },
+  }),
+  initReactI18next: {
+    type: '3rdParty',
+    init: () => {},
+  },
+}));

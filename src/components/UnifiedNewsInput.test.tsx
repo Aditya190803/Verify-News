@@ -225,7 +225,7 @@ describe('UnifiedNewsInput Component', () => {
       await user.click(submitButton);
       
       await waitFor(() => {
-        expect(screen.getByText(/something went wrong/i)).toBeInTheDocument();
+        expect(screen.getByText(/server error/i)).toBeInTheDocument();
       });
     });
   });
