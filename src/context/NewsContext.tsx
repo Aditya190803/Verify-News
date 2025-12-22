@@ -30,7 +30,9 @@ class NewsContextErrorBoundary extends Component<{ children: ReactNode }, { hasE
 
   render() {
     if (this.state.hasError) {
-      return null; // Fail gracefully without breaking the app
+      // Still render children so the error boundary doesn't break the entire app
+      // The error will be caught by parent error boundaries
+      return this.props.children;
     }
     return this.props.children;
   }

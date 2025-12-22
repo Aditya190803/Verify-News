@@ -179,7 +179,7 @@ export const handleFirebaseError = handleAppwriteError;
  * ```
  */
 /**
- * Handles errors from AI providers (Gemini, OpenRouter, Groq).
+ * Handles errors from AI providers (Gemini, OpenRouter).
  * 
  * @param {unknown} error - The error to handle
  * @returns {string} A user-friendly error message
