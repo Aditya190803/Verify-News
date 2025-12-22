@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, memo } from 'react';
 import { cn } from '@/lib/utils';
 import { Menu, X, User, LogOut } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -6,12 +6,13 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import Logo from '@/components/Logo';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 interface HeaderProps {
   className?: string;
 }
 
-const Header = ({ className }: HeaderProps) => {
+const Header = memo(({ className }: HeaderProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -28,7 +29,7 @@ const Header = ({ className }: HeaderProps) => {
         description: "See you next time!"
       });
       navigate('/');
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: "Couldn't log out",
         description: "Please try again.",
@@ -49,24 +50,26 @@ const Header = ({ className }: HeaderProps) => {
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center">
-          <Link to="/" className="flex items-center">
+          <Link to="/" className="flex items-center" aria-label="Navigate to home page">
             <Logo size="md" showText className="hidden sm:flex" />
             <Logo size="sm" showText={false} className="sm:hidden" />
           </Link>
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1" aria-label="Main navigation">
           {navLinks.map((link) => (
-            <Link 
+            <Link
               key={link.path}
-              to={link.path} 
+              to={link.path}
               className={cn(
                 "px-4 py-2 text-sm rounded-lg transition-colors",
-                isActive(link.path) 
-                  ? "text-foreground bg-muted font-medium" 
+                isActive(link.path)
+                  ? "text-foreground bg-muted font-medium"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               )}
+              aria-label={`Navigate to ${link.label} page`}
+              aria-current={isActive(link.path) ? 'page' : undefined}
             >
               {link.label}
             </Link>
@@ -74,7 +77,8 @@ const Header = ({ className }: HeaderProps) => {
         </nav>
 
         {/* Desktop Auth */}
-        <div className="hidden lg:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-4">
+          <LanguageSwitcher />
           {currentUser ? (
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
@@ -90,7 +94,7 @@ const Header = ({ className }: HeaderProps) => {
               </Button>
             </div>
           ) : (
-            <Link to="/login">
+            <Link to="/login" aria-label="Sign in to your account">
               <Button size="sm">Sign in</Button>
             </Link>
           )}
@@ -98,9 +102,12 @@ const Header = ({ className }: HeaderProps) => {
 
         {/* Mobile Menu Button */}
         <div className="lg:hidden flex items-center">
-          <button 
+          <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-2 rounded-lg hover:bg-muted transition-colors"
+            aria-label={mobileMenuOpen ? 'Close mobile menu' : 'Open mobile menu'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
           >
             {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -110,18 +117,20 @@ const Header = ({ className }: HeaderProps) => {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 top-[65px] z-50 bg-background">
-          <nav className="flex flex-col p-4 gap-1">
+          <nav className="flex flex-col p-4 gap-1" aria-label="Mobile navigation">
             {navLinks.map((link) => (
-              <Link 
+              <Link
                 key={link.path}
                 to={link.path}
                 onClick={() => setMobileMenuOpen(false)}
                 className={cn(
                   "px-4 py-3 text-base rounded-lg transition-colors",
-                  isActive(link.path) 
-                    ? "bg-muted text-foreground font-medium" 
+                  isActive(link.path)
+                    ? "bg-muted text-foreground font-medium"
                     : "text-muted-foreground hover:bg-muted/50"
                 )}
+                aria-label={`Navigate to ${link.label} page`}
+                aria-current={isActive(link.path) ? 'page' : undefined}
               >
                 {link.label}
               </Link>
@@ -131,7 +140,7 @@ const Header = ({ className }: HeaderProps) => {
             
             {currentUser ? (
               <>
-                <div className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg">
+                <div className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg" aria-label="Current user information">
                   <User className="h-5 w-5 text-primary" />
                   <div>
                     <p className="font-medium">{currentUser.displayName || 'User'}</p>
@@ -142,13 +151,14 @@ const Header = ({ className }: HeaderProps) => {
                   onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
                   variant="outline"
                   className="mt-2"
+                  aria-label="Sign out of your account"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
                   Sign out
                 </Button>
               </>
             ) : (
-              <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+              <Link to="/login" onClick={() => setMobileMenuOpen(false)} aria-label="Sign in to your account">
                 <Button className="w-full">Sign in</Button>
               </Link>
             )}
@@ -157,6 +167,6 @@ const Header = ({ className }: HeaderProps) => {
       )}
     </header>
   );
-};
+});
 
 export default Header;
