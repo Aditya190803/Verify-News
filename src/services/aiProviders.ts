@@ -16,7 +16,6 @@ const getApiKey = (name: string) => import.meta.env[name] || (typeof process !==
 // Model names from environment variables
 const GEMINI_MODEL = import.meta.env.VITE_GEMINI_MODEL || "gemini-2.5-flash";
 const OPENROUTER_MODEL = import.meta.env.VITE_OPENROUTER_MODEL || "mistralai/devstral-2512:free";
-const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || "llama-3.3-70b-versatile";
 
 // Check if we should use proxy (backend) or direct API calls
 const shouldUseProxy = isAIProxyAvailable();
@@ -158,56 +157,28 @@ export const verifyWithOpenRouter = async (
 };
 
 /**
- * Groq Provider (Kimi)
- * Note: When proxy is enabled, this function routes through the backend
+ * Groq Provider - DEPRECATED
+ * Groq has been removed from the system.
+ * All requests now use OpenRouter as the primary provider with Gemini as fallback.
+ * @deprecated Use verifyWithFallback instead
  */
 export const verifyWithGroq = async (
   content: string,
   searchResults: SearchResponse[] = []
 ): Promise<VerificationResult> => {
-  // Use proxy if available (removes need for client-side API keys)
-  if (shouldUseProxy) {
-    return verifyWithProxy(content, searchResults);
-  }
-
-  // Fallback to direct API call (for backward compatibility)
-  const apiKey = getApiKey('VITE_GROQ_API_KEY');
-  if (!apiKey) throw new Error('Groq API key is missing');
-
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      "model": GROQ_MODEL,
-      "messages": [
-        { "role": "user", "content": constructPrompt(content, searchResults) }
-      ],
-      "response_format": { "type": "json_object" }
-    })
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Groq API error: ${error.error?.message || response.statusText}`);
-  }
-
-  const data = await response.json();
-  return parseAIResponse(data.choices[0].message.content);
+  logger.warn('verifyWithGroq is deprecated. Using OpenRouter instead.');
+  return verifyWithOpenRouter(content, searchResults);
 };
 
 /**
  * Fallback Mechanism
- * Order: Groq -> OpenRouter -> Gemini
+ * Order: OpenRouter -> Gemini
  */
 export const verifyWithFallback = async (
   content: string,
   searchResults: SearchResponse[] = []
 ): Promise<VerificationResult> => {
   const providers = [
-    { name: 'Groq', fn: verifyWithGroq },
     { name: 'OpenRouter', fn: verifyWithOpenRouter },
     { name: 'Gemini', fn: verifyWithGemini }
   ];
@@ -230,10 +201,10 @@ export const verifyWithFallback = async (
 
 /**
  * Generate Title with Fallback
+ * Order: OpenRouter -> Gemini
  */
 export const generateTitleWithFallback = async (input: string): Promise<string> => {
   const providers = [
-    { name: 'Groq', fn: generateTitleWithGroq },
     { name: 'OpenRouter', fn: generateTitleWithOpenRouter },
     { name: 'Gemini', fn: generateTitleWithGemini }
   ];
@@ -252,6 +223,7 @@ export const generateTitleWithFallback = async (input: string): Promise<string> 
 
 /**
  * Rank Search Results with Fallback
+ * Order: OpenRouter -> Gemini
  */
 export const rankSearchResultsWithFallback = async (
   content: string,
@@ -260,7 +232,6 @@ export const rankSearchResultsWithFallback = async (
   if (results.length <= 3) return results; // No need to rank if few results
 
   const providers = [
-    { name: 'Groq', fn: rankWithGroq },
     { name: 'OpenRouter', fn: rankWithOpenRouter },
     { name: 'Gemini', fn: rankWithGemini }
   ];
@@ -337,39 +308,12 @@ async function rankWithOpenRouter(content: string, results: SearchArticle[]): Pr
   return parseRankingResponse(data.choices[0].message.content, results);
 }
 
+
 /**
- * Ranking - Groq
- * Note: When proxy is enabled, this function routes through the backend
+ * Ranking - Groq (DEPRECATED)
+ * Groq has been removed. Use OpenRouter instead - see rankWithOpenRouter
  */
-async function rankWithGroq(content: string, results: SearchArticle[]): Promise<SearchArticle[]> {
-  // Use proxy if available (removes need for client-side API keys)
-  if (shouldUseProxy) {
-    return rankSearchResultsWithProxy(content, results);
-  }
-
-  // Fallback to direct API call (for backward compatibility)
-  const apiKey = getApiKey('VITE_GROQ_API_KEY');
-  if (!apiKey) throw new Error('Groq API key is missing');
-
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      "model": GROQ_MODEL,
-      "messages": [
-        { "role": "user", "content": constructRankingPrompt(content, results) }
-      ],
-      "response_format": { "type": "json_object" }
-    })
-  });
-
-  if (!response.ok) throw new Error('Groq ranking failed');
-  const data = await response.json();
-  return parseRankingResponse(data.choices[0].message.content, results);
-}
+// Function intentionally removed - use rankWithOpenRouter instead
 
 function constructRankingPrompt(content: string, results: SearchArticle[]): string {
   const simplifiedResults = results.map((r, i) => ({
@@ -458,37 +402,10 @@ async function generateTitleWithOpenRouter(input: string): Promise<string> {
 }
 
 /**
- * Title Generation - Groq
- * Note: When proxy is enabled, this function routes through the backend
+ * Title Generation - Groq (DEPRECATED)
+ * Groq has been removed. Use OpenRouter instead - see generateTitleWithOpenRouter
  */
-async function generateTitleWithGroq(input: string): Promise<string> {
-  // Use proxy if available (removes need for client-side API keys)
-  if (shouldUseProxy) {
-    return generateTitleWithProxy(input);
-  }
-
-  // Fallback to direct API call (for backward compatibility)
-  const apiKey = getApiKey('VITE_GROQ_API_KEY');
-  if (!apiKey) throw new Error('Groq API key is missing');
-
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      "model": GROQ_MODEL,
-      "messages": [
-        { "role": "user", "content": constructTitlePrompt(input) }
-      ]
-    })
-  });
-
-  if (!response.ok) throw new Error('Groq title generation failed');
-  const data = await response.json();
-  return data.choices[0].message.content.replace(/^"|"$/g, '').trim();
-}
+// Function intentionally removed - use generateTitleWithOpenRouter instead
 
 function constructTitlePrompt(input: string): string {
   return `Generate a concise, human-readable title (max 6 words) for the following news content or topic. Respond ONLY with the title text.\n\nInput: ${input}`;

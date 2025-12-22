@@ -29,7 +29,7 @@ vi.mock('../services/aiProviders', () => ({
     confidence: 85,
     explanation: 'Test explanation',
     sources: [],
-    provider: 'Groq'
+    provider: 'OpenRouter'
   }),
   verifyMediaWithGemini: vi.fn().mockResolvedValue({
     veracity: 'true',

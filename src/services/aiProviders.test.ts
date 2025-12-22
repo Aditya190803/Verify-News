@@ -23,7 +23,7 @@ vi.mock('@google/generative-ai', () => {
   };
 });
 
-// Mock fetch for OpenRouter and Groq
+// Mock fetch for OpenRouter
 global.fetch = vi.fn();
 
 describe('AI Providers', () => {
@@ -32,7 +32,6 @@ describe('AI Providers', () => {
     // Set up environment variables
     process.env.VITE_GEMINI_API_KEY = 'test-gemini-key';
     process.env.VITE_OPENROUTER_API_KEY = 'test-openrouter-key';
-    process.env.VITE_GROQ_API_KEY = 'test-groq-key';
   });
 
   describe('verifyWithGemini', () => {
@@ -76,61 +75,45 @@ describe('AI Providers', () => {
     });
   });
 
-  describe('verifyWithGroq', () => {
-    it('should call Groq API with correct model and return parsed response', async () => {
+  describe('verifyWithGroq (deprecated)', () => {
+    it('should redirect to OpenRouter (Groq is deprecated)', async () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({
-          choices: [{ message: { content: JSON.stringify({ veracity: 'partially-true', confidence: 70, explanation: 'Groq test', sources: [] }) } }]
+          choices: [{ message: { content: JSON.stringify({ veracity: 'partially-true', confidence: 70, explanation: 'OpenRouter test', sources: [] }) } }]
         })
       } as Response);
 
       const result = await verifyWithGroq('Test content');
       expect(result.veracity).toBe('partially-true');
       expect(result.confidence).toBe(70);
-      expect(fetch).toHaveBeenCalledWith(expect.stringContaining('groq.com'), expect.any(Object));
+      // Verify it uses OpenRouter instead
+      expect(fetch).toHaveBeenCalledWith(expect.stringContaining('openrouter.ai'), expect.any(Object));
     });
   });
 
   describe('verifyWithFallback', () => {
     it('should fallback to secondary provider if primary fails', async () => {
-      // Gemini fails
-      const { GoogleGenerativeAI } = await import('@google/generative-ai');
-      vi.mocked(GoogleGenerativeAI).mockImplementationOnce(() => ({
-        getGenerativeModel: () => ({
-          generateContent: () => Promise.reject(new Error('Gemini failed'))
-        })
-      } as any));
+      // OpenRouter fails
+      vi.mocked(fetch).mockRejectedValueOnce(new Error('OpenRouter failed'));
 
-      // OpenRouter succeeds
-      vi.mocked(fetch).mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({
-          choices: [{ message: { content: JSON.stringify({ veracity: 'true', confidence: 95, explanation: 'Fallback success', sources: [] }) } }]
-        })
-      } as Response);
-
+      // Gemini succeeds
       const result = await verifyWithFallback('Test content');
-      expect(result.explanation).toBe('Fallback success');
+      expect(result.veracity).toBe('true');
+      expect(result.confidence).toBe(90);
     });
 
     it('should throw error if all providers fail', async () => {
-      // Gemini fails
-      const { GoogleGenerativeAI } = await import('@google/generative-ai');
-      vi.mocked(GoogleGenerativeAI).mockImplementation(() => ({
-        getGenerativeModel: () => ({
-          generateContent: () => Promise.reject(new Error('Gemini failed'))
-        })
-      } as any));
-
-      // OpenRouter and Groq fail
+      // Both OpenRouter and Gemini fail
       vi.mocked(fetch).mockResolvedValue({
         ok: false,
         statusText: 'Error',
         json: () => Promise.resolve({ error: { message: 'API Error' } })
       } as Response);
 
-      await expect(verifyWithFallback('Test content')).rejects.toThrow('All AI providers failed');
-    });
-  });
-});
+      const { GoogleGenerativeAI } = await import('@google/generative-ai');
+      vi.mocked(GoogleGenerativeAI).mockImplementation(() => ({
+        getGenerativeModel: () => ({
+          generateContent: () => Promise.reject(new Error('Gemini failed'))
+        })
+      } as any));
