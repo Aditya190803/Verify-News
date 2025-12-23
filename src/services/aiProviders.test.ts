@@ -112,8 +112,15 @@ describe('AI Providers', () => {
       } as Response);
 
       const { GoogleGenerativeAI } = await import('@google/generative-ai');
-      vi.mocked(GoogleGenerativeAI).mockImplementation(() => ({
+      type GenerativeAIConstructor = typeof GoogleGenerativeAI;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vi.mocked<any>(GoogleGenerativeAI).mockImplementation(() => ({
         getGenerativeModel: () => ({
           generateContent: () => Promise.reject(new Error('Gemini failed'))
         })
-      } as any));
+      } as unknown as InstanceType<GenerativeAIConstructor>));
+
+      await expect(verifyWithFallback('Test content')).rejects.toThrow();
+    });
+  });
+});

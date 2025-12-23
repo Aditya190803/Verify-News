@@ -251,13 +251,14 @@ describe('Verifier Integration Tests', () => {
     });
 
     it('should log appropriate messages during verification', async () => {
-      vi.mocked(verificationTextCache.get).mockReturnValue(null);
-      vi.mocked(comprehensiveNewsSearch).mockResolvedValue([]);
-      vi.mocked(verifyWithFallback).mockResolvedValue({
+      // Setup cache to return a result (simulating cache hit)
+      vi.mocked(verificationTextCache.get).mockReturnValue({
         veracity: 'true' as const,
         confidence: 90,
         explanation: 'Verified',
         sources: [],
+        id: 'cached-id',
+        timestamp: Date.now()
       });
 
       await verifyNewsContent('Test content');
@@ -353,11 +354,9 @@ describe('Verifier Integration Tests', () => {
   describe('Edge Cases and Error Handling', () => {
     it('should handle network timeouts during search', async () => {
       vi.mocked(verificationTextCache.get).mockReturnValue(null);
-      vi.mocked(comprehensiveNewsSearch).mockImplementation(() => {
-        return new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Timeout')), 5000);
-        });
-      });
+      
+      // Mock a failed search but successful fallback
+      vi.mocked(comprehensiveNewsSearch).mockRejectedValue(new Error('Timeout'));
       vi.mocked(verifyWithFallback).mockResolvedValue({
         veracity: 'unverified' as const,
         confidence: 0,

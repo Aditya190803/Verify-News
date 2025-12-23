@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { extractNewsFromSearch, generateSearchVariations } from './searchUtils';
+import type { SearchResponse } from '@/types/news';
 
 describe('searchUtils utilities', () => {
   describe('extractNewsFromSearch', () => {
@@ -30,12 +31,12 @@ describe('searchUtils utilities', () => {
     });
 
     it('returns empty array for null results', () => {
-      const articles = extractNewsFromSearch(null as any, 'test');
+      const articles = extractNewsFromSearch(null as unknown as SearchResponse, 'test');
       expect(articles).toHaveLength(0);
     });
 
     it('returns empty array for results without webPages', () => {
-      const articles = extractNewsFromSearch({} as any, 'test');
+      const articles = extractNewsFromSearch({} as unknown as SearchResponse, 'test');
       expect(articles).toHaveLength(0);
     });
 

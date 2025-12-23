@@ -41,6 +41,7 @@ describe('verificationService', () => {
 
       vi.mocked(databases.createDocument).mockResolvedValue({
         $id: 'new-doc-id',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
       await saveVerificationToCollection(
@@ -87,6 +88,7 @@ describe('verificationService', () => {
       vi.mocked(databases.listDocuments).mockResolvedValue({
         documents: [mockDoc],
         total: 1
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
       const result = await getVerificationBySlug('test-slug');
@@ -99,6 +101,7 @@ describe('verificationService', () => {
       vi.mocked(databases.listDocuments).mockResolvedValue({
         documents: [],
         total: 0
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
       const result = await getVerificationBySlug('non-existent');
@@ -114,6 +117,7 @@ describe('verificationService', () => {
           { $id: '2', slug: 'slug2', result: '{}' }
         ],
         total: 2
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
       const result = await getRecentVerifications(10);
@@ -140,6 +144,7 @@ describe('verificationService', () => {
       vi.mocked(databases.getDocument).mockResolvedValue({
         $id: 'doc-id',
         upvotes: 5
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
       await voteOnVerification('doc-id', 'up');
@@ -156,6 +161,7 @@ describe('verificationService', () => {
       vi.mocked(databases.getDocument).mockResolvedValue({
         $id: 'doc-id',
         downvotes: 2
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
       await voteOnVerification('doc-id', 'down');

@@ -3,11 +3,11 @@ import { logger } from './logger';
 
 describe('Logger Utility', () => {
   let consoleSpy: {
-    log: any;
-    info: any;
-    warn: any;
-    error: any;
-    debug: any;
+    log: ReturnType<typeof vi.spyOn>;
+    info: ReturnType<typeof vi.spyOn>;
+    warn: ReturnType<typeof vi.spyOn>;
+    error: ReturnType<typeof vi.spyOn>;
+    debug: ReturnType<typeof vi.spyOn>;
   };
 
   beforeEach(() => {

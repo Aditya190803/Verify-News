@@ -7,6 +7,7 @@ import {
   clearUserSearchHistory
 } from './historyService';
 import { databases } from './base';
+import type { VerificationResult } from '@/types/news';
 
 // Mock the base module
 vi.mock('./base', () => ({
@@ -33,6 +34,7 @@ describe('historyService', () => {
 
   describe('saveSearchToHistory', () => {
     it('should create a search history entry', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(databases.createDocument).mockResolvedValue({ $id: 'new-id' } as any);
 
       await saveSearchToHistory(
@@ -58,12 +60,13 @@ describe('historyService', () => {
 
   describe('saveVerificationToHistory', () => {
     it('should create a verification history entry', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(databases.createDocument).mockResolvedValue({ $id: 'new-id' } as any);
 
       await saveVerificationToHistory(
         'user123',
         'test query',
-        { veracity: 'true', confidence: 95, explanation: '...', sources: [] } as any,
+        { veracity: 'true', confidence: 95, explanation: '...', sources: [] } as VerificationResult,
         null,
         'test-slug',
         'Test Title'
@@ -94,6 +97,7 @@ describe('historyService', () => {
           { $id: '1', query: 'q1', timestamp: '2024-01-01', resultType: 'search' }
         ],
         total: 1
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
       const result = await getUserSearchHistory('user123');
@@ -107,7 +111,9 @@ describe('historyService', () => {
       vi.mocked(databases.getDocument).mockResolvedValue({
         $id: 'doc-id',
         userId: 'user123'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(databases.deleteDocument).mockResolvedValue({} as any);
 
       await deleteSearchHistoryItem('user123', 'doc-id');
@@ -128,6 +134,7 @@ describe('historyService', () => {
           { $id: '2' }
         ],
         total: 2
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
       await clearUserSearchHistory('user123');

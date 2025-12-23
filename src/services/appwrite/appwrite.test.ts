@@ -63,6 +63,7 @@ describe('appwriteService', () => {
       vi.mocked(databases.listDocuments).mockResolvedValueOnce({
         documents: [],
         total: 0,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
       
       const result = await getVerificationBySlug('nonexistent');
@@ -91,6 +92,7 @@ describe('appwriteService', () => {
           },
         ],
         total: 1,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
       const result = await getUserSearchHistory('user123');
