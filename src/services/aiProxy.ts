@@ -19,7 +19,7 @@ const AI_PROXY_BASE_URL = import.meta.env.VITE_AI_PROXY_URL || '/api/ai';
  */
 async function callAIProxy<T>(
   endpoint: string,
-  payload: any,
+  payload: Record<string, unknown>,
   timeout: number = 30000
 ): Promise<T> {
   const controller = new AbortController();

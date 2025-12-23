@@ -39,9 +39,11 @@ export const useVerification = ({ userId, refreshHistory, onStatusChange, onResu
   const navigate = useNavigate();
   
   // Create a memoized version of comprehensiveNewsSearch to avoid duplicate API calls
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const searchCacheRef = useRef<Record<string, Promise<any>>>({});
   
-  const memoizedComprehensiveNewsSearch = useCallback(async (content: string, statusCallback?: (status: string) => void) => {
+  // Memoized search to avoid duplicate API calls for the same content
+  const memoizedComprehensiveNewsSearch = useCallback(async (content: string, statusCallback?: (status: string) => void): Promise<SearchResponse[]> => {
     const cacheKey = content.trim();
     
     // Check if we already have a pending request for this content
@@ -161,7 +163,7 @@ export const useVerification = ({ userId, refreshHistory, onStatusChange, onResu
       onStatusChange('error');
       throw error;
     }
-  }, [userId, refreshHistory, onStatusChange, onResultReady, navigate]);
+  }, [userId, refreshHistory, onStatusChange, onResultReady, navigate, memoizedComprehensiveNewsSearch]);
 
   const verifyMedia = useCallback(async (mediaFile: MediaFile, query?: string, forcedSlug?: string, forcedTitle?: string) => {
     try {

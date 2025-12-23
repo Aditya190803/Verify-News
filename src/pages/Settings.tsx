@@ -99,7 +99,7 @@ const Settings = () => {
         description: "Your preferences have been updated successfully.",
       });
       setHasChanges(false);
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: "Error saving settings",
         description: "Failed to save your preferences. Please try again.",

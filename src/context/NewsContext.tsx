@@ -16,16 +16,17 @@ class NewsContextErrorBoundary extends Component<{ children: ReactNode }, { hasE
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error): { hasError: boolean } {
+  static getDerivedStateFromError(_error: Error): { hasError: boolean } {
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+  componentDidCatch(error: Error, _errorInfo: ErrorInfo): void {
     logger.error('NewsContext ErrorBoundary caught an error:', {
       error: error.message,
       stack: error.stack,
-      componentStack: errorInfo.componentStack
+      componentStack: _errorInfo.componentStack
     });
+    // Error is handled by error boundary, no need to re-throw
   }
 
   render() {

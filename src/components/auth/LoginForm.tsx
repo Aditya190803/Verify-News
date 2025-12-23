@@ -75,8 +75,7 @@ const LoginForm = ({ email, setEmail, password, setPassword }: LoginFormProps) =
       
       // Handle rate limit errors specifically
       if (isRateLimitError(error)) {
-        const rateLimitError = error as any;
-        message = rateLimitError.message || "Too many login attempts. Please wait and try again.";
+        message = error.message || "Too many login attempts. Please wait and try again.";
       }
       // Make error messages more user-friendly
       else if (message.includes('Invalid') || message.includes('password')) {

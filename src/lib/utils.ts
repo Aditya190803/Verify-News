@@ -13,7 +13,7 @@ export function cn(...inputs: ClassValue[]) {
  * @param wait The number of milliseconds to delay
  * @returns A debounced version of the function
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -37,7 +37,7 @@ export function debounce<T extends (...args: any[]) => any>(
  * @param limit The number of milliseconds to throttle
  * @returns A throttled version of the function
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: Parameters<T>) => ReturnType<T>>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
@@ -69,7 +69,7 @@ export function throttle<T extends (...args: any[]) => any>(
  * @param obj2 The second value to compare
  * @returns True if the values are deeply equal, false otherwise
  */
-export function deepEqual(obj1: any, obj2: any): boolean {
+export function deepEqual(obj1: unknown, obj2: unknown): boolean {
   // Handle primitive types and null/undefined
   if (obj1 === obj2) return true
   

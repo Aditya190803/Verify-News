@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { stackClientApp, isStackAuthConfigured } from '../config/stackAuth';
 import { logger } from '@/lib/logger';
-import { signOut as apiSignOut } from '../services/stackAuthApi';
+import { signOut as apiSignOut, type StackUser } from '../services/stackAuthApi';
 import { syncUserToAppwrite } from '@/services/appwrite/userService';
 
 // Type definitions for compatibility with the existing app structure
@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Sync user to Appwrite in the background (don't block UI)
       if (appUser && sdkUser) {
-        syncUserToAppwrite(sdkUser as any).catch(error => {
+        syncUserToAppwrite(sdkUser as StackUser).catch(error => {
           logger.error('Failed to sync user to Appwrite:', error);
         });
       }
@@ -133,7 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     // Sync user to Appwrite
-    await syncUserToAppwrite(user as any).catch(error => {
+    await syncUserToAppwrite(user as StackUser).catch(error => {
       logger.error('Failed to sync user to Appwrite after signup:', error);
     });
     
@@ -161,7 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     // Sync user to Appwrite
-    await syncUserToAppwrite(user as any).catch(error => {
+    await syncUserToAppwrite(user as StackUser).catch(error => {
       logger.error('Failed to sync user to Appwrite after login:', error);
     });
     
