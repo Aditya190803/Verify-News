@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { 
   saveVerificationToCollection, 
   getVerificationBySlug,
-  getRecentVerifications,
   incrementViewCount,
   voteOnVerification
 } from './verificationService';
@@ -106,23 +105,6 @@ describe('verificationService', () => {
 
       const result = await getVerificationBySlug('non-existent');
       expect(result).toBeNull();
-    });
-  });
-
-  describe('getRecentVerifications', () => {
-    it('should return a list of latest verifications', async () => {
-      vi.mocked(databases.listDocuments).mockResolvedValue({
-        documents: [
-          { $id: '1', slug: 'slug1', result: '{}' },
-          { $id: '2', slug: 'slug2', result: '{}' }
-        ],
-        total: 2
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
-
-      const result = await getRecentVerifications(10);
-      expect(result).toHaveLength(2);
-      expect(databases.listDocuments).toHaveBeenCalled();
     });
   });
 

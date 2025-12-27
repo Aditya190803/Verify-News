@@ -1,5 +1,9 @@
 import { API_ENDPOINTS, STORAGE_KEYS, ERROR_MESSAGES } from '@/lib/constants';
 import { logger } from '@/lib/logger';
+import type { StackUser, AuthResponse, UserProfileUpdate } from '@/types/auth';
+
+// Re-export types for backwards compatibility
+export type { StackUser, AuthResponse } from '@/types/auth';
 
 const STACK_API_BASE_URL = API_ENDPOINTS.STACK_AUTH;
 
@@ -68,30 +72,6 @@ const getHeaders = (accessToken?: string | null): Record<string, string> => {
   
   return headers;
 };
-
-/**
- * User type from Stack Auth API
- */
-export interface StackUser {
-  id: string;
-  primary_email: string | null;
-  primary_email_verified: boolean;
-  display_name: string | null;
-  profile_image_url: string | null;
-  signed_up_at_millis: number;
-  is_anonymous: boolean;
-  client_metadata?: Record<string, unknown>;
-  client_read_only_metadata?: Record<string, unknown>;
-}
-
-/**
- * Authentication response containing tokens
- */
-export interface AuthResponse {
-  access_token: string;
-  refresh_token: string;
-  user_id: string;
-}
 
 /**
  * Sign up with email and password
@@ -299,11 +279,7 @@ export const handleOAuthCallback = async (_code: string): Promise<AuthResponse> 
  * 
  * PATCH /users/me
  */
-export const updateCurrentUser = async (updates: {
-  display_name?: string;
-  profile_image_url?: string;
-  client_metadata?: Record<string, unknown>;
-}): Promise<StackUser> => {
+export const updateCurrentUser = async (updates: UserProfileUpdate): Promise<StackUser> => {
   const { accessToken } = getStoredTokens();
   
   if (!accessToken) {

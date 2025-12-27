@@ -11,9 +11,13 @@ import {
 } from './base';
 import { VerificationResult, NewsArticle, MediaFile } from '@/types/news';
 import { logger } from '@/lib/logger';
-import { queryCache } from '@/lib/queryCache';
+import { generateQueryHash } from '@/lib/utils';
 
-// Type for verification document (improved schema v2)
+// Curation threshold - number of similar queries before a claim becomes curated
+// Set to 1 for initial launch to ensure content appears, can increase later
+export const CURATION_THRESHOLD = 3;
+
+// Type for verification document (improved schema v2 with curation fields)
 export interface VerificationDocument {
   id?: string;
   slug: string;
@@ -34,6 +38,12 @@ export interface VerificationDocument {
   mediaId?: string;
   mediaUrl?: string;
   mediaType?: string;
+  // Curation fields
+  queryHash?: string;
+  queryCount?: number;
+  isCurated?: boolean;
+  curatedAt?: string | null;
+  verificationDepth?: 'standard' | 'deep';
 }
 
 // Increment view count for a verification
@@ -56,8 +66,61 @@ export const incrementViewCount = async (docId: string, currentCount: number): P
   }
 };
 
+/**
+ * Find similar verifications by query hash
+ * Returns verifications that have the same normalized query hash
+ */
+export const findSimilarVerifications = async (
+  queryHash: string,
+  limit: number = 10
+): Promise<VerificationDocument[]> => {
+  if (!isAppwriteConfigured() || !queryHash) {
+    return [];
+  }
+
+  try {
+    const response = await databases.listDocuments(
+      DATABASE_ID,
+      COLLECTIONS.VERIFICATIONS,
+      [
+        Query.equal('queryHash', queryHash),
+        Query.orderDesc('timestamp'),
+        Query.limit(limit)
+      ]
+    );
+
+    return response.documents.map((doc) => ({
+      id: doc.$id,
+      slug: doc.slug,
+      userId: doc.userId,
+      query: doc.query,
+      content: doc.content,
+      title: doc.title,
+      articleUrl: doc.articleUrl,
+      articleTitle: doc.articleTitle,
+      veracity: doc.veracity,
+      confidence: doc.confidence,
+      result: doc.result,
+      timestamp: doc.timestamp,
+      isPublic: doc.isPublic ?? true,
+      viewCount: doc.viewCount || 0,
+      upvotes: doc.upvotes || 0,
+      downvotes: doc.downvotes || 0,
+      queryHash: doc.queryHash,
+      queryCount: 1, // queryCount is not in DB schema, always default to 1
+      // isCurated based on having a valid result and being public
+      isCurated: doc.isPublic && doc.result && doc.result.length > 10,
+      curatedAt: doc.curatedAt,
+      verificationDepth: doc.verificationDepth || 'standard',
+    }));
+  } catch (error) {
+    logger.error('Error finding similar verifications:', error);
+    return [];
+  }
+};
+
 // Fetch a verification result by slug
-export const getVerificationBySlug = async (slug: string): Promise<VerificationDocument | null> => {
+export const getVerificationBySlug = async (slug: string, currentUserId?: string): Promise<VerificationDocument | null> => {
   if (!isAppwriteConfigured() || !slug) {
     logger.warn('getVerificationBySlug: Not configured or missing slug');
     return null;
@@ -76,6 +139,15 @@ export const getVerificationBySlug = async (slug: string): Promise<VerificationD
     }
     
     const doc = response.documents[0];
+    
+    // Check privacy: if verification is private, only the owner can view it
+    const isPrivate = doc.isPublic === false;
+    const isOwner = currentUserId && doc.userId === currentUserId;
+    
+    if (isPrivate && !isOwner) {
+      logger.info('Access denied: verification is private and user is not owner');
+      return null;
+    }
     
     // Increment view count (fire and forget)
     incrementViewCount(doc.$id, doc.viewCount || 0).catch(() => {});
@@ -177,7 +249,25 @@ export const saveVerificationToCollection = async (
       correctedInfo: result.correctedInfo
     });
 
-    // Improved schema v2 - with denormalized fields for filtering
+    // Generate query hash for similarity matching
+    const queryHash = generateQueryHash(searchQuery + ' ' + newsContent.substring(0, 500));
+
+    // Check for existing similar verifications
+    const similarVerifications = await findSimilarVerifications(queryHash, 1);
+    
+    if (similarVerifications.length > 0) {
+      // Similar verification exists - log it for tracking
+      const existing = similarVerifications[0];
+      if (existing.id) {
+        logger.info('Found existing similar verification:', { 
+          existingId: existing.id, 
+          queryHash
+        });
+      }
+      // Still save the new verification for history/audit purposes
+    }
+
+    // Improved schema v2 - with denormalized fields for filtering and curation
     const documentData = removeUndefined({
       // Core identification
       slug: slug,
@@ -208,6 +298,11 @@ export const saveVerificationToCollection = async (
       viewCount: 0,
       upvotes: 0,
       downvotes: 0,
+      
+      // Curation fields - curation is determined by having a valid result
+      queryHash,
+      // Note: queryCount and isCurated are not in DB schema, derived at query time
+      verificationDepth: 'standard',
     });
 
     await retryOperation(() =>
@@ -219,101 +314,9 @@ export const saveVerificationToCollection = async (
       )
     );
     logger.info('Verification saved to collection successfully');
-    // Invalidate cache since we've added new data
-    invalidateRecentVerificationsCache();
   } catch (error) {
     logger.error('Error saving verification to collection:', error);
   }
-};
-
-// Get recent public verifications (for feed/discovery)
-export const getRecentVerifications = async (
-  limit: number = 20,
-  veracityFilter?: string,
-  sortBy: 'recent' | 'views' | 'votes' = 'recent',
-  dateRange?: { start: string; end: string }
-): Promise<VerificationDocument[]> => {
-  if (!isAppwriteConfigured()) {
-    return [];
-  }
-  
-  // Generate cache key based on parameters
-  const cacheKey = `getRecentVerifications:${limit}:${veracityFilter || 'none'}:${sortBy}:${dateRange ? JSON.stringify(dateRange) : 'none'}`;
-  
-  // Try to get cached results first
-  const cachedResults = queryCache.get<VerificationDocument[]>(cacheKey);
-  if (cachedResults) {
-    logger.debug('Returning cached recent verifications');
-    return cachedResults;
-  }
-  
-  try {
-    const queries = [
-      Query.equal('isPublic', true),
-      Query.limit(limit)
-    ];
-    
-    if (veracityFilter) {
-      queries.push(Query.equal('veracity', veracityFilter));
-    }
-
-    if (dateRange) {
-      queries.push(Query.greaterThanEqual('timestamp', dateRange.start));
-      queries.push(Query.lessThanEqual('timestamp', dateRange.end));
-    }
-
-    if (sortBy === 'views') {
-      queries.push(Query.orderDesc('viewCount'));
-    } else if (sortBy === 'votes') {
-      queries.push(Query.orderDesc('upvotes'));
-    } else {
-      queries.push(Query.orderDesc('timestamp'));
-    }
-    
-    const response = await databases.listDocuments(
-      DATABASE_ID,
-      COLLECTIONS.VERIFICATIONS,
-      queries
-    );
-    
-    const results = response.documents.map((doc) => ({
-      id: doc.$id,
-      slug: doc.slug,
-      userId: doc.userId,
-      query: doc.query,
-      content: doc.content,
-      title: doc.title,
-      articleUrl: doc.articleUrl,
-      articleTitle: doc.articleTitle,
-      veracity: doc.veracity,
-      confidence: doc.confidence,
-      result: doc.result,
-      timestamp: doc.timestamp,
-      isPublic: doc.isPublic ?? true,
-      viewCount: doc.viewCount || 0,
-      upvotes: doc.upvotes || 0,
-      downvotes: doc.downvotes || 0,
-    }));
-    
-    // Cache the results for future requests
-    queryCache.set(cacheKey, results);
-    
-    return results;
-  } catch (error) {
-    logger.error('Error getting recent verifications:', error);
-    return [];
-  }
-};
-
-// Invalidate cache for getRecentVerifications
-// This should be called when new verifications are added or existing ones are updated
-export const invalidateRecentVerificationsCache = (): void => {
-  logger.debug('Invalidating recent verifications cache');
-  // Clear all cache entries that start with the function name
-  // Since queryCache doesn't expose internal keys, we'll use a prefix-based approach
-  // For now, we'll clear the entire query cache as a simple approach
-  // In a production environment, you might want a more targeted approach
-  queryCache.clear();
 };
 
 // Update verification privacy setting

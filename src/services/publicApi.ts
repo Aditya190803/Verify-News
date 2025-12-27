@@ -91,16 +91,6 @@ export const VerifyNewsAPI = {
       logger.error('API Error (verifyMedia):', error);
       throw new Error('Media verification failed.');
     }
-  },
-
-  /**
-   * Get the latest global verifications
-   */
-  getLatestVerifications: async (limit: number = 10) => {
-    // This would call a public endpoint in a real app
-    // For now, we can use our appwrite service
-    const { getRecentVerifications } = await import('@/services/appwrite');
-    return getRecentVerifications(limit);
   }
 };
 
