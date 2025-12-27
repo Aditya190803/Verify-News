@@ -24,7 +24,50 @@
     "edit": "Edit",
     "back": "Back",
     "next": "Next",
-    "previous": "Previous"
+    "previous": "Previous",
+    "howItWorks": "How it works",
+    "startVerifying": "Start verifying"
+  },
+  "aria": {
+    "navigateToPage": "Navigate to {{page}} page",
+    "signInToAccount": "Sign in to your account",
+    "signOutOfAccount": "Sign out of your account",
+    "openMobileMenu": "Open mobile menu",
+    "closeMobileMenu": "Close mobile menu"
+  },
+  "footer": {
+    "builtForTruth": "Built for truth."
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "createAccount": "Create account",
+    "user": "User",
+    "termsNote": "By signing in, you agree to our terms of service and privacy policy.",
+    "toastLoggedOutTitle": "Logged out",
+    "toastLoggedOutDesc": "See you next time!",
+    "toastLogoutFailedTitle": "Couldn't log out",
+    "toastLogoutFailedDesc": "Please try again."
+  },
+  "trust": {
+    "verifiedSources": "Verified sources",
+    "resultsInSeconds": "Results in seconds",
+    "aiPoweredAnalysis": "AI-powered analysis"
+  },
+  "features": {
+    "title": "How it works",
+    "step1": {
+      "title": "Share content",
+      "desc": "Paste a link, article text, or any claim you want to verify"
+    },
+    "step2": {
+      "title": "We analyze",
+      "desc": "Our AI cross-references with trusted news sources and fact-checkers"
+    },
+    "step3": {
+      "title": "Get the truth",
+      "desc": "See a clear verdict with sources you can check yourself"
+    }
   },
   "verification": {
     "title": "Verify News",
@@ -47,7 +90,8 @@
     "totalVerifications": "Total Verifications",
     "trueCount": "True",
     "falseCount": "False",
-    "uncertainCount": "Uncertain"
+    "uncertainCount": "Uncertain",
+    "subtitle": "Track your verification history and stats"
   },
   "settings": {
     "title": "Settings",
@@ -64,5 +108,33 @@
     "passwordMismatch": "Passwords do not match",
     "networkError": "Network error. Please try again.",
     "serverError": "Server error. Please try again."
+  },
+  "about": {
+    "heroTitle": "Fighting misinformation, one fact at a time",
+    "heroDesc": "VerifyNews was built to give everyone the power to verify information before believing or sharing it.",
+    "storyTitle": "Our story",
+    "storyP1": "In today's world of viral content and instant sharing, it's harder than ever to know what's true. We built VerifyNews because we believe everyone deserves access to accurate information—without spending hours fact-checking on their own.",
+    "storyP2": "Our platform combines AI technology with trusted sources to help you verify news articles, social media posts, and claims quickly and reliably. No expertise required.",
+    "featuresTitle": "What makes us different",
+    "features": {
+      "trustworthy": { "title": "Trustworthy verification", "desc": "We check against multiple reliable sources, not just one." },
+      "fast": { "title": "Fast results", "desc": "Get answers in seconds, not hours of research." },
+      "global": { "title": "Global coverage", "desc": "We verify news from sources around the world." },
+      "privacy": { "title": "Privacy first", "desc": "Your searches are yours. We don't sell your data." }
+    },
+    "ctaTitle": "Ready to try it?",
+    "ctaDesc": "Start verifying news in seconds."
+  },
+  "howItWorks": {
+    "heroTitle": "Simple verification, powerful results",
+    "heroDesc": "See how we help you separate fact from fiction in just a few steps.",
+    "featuresTitle": "What makes it work",
+    "feature": {
+      "smartUnderstanding": { "title": "Smart understanding", "desc": "Our AI understands context and nuance, not just keywords" },
+      "trustedSources": { "title": "Trusted sources", "desc": "We only use verified, reputable sources for verification" },
+      "realTime": { "title": "Real-time analysis", "desc": "Get results in seconds, not hours of manual research" }
+    },
+    "ctaTitle": "Ready to try it?",
+    "ctaDesc": "Start verifying in seconds. No signup required."
   }
 }
