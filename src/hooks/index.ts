@@ -12,3 +12,7 @@ export { useNewsState } from './useNewsState';
 export { useOnlineStatus } from './useOnlineStatus';
 export { useSearchHistory } from './useSearchHistory';
 export { useGlobalToastListener } from './useGlobalToastListener';
+export { useKeyboardShortcuts } from './useKeyboardShortcuts';
+export { useSearch } from './useSearch';
+export { useVerification } from './useVerification';
+export { useDashboardData } from './useDashboardData';

@@ -2,29 +2,10 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { stackClientApp, isStackAuthConfigured } from '../config/stackAuth';
 import { logger } from '@/lib/logger';
-import { signOut as apiSignOut, type StackUser } from '../services/stackAuthApi';
+import { signOut as apiSignOut } from '../services/stackAuthApi';
 import { syncUserToAppwrite } from '@/services/appwrite/userService';
-
-// Type definitions for compatibility with the existing app structure
-interface AppUser {
-  id: string;
-  displayName: string | null;
-  email: string | null;
-  emailVerified: boolean;
-  photoURL: string | null;
-  uid: string; // alias for id for backwards compatibility
-}
-
-interface AuthContextType {
-  currentUser: AppUser | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<AppUser>;
-  signup: (email: string, password: string) => Promise<AppUser>;
-  logout: () => Promise<void>;
-  socialLogin: (provider: 'google') => Promise<AppUser>;
-  resetPassword: (email: string) => Promise<void>;
-  refreshUser: () => Promise<void>;
-}
+import type { AppUser, AuthContextType, StackSDKUser } from '@/types/auth';
+import { convertSDKUserToStackUser } from '@/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -37,13 +18,7 @@ export const useAuth = (): AuthContextType => {
 };
 
 // Convert SDK user type to our AppUser format
-const convertToAppUser = (user: {
-  id: string;
-  displayName?: string | null;
-  primaryEmail?: string | null;
-  primaryEmailVerified?: boolean;
-  profileImageUrl?: string | null;
-} | null): AppUser | null => {
+const convertToAppUser = (user: StackSDKUser | null): AppUser | null => {
   if (!user) return null;
   return {
     id: user.id,
@@ -66,13 +41,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      const sdkUser = await stackClientApp.getUser();
+      const sdkUser = await stackClientApp.getUser() as StackSDKUser | null;
       const appUser = convertToAppUser(sdkUser);
       setCurrentUser(appUser);
       
       // Sync user to Appwrite in the background (don't block UI)
       if (appUser && sdkUser) {
-        syncUserToAppwrite(sdkUser as StackUser).catch(error => {
+        const stackUser = convertSDKUserToStackUser(sdkUser);
+        syncUserToAppwrite(stackUser).catch(error => {
           logger.error('Failed to sync user to Appwrite:', error);
         });
       }
@@ -125,15 +101,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error(result.error.message);
     }
     
-    const user = await stackClientApp.getUser();
+    const user = await stackClientApp.getUser() as StackSDKUser | null;
     const appUser = convertToAppUser(user);
     
-    if (!appUser) {
+    if (!appUser || !user) {
       throw new Error('Failed to get user after signup');
     }
     
     // Sync user to Appwrite
-    await syncUserToAppwrite(user as StackUser).catch(error => {
+    const stackUser = convertSDKUserToStackUser(user);
+    await syncUserToAppwrite(stackUser).catch(error => {
       logger.error('Failed to sync user to Appwrite after signup:', error);
     });
     
@@ -153,15 +130,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error(result.error.message);
     }
     
-    const user = await stackClientApp.getUser();
+    const user = await stackClientApp.getUser() as StackSDKUser | null;
     const appUser = convertToAppUser(user);
     
-    if (!appUser) {
+    if (!appUser || !user) {
       throw new Error('Failed to get user after login');
     }
     
     // Sync user to Appwrite
-    await syncUserToAppwrite(user as StackUser).catch(error => {
+    const stackUser = convertSDKUserToStackUser(user);
+    await syncUserToAppwrite(stackUser).catch(error => {
       logger.error('Failed to sync user to Appwrite after login:', error);
     });
     

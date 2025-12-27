@@ -10,7 +10,7 @@ import { getLLMGeneratedTitle } from '@/utils/llmHelpers';
 import { handleAppwriteError, handleAIError } from '@/utils/errorHandling';
 import { VerificationResult, VerificationStatus, NewsArticle, MediaFile, SearchResponse } from '@/types/news';
 import { logger } from '@/lib/logger';
-import { searchResultsCache } from '@/lib/verificationCache';
+import { searchResultsCache, verificationTextCache } from '@/lib/verificationCache';
 
 /**
  * Creates a fallback verification result when all providers fail
@@ -39,8 +39,7 @@ export const useVerification = ({ userId, refreshHistory, onStatusChange, onResu
   const navigate = useNavigate();
   
   // Create a memoized version of comprehensiveNewsSearch to avoid duplicate API calls
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const searchCacheRef = useRef<Record<string, Promise<any>>>({});
+  const searchCacheRef = useRef<Record<string, Promise<SearchResponse[]>>>({});
   
   // Memoized search to avoid duplicate API calls for the same content
   const memoizedComprehensiveNewsSearch = useCallback(async (content: string, statusCallback?: (status: string) => void): Promise<SearchResponse[]> => {
@@ -96,6 +95,44 @@ export const useVerification = ({ userId, refreshHistory, onStatusChange, onResu
         throw new Error("Please provide news content to verify");
       }
 
+      // Check cache first for verification results
+      const cacheKey = content.trim().toLowerCase();
+      const cachedVerification = verificationTextCache.get<VerificationResult>(cacheKey, 'verification');
+      
+      if (cachedVerification) {
+        logger.info('Returning cached verification result');
+        
+        // Still add selected article source if needed
+        if (selectedArticle?.url) {
+          const articleUrlExists = cachedVerification.sources.some(s => s.url === selectedArticle.url);
+          if (!articleUrlExists) {
+            cachedVerification.sources.unshift({
+              name: selectedArticle.title || "Original Article",
+              url: selectedArticle.url
+            });
+          }
+        }
+        
+        onResultReady(cachedVerification);
+        onStatusChange('verified');
+        
+        const slug = forcedSlug || generateSlug();
+        const llmTitle = forcedTitle || await getLLMGeneratedTitle(content || query);
+        
+        if (userId) {
+          try {
+            await saveVerificationToHistory(userId, query, cachedVerification, selectedArticle || null, slug, llmTitle);
+            refreshHistory();
+          } catch (appwriteError) {
+            handleAppwriteError(appwriteError, 'verification save');
+          }
+        }
+        
+        await saveVerificationToCollection(query, content, cachedVerification, userId || 'anonymous', selectedArticle || null, slug, llmTitle);
+        navigate(`/result/${slug}`);
+        return;
+      }
+
       let currentSearchResults = [];
       try {
         currentSearchResults = await memoizedComprehensiveNewsSearch(content || query, (status) => {
@@ -117,6 +154,10 @@ export const useVerification = ({ userId, refreshHistory, onStatusChange, onResu
           content, 
           currentSearchResults
         );
+        
+        // Cache the verification result
+        verificationTextCache.set(cacheKey, parsedResult, 'verification');
+        logger.info('Cached verification result for future requests');
         
         if (selectedArticle?.url) {
           const articleUrlExists = parsedResult.sources.some(s => s.url === selectedArticle.url);
