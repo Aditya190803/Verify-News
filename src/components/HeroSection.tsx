@@ -25,15 +25,15 @@ export const HeroSection = () => {
       <div className="flex flex-wrap items-center justify-center gap-6 mt-10 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <CheckCircle className="h-4 w-4 text-secondary" />
-          <span>Verified sources</span>
+          <span>{t('trust.verifiedSources')}</span>
         </div>
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-secondary" />
-          <span>Results in seconds</span>
+          <span>{t('trust.resultsInSeconds')}</span>
         </div>
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-secondary" />
-          <span>AI-powered analysis</span>
+          <span>{t('trust.aiPoweredAnalysis')}</span>
         </div>
       </div>
     </div>

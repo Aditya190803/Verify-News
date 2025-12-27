@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import Logo from '@/components/Logo';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 interface HeaderProps {
   className?: string;
@@ -18,6 +19,7 @@ const Header = memo(({ className }: HeaderProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { currentUser, logout } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   
   const isActive = (path: string) => location.pathname === path;
 
@@ -25,24 +27,23 @@ const Header = memo(({ className }: HeaderProps) => {
     try {
       await logout();
       toast({
-        title: "Logged out",
-        description: "See you next time!"
+        title: t('auth.toastLoggedOutTitle'),
+        description: t('auth.toastLoggedOutDesc')
       });
       navigate('/');
     } catch (_error) {
       toast({
-        title: "Couldn't log out",
-        description: "Please try again.",
+        title: t('auth.toastLogoutFailedTitle'),
+        description: t('auth.toastLogoutFailedDesc'),
         variant: "destructive"
       });
     }
   };
 
   const navLinks = [
-    { path: '/feed', label: 'Feed' },
-    ...(currentUser ? [{ path: '/dashboard', label: 'Dashboard' }] : []),
-    { path: '/about', label: 'About' },
-    { path: '/how-it-works', label: 'How it works' },
+    ...(currentUser ? [{ path: '/dashboard', label: t('dashboard.title') }] : []),
+    { path: '/about', label: t('common.about') },
+    { path: '/how-it-works', label: t('common.howItWorks') },
   ];
 
   return (
@@ -68,7 +69,7 @@ const Header = memo(({ className }: HeaderProps) => {
                   ? "text-foreground bg-muted font-medium"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               )}
-              aria-label={`Navigate to ${link.label} page`}
+              aria-label={t('aria.navigateToPage', { page: link.label })}
               aria-current={isActive(link.path) ? 'page' : undefined}
             >
               {link.label}
@@ -94,8 +95,8 @@ const Header = memo(({ className }: HeaderProps) => {
               </Button>
             </div>
           ) : (
-            <Link to="/login" aria-label="Sign in to your account">
-              <Button size="sm">Sign in</Button>
+            <Link to="/login" aria-label={t('aria.signInToAccount')}>
+              <Button size="sm">{t('auth.signIn')}</Button>
             </Link>
           )}
         </div>
@@ -105,7 +106,7 @@ const Header = memo(({ className }: HeaderProps) => {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-2 rounded-lg hover:bg-muted transition-colors"
-            aria-label={mobileMenuOpen ? 'Close mobile menu' : 'Open mobile menu'}
+            aria-label={mobileMenuOpen ? t('aria.closeMobileMenu') : t('aria.openMobileMenu')}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-navigation"
           >
@@ -129,7 +130,7 @@ const Header = memo(({ className }: HeaderProps) => {
                     ? "bg-muted text-foreground font-medium"
                     : "text-muted-foreground hover:bg-muted/50"
                 )}
-                aria-label={`Navigate to ${link.label} page`}
+                aria-label={t('aria.navigateToPage', { page: link.label })}
                 aria-current={isActive(link.path) ? 'page' : undefined}
               >
                 {link.label}
@@ -143,7 +144,7 @@ const Header = memo(({ className }: HeaderProps) => {
                 <div className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg" aria-label="Current user information">
                   <User className="h-5 w-5 text-primary" />
                   <div>
-                    <p className="font-medium">{currentUser.displayName || 'User'}</p>
+                    <p className="font-medium">{currentUser.displayName || t('auth.user')}</p>
                     <p className="text-sm text-muted-foreground">{currentUser.email}</p>
                   </div>
                 </div>
@@ -151,15 +152,15 @@ const Header = memo(({ className }: HeaderProps) => {
                   onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
                   variant="outline"
                   className="mt-2"
-                  aria-label="Sign out of your account"
+                  aria-label={t('aria.signOutOfAccount')}
                 >
                   <LogOut className="h-4 w-4 mr-2" />
-                  Sign out
+                  {t('auth.signOut')}
                 </Button>
               </>
             ) : (
-              <Link to="/login" onClick={() => setMobileMenuOpen(false)} aria-label="Sign in to your account">
-                <Button className="w-full">Sign in</Button>
+              <Link to="/login" onClick={() => setMobileMenuOpen(false)} aria-label={t('aria.signInToAccount')}>
+                <Button className="w-full">{t('auth.signIn')}</Button>
               </Link>
             )}
           </nav>

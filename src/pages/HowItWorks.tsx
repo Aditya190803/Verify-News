@@ -12,8 +12,10 @@ import {
   Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 const HowItWorks = () => {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -22,10 +24,10 @@ const HowItWorks = () => {
         <div className="bg-muted/30 border-b border-border/50">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
-              Simple verification,<br />powerful results
+              {t('howItWorks.heroTitle')}
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              See how we help you separate fact from fiction in just a few steps.
+              {t('howItWorks.heroDesc')}
             </p>
           </div>
         </div>
@@ -74,24 +76,24 @@ const HowItWorks = () => {
         {/* What makes it work */}
         <div className="bg-muted/30 border-y border-border/50">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16">
-            <h2 className="text-2xl font-semibold text-center mb-12">What makes it work</h2>
+            <h2 className="text-2xl font-semibold text-center mb-12">{t('howItWorks.featuresTitle')}</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 {
                   icon: <Lightbulb className="h-5 w-5" />,
-                  title: "Smart understanding",
-                  description: "Our AI understands context and nuance, not just keywords"
+                  title: t('howItWorks.feature.smartUnderstanding.title'),
+                  description: t('howItWorks.feature.smartUnderstanding.desc')
                 },
                 {
                   icon: <Shield className="h-5 w-5" />,
-                  title: "Trusted sources",
-                  description: "We only use verified, reputable sources for verification"
+                  title: t('howItWorks.feature.trustedSources.title'),
+                  description: t('howItWorks.feature.trustedSources.desc')
                 },
                 {
                   icon: <Zap className="h-5 w-5" />,
-                  title: "Real-time analysis",
-                  description: "Get results in seconds, not hours of manual research"
+                  title: t('howItWorks.feature.realTime.title'),
+                  description: t('howItWorks.feature.realTime.desc')
                 },
               ].map((feature, index) => (
                 <div key={index} className="text-center">
@@ -108,34 +110,18 @@ const HowItWorks = () => {
 
         {/* CTA */}
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 text-center">
-          <h2 className="text-2xl font-semibold mb-4">Ready to try it?</h2>
-          <p className="text-muted-foreground mb-8">Start verifying in seconds. No signup required.</p>
+          <h2 className="text-2xl font-semibold mb-4">{t('howItWorks.ctaTitle')}</h2>
+          <p className="text-muted-foreground mb-8">{t('howItWorks.ctaDesc')}</p>
           <Link to="/">
             <Button size="lg" className="group">
-              Start verifying
+              {t('common.startVerifying')}
               <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
         </div>
       </main>
       
-      <footer className="py-8 border-t border-border/50 bg-muted/30">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} VerifyNews
-            </p>
-            <div className="flex items-center gap-6 text-sm">
-              <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
-                About
-              </Link>
-              <Link to="/feed" className="text-muted-foreground hover:text-foreground transition-colors">
-                Feed
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      {/* Footer rendered globally in App */}
     </div>
   );
 };

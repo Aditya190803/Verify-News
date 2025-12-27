@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/context/AuthContext';
@@ -9,12 +9,14 @@ import LoginForm from '@/components/auth/LoginForm';
 import SignupForm from '@/components/auth/SignupForm';
 import SocialLogin from '@/components/auth/SocialLogin';
 import RateLimitStatus from '@/components/RateLimitStatus';
+import { useTranslation } from 'react-i18next';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (currentUser) {
@@ -36,10 +38,10 @@ const Login = () => {
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-8 bg-muted/50 p-1 rounded-xl">
                 <TabsTrigger value="login" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                  Sign in
+                  {t('auth.signIn')}
                 </TabsTrigger>
                 <TabsTrigger value="signup" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                  Create account
+                  {t('auth.createAccount')}
                 </TabsTrigger>
               </TabsList>
               
@@ -66,16 +68,12 @@ const Login = () => {
           </div>
           
           <p className="text-center text-sm text-muted-foreground mt-6">
-            By signing in, you agree to our terms of service and privacy policy.
+            {t('auth.termsNote')}
           </p>
         </div>
       </main>
       
-      <footer className="py-6 border-t border-border/50 bg-background">
-        <div className="max-w-5xl mx-auto px-4 text-center text-sm text-muted-foreground">
-          <Link to="/" className="hover:text-foreground transition-colors">← Back to home</Link>
-        </div>
-      </footer>
+      {/* Footer rendered globally in App */}
     </div>
   );
 };

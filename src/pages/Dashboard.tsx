@@ -12,7 +12,6 @@ import { useDashboardData } from '@/hooks/useDashboardData';
 const StatsOverview = lazy(() => import('@/components/dashboard/StatsOverview'));
 const ResultsBreakdown = lazy(() => import('@/components/dashboard/ResultsBreakdown'));
 const RecentVerifications = lazy(() => import('@/components/dashboard/RecentVerifications'));
-const TrendingAlerts = lazy(() => import('@/components/dashboard/TrendingAlerts'));
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -62,7 +61,7 @@ const Dashboard = () => {
           <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
             <h1 className="text-3xl font-bold mb-2">{t('dashboard.title')}</h1>
             <p className="text-muted-foreground">
-              Track your verification history and stats
+              {t('dashboard.subtitle')}
             </p>
           </div>
         </div>
@@ -95,19 +94,10 @@ const Dashboard = () => {
           <Suspense fallback={<div className="h-32 bg-muted/20 rounded-lg animate-pulse mt-6" />}>
             <RecentVerifications verifications={stats.recentVerifications} />
           </Suspense>
-
-          {/* Trending Alerts */}
-          <Suspense fallback={<div className="h-40 bg-muted/20 rounded-lg animate-pulse mt-6" />}>
-            <TrendingAlerts />
-          </Suspense>
         </div>
       </main>
       
-      <footer className="py-8 border-t border-border/50 bg-muted/30">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} VerifyNews
-        </div>
-      </footer>
+      {/* Footer rendered globally in App */}
     </div>
   );
 };
