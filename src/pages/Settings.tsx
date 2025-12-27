@@ -207,7 +207,7 @@ const Settings = () => {
                 <div>
                   <p className="font-medium">Email Notifications</p>
                   <p className="text-sm text-muted-foreground">
-                    Get email updates on trending fact-checks
+                    Get email updates on your fact-checks
                   </p>
                 </div>
                 <Switch

@@ -38,7 +38,7 @@ const Results = () => {
     if (urlSlug) {
       setLoading(true);
       setFetching(true);
-      getVerificationBySlug(urlSlug)
+      getVerificationBySlug(urlSlug, currentUser?.uid)
         .then((data) => {
           if (data && data.result) {
             // result is stored as a JSON string in Appwrite; parse if necessary
@@ -78,7 +78,7 @@ const Results = () => {
           setFetching(false);
         });
     }
-  }, [urlSlug, setResult, setStatus, setSearchQuery, setNewsContent]);
+  }, [urlSlug, currentUser?.uid, setResult, setStatus, setSearchQuery, setNewsContent]);
 
   const result = urlSlug ? fetchedResult : contextResult;
   const status = urlSlug ? (loading ? 'verifying' : (fetchedResult ? 'verified' : 'error')) : contextStatus;
