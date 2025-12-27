@@ -131,6 +131,5 @@ npm run test:coverage  # With coverage
 
 ## Future Enhancements
 - Real-time misinformation alerts
-- Browser extension for instant verification
 - AI-powered sentiment analysis
 - Multi-Modal Support

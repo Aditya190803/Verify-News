@@ -10,7 +10,6 @@ interface ImportMetaEnv {
   readonly VITE_APPWRITE_COLLECTION_VERIFICATIONS: string;
   readonly VITE_APPWRITE_COLLECTION_USER_PROFILES: string;
   readonly VITE_APPWRITE_COLLECTION_FEEDBACK: string;
-  readonly VITE_APPWRITE_COLLECTION_TRENDING: string;
 }
 
 interface ImportMeta {
