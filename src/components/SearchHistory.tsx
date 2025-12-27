@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { useSearchHistoryContext } from '@/context/SearchHistoryContext';
@@ -9,11 +9,9 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   SearchHistoryHeader,
-  SearchHistoryFilters,
   SearchHistoryItemCard,
   SearchHistoryEmptyState,
   SearchHistoryLoading,
-  type HistoryFilterType,
 } from '@/components/search-history';
 import { logger } from '@/lib/logger';
 
@@ -33,27 +31,9 @@ const SearchHistory = ({ className, onClose, showCloseButton = false }: SearchHi
   const { history, loading, refreshHistory, deleteItem, clearHistory, total } = useSearchHistory();
   const { registerRefreshFunction, unregisterRefreshFunction } = useSearchHistoryContext();
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<HistoryFilterType>('all');
   const navigate = useNavigate();
 
-  const filteredHistory = useMemo(() => {
-    let filtered = history;
 
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter(item => item.resultType === typeFilter);
-    }
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(item =>
-        item.query?.toLowerCase().includes(query) ||
-        item.title?.toLowerCase().includes(query)
-      );
-    }
-
-    return filtered;
-  }, [history, searchQuery, typeFilter]);
 
   useEffect(() => {
     registerRefreshFunction(refreshHistory);
@@ -83,11 +63,6 @@ const SearchHistory = ({ className, onClose, showCloseButton = false }: SearchHi
     setDeletingId(null);
   }, [deleteItem]);
 
-  const handleClearFilters = useCallback(() => {
-    setSearchQuery('');
-    setTypeFilter('all');
-  }, []);
-
   if (!currentUser) {
     return (
       <div className={cn('h-full', className)}>
@@ -104,7 +79,7 @@ const SearchHistory = ({ className, onClose, showCloseButton = false }: SearchHi
     <div className={cn('p-4 h-full flex flex-col', className)}>
       <SearchHistoryHeader
         historyCount={history.length}
-        filteredCount={filteredHistory.length}
+        filteredCount={history.length}
         totalCount={total}
         loading={loading}
         onRefresh={refreshHistory}
@@ -113,28 +88,14 @@ const SearchHistory = ({ className, onClose, showCloseButton = false }: SearchHi
         showCloseButton={showCloseButton}
       />
 
-      {history.length > 0 && (
-        <SearchHistoryFilters
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          typeFilter={typeFilter}
-          onTypeFilterChange={setTypeFilter}
-        />
-      )}
-
       {loading ? (
         <SearchHistoryLoading />
       ) : history.length === 0 ? (
         <SearchHistoryEmptyState type="no-history" />
-      ) : filteredHistory.length === 0 ? (
-        <SearchHistoryEmptyState 
-          type="no-matches" 
-          onClearFilters={handleClearFilters}
-        />
       ) : (
         <ScrollArea className="flex-1 -mx-4 px-4">
           <div className="space-y-2">
-            {filteredHistory.map((item, index) => (
+            {history.map((item, index) => (
               <SearchHistoryItemCard
                 key={item.id || index}
                 item={item}
