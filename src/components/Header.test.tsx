@@ -58,11 +58,6 @@ describe('Header Component', () => {
   });
 
   describe('Navigation Links', () => {
-    it('renders Feed link', () => {
-      renderHeader();
-      expect(screen.getByRole('link', { name: /feed/i })).toBeInTheDocument();
-    });
-
     it('renders About link', () => {
       renderHeader();
       expect(screen.getByRole('link', { name: /about/i })).toBeInTheDocument();

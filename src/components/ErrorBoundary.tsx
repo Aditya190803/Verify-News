@@ -54,13 +54,43 @@ class ErrorBoundary extends Component<Props, State> {
 
     // Log to error reporting service in production
     if (import.meta.env.PROD) {
-      // TODO: Send to error tracking service (Sentry, etc.)
-      logger.info('Would report error to tracking service:', {
-        error: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack,
-      });
+      this.reportError(error, errorInfo);
     }
+  }
+
+  /**
+   * Report error to external error tracking service.
+   * Integration point for services like Sentry, LogRocket, etc.
+   * 
+   * To integrate with Sentry:
+   * 1. Install: bun add @sentry/react
+   * 2. Initialize Sentry in main.tsx
+   * 3. Replace the console call below with: Sentry.captureException(error, { extra: { componentStack } });
+   * 
+   * @param error - The error that was caught
+   * @param errorInfo - React error info containing component stack
+   */
+  private reportError(error: Error, errorInfo: ErrorInfo): void {
+    const errorData = {
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      url: window.location.href,
+      userAgent: navigator.userAgent,
+      timestamp: new Date().toISOString(),
+    };
+
+    // Log error data for now - replace with actual error tracking service
+    logger.info('Error report (ready for external service):', errorData);
+
+    // Example Sentry integration (uncomment when Sentry is installed):
+    // import * as Sentry from '@sentry/react';
+    // Sentry.captureException(error, { 
+    //   extra: { 
+    //     componentStack: errorInfo.componentStack,
+    //     url: window.location.href 
+    //   } 
+    // });
   }
 
   handleReload = (): void => {

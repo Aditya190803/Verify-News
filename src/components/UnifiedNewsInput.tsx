@@ -81,7 +81,7 @@ const UnifiedNewsInput = memo(({ className }: { className?: string }) => {
     }
   };
 
-  const isProcessing = isSubmitting || status === 'verifying' || status === 'searching' || status === 'verified';
+  const isProcessing = isSubmitting || status === 'verifying' || status === 'searching' || status === 'ranking' || status === 'verified';
 
   // Check if input looks like a URL
   const isUrl = input.trim().match(/^https?:\/\//);

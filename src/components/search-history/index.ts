@@ -6,7 +6,6 @@
  */
 
 export { SearchHistoryHeader } from './SearchHistoryHeader';
-export { SearchHistoryFilters, type HistoryFilterType } from './SearchHistoryFilters';
 export { SearchHistoryItemCard } from './SearchHistoryItemCard';
 export { SearchHistoryEmptyState } from './SearchHistoryEmptyState';
 export { SearchHistoryLoading } from './SearchHistoryLoading';

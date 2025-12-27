@@ -5,7 +5,6 @@ import {
   BookmarkX, 
   InboxIcon, 
   ShieldCheck,
-  TrendingUp,
   Plus,
   Upload,
 } from 'lucide-react';
@@ -139,9 +138,8 @@ export const NoBookmarksEmptyState = ({ onExplore }: NoBookmarksEmptyStateProps)
       action={
         onExplore
           ? {
-              label: 'Explore Feed',
+              label: 'Start Verifying',
               onClick: onExplore,
-              icon: <TrendingUp className="mr-2 h-4 w-4" />,
             }
           : undefined
       }
@@ -150,7 +148,7 @@ export const NoBookmarksEmptyState = ({ onExplore }: NoBookmarksEmptyStateProps)
 };
 
 interface NoContentEmptyStateProps {
-  type?: 'articles' | 'verifications' | 'feed' | 'generic';
+  type?: 'articles' | 'verifications' | 'generic';
   onAction?: () => void;
   actionLabel?: string;
 }
@@ -170,11 +168,6 @@ export const NoContentEmptyState = ({
       icon: <ShieldCheck className="h-8 w-8 text-muted-foreground" />,
       title: 'No verifications yet',
       description: 'Start verifying news to see your verifications here.',
-    },
-    feed: {
-      icon: <TrendingUp className="h-8 w-8 text-muted-foreground" />,
-      title: 'Nothing to show yet',
-      description: 'Check back later for the latest verifications from the community.',
     },
     generic: {
       icon: <InboxIcon className="h-8 w-8 text-muted-foreground" />,

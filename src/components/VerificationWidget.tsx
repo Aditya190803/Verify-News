@@ -101,15 +101,15 @@ export const VerificationWidget: React.FC<VerificationWidgetProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-9 text-xs"
-                disabled={status === 'verifying' || status === 'searching'}
+                disabled={status === 'verifying' || status === 'searching' || status === 'ranking' || status === 'verified'}
               />
               <Button 
                 type="submit" 
                 size="sm" 
                 className="h-9 px-3"
-                disabled={status === 'verifying' || status === 'searching' || !searchQuery.trim()}
+                disabled={status === 'verifying' || status === 'searching' || status === 'ranking' || status === 'verified' || !searchQuery.trim()}
               >
-                {status === 'verifying' || status === 'searching' ? (
+                {status === 'verifying' || status === 'searching' || status === 'ranking' || status === 'verified' ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                 ) : (
                   <Search className="w-4 h-4" />

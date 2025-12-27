@@ -109,7 +109,7 @@ export const PrivacyToggle = ({
                     {isPublic && <Check className="h-4 w-4 text-primary" />}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Appears in public feed, shareable link, searchable by others
+                    Appears in shareable link, searchable by others
                   </p>
                 </div>
               </div>

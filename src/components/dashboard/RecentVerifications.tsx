@@ -68,7 +68,7 @@ const RecentVerifications = ({ verifications }: RecentVerificationsProps) => {
                 )}
                 {item.confidence && (
                   <span className="text-xs text-muted-foreground">
-                    {Math.round(item.confidence * 100)}% confidence
+                    {Math.round(item.confidence)}% confidence
                   </span>
                 )}
               </div>
