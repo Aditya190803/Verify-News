@@ -8,5 +8,4 @@ export * from './utils';
 export * from './schemas';
 export * from './sanitize';
 export * from './rateLimiter';
-export * from './design-tokens';
 export * from './constants';

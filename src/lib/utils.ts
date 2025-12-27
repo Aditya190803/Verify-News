@@ -107,3 +107,77 @@ export function deepEqual(obj1: unknown, obj2: unknown): boolean {
   
   return true
 }
+
+/**
+ * Normalizes a query string for similarity matching.
+ * Converts to lowercase, removes punctuation, extra spaces, and common stop words.
+ * 
+ * @param query The query string to normalize
+ * @returns Normalized query string
+ */
+export function normalizeQuery(query: string): string {
+  const stopWords = new Set([
+    'a', 'an', 'the', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+    'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should',
+    'may', 'might', 'must', 'shall', 'can', 'need', 'dare', 'ought', 'used',
+    'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'as', 'into',
+    'through', 'during', 'before', 'after', 'above', 'below', 'between',
+    'and', 'but', 'or', 'nor', 'so', 'yet', 'both', 'either', 'neither',
+    'not', 'only', 'own', 'same', 'than', 'too', 'very', 'just',
+    'that', 'this', 'these', 'those', 'what', 'which', 'who', 'whom',
+    'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves',
+    'you', 'your', 'yours', 'yourself', 'yourselves',
+    'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself',
+    'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves'
+  ])
+
+  return query
+    .toLowerCase()
+    .replace(/[^\w\s]/g, ' ') // Remove punctuation
+    .split(/\s+/)
+    .filter(word => word.length > 2 && !stopWords.has(word))
+    .sort() // Sort for consistent ordering
+    .join(' ')
+    .trim()
+}
+
+/**
+ * Generates a simple hash from a string for quick similarity lookup.
+ * Uses a combination of normalized content for grouping similar queries.
+ * 
+ * @param text The text to hash
+ * @returns A hash string suitable for database indexing
+ */
+export function generateQueryHash(text: string): string {
+  const normalized = normalizeQuery(text)
+  
+  // Simple hash function for client-side use
+  let hash = 0
+  for (let i = 0; i < normalized.length; i++) {
+    const char = normalized.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash // Convert to 32bit integer
+  }
+  
+  // Return as hex string with prefix for readability
+  return `qh_${Math.abs(hash).toString(16)}`
+}
+
+/**
+ * Calculates similarity score between two strings using Jaccard similarity.
+ * 
+ * @param str1 First string
+ * @param str2 Second string
+ * @returns Similarity score between 0 and 1
+ */
+export function calculateSimilarity(str1: string, str2: string): number {
+  const words1 = new Set(normalizeQuery(str1).split(' '))
+  const words2 = new Set(normalizeQuery(str2).split(' '))
+  
+  if (words1.size === 0 || words2.size === 0) return 0
+  
+  const intersection = new Set([...words1].filter(x => words2.has(x)))
+  const union = new Set([...words1, ...words2])
+  
+  return intersection.size / union.size
+}

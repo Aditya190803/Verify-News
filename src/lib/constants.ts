@@ -116,7 +116,6 @@ export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
   DASHBOARD: '/dashboard',
-  FEED: '/feed',
   ABOUT: '/about',
   HOW_IT_WORKS: '/how-it-works',
   SEARCH_RESULTS: '/search-results',
