@@ -100,6 +100,12 @@ export interface VerificationDocument {
   viewCount: number;
   upvotes: number;
   downvotes: number;
+  // Curation fields
+  queryHash?: string;
+  queryCount?: number;
+  isCurated?: boolean;
+  curatedAt?: string | null;
+  verificationDepth?: 'standard' | 'deep';
 }
 
 export interface SearchHistoryItem {
