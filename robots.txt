@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /about
+Allow: /how-it-works
+
+# Protected routes
+Disallow: /dashboard/
+Disallow: /settings/
+Disallow: /results/
+Disallow: /search-results/
+
+Sitemap: https://verify-news.adityamer.dev/sitemap.xml

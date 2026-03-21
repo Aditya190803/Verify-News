@@ -1,0 +1,37 @@
+# Verify-News
+
+> A React-based fake news verifier that detects misinformation by analyzing text, images, audio, and video using DuckDuckGo search and Gemini LLM.
+
+## Overview
+Verify-News is a comprehensive misinformation detection platform that analyzes text, images, audio, and video content to verify news authenticity. It uses DuckDuckGo search and Google Gemini LLM to cross-reference claims and provide corrected information.
+
+## Key Features
+- **Multi-modal Verification** — Analyze text, images, audio, and video for misinformation
+- **AI-Powered Analysis** — Uses Gemini LLM for deep fact-checking
+- **Search Integration** — Cross-references claims via DuckDuckGo search
+- **Corrected Information** — Provides accurate information when content is false
+- **Verification History** — Stores past verifications for future reference
+- **Dashboard** — View verification trends and statistics
+- **Multi-language Support** — Internationalization (i18n) built-in
+- **Keyboard Shortcuts** — Full keyboard navigation support
+- **Share Results** — Easily share verification results
+
+## Pages
+- `/` — Landing page
+- `/dashboard` — Verification dashboard
+- `/results` — Verification results
+- `/search-results` — Search results
+- `/about` — About the platform
+- `/how-it-works` — How verification works
+- `/login` — Sign in
+- `/settings` — User settings
+
+## Tech Stack
+- React + Vite
+- TypeScript
+- Stack Auth
+- Appwrite
+- Gemini LLM
+- DuckDuckGo Search API
+- Tailwind CSS
+- shadcn/ui

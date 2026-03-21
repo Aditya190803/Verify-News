@@ -3,7 +3,7 @@
 ## Overview
 VerifyNews is a modern, AI-powered news verification platform built with React and TypeScript. It helps users fact-check news articles and headlines in real-time using advanced web search capabilities and Google's Gemini AI for intelligent analysis. The application provides instant credibility assessments, source verification, and corrected information when misinformation is detected.
 
-**🌐 Live Demo**: [https://verifynews.adityamer.live/](https://verifynews.adityamer.live/)  
+**🌐 Live Demo**: [https://verifynews.adityamer.dev/](https://verifynews.adityamer.dev/)  
 **🤖 Get Gemini API Key**: [Google AI Studio](https://aistudio.google.com/app/apikey)
 
 ## ✨ Features
