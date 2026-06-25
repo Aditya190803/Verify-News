@@ -41,13 +41,16 @@ const Header = memo(({ className }: HeaderProps) => {
   };
 
   const navLinks = [
+    { path: '/feed', label: 'Feed' },
+    { path: '/following', label: 'Following' },
+    { path: '/pricing', label: 'Pricing' },
     ...(currentUser ? [{ path: '/dashboard', label: t('dashboard.title') }] : []),
     { path: '/about', label: t('common.about') },
     { path: '/how-it-works', label: t('common.howItWorks') },
   ];
 
   return (
-    <header className={cn('w-full py-4 px-4 sm:px-6 bg-background/95 backdrop-blur-sm sticky top-0 z-50 border-b border-border/40', className)}>
+    <header className={cn('w-full py-4 px-4 sm:px-6 bg-background/95 sticky top-0 z-50 border-b border-border/50', className)}>
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center">

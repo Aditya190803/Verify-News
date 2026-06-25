@@ -114,7 +114,7 @@
     "heroDesc": "VerifyNews was built to give everyone the power to verify information before believing or sharing it.",
     "storyTitle": "Our story",
     "storyP1": "In today's world of viral content and instant sharing, it's harder than ever to know what's true. We built VerifyNews because we believe everyone deserves access to accurate information—without spending hours fact-checking on their own.",
-    "storyP2": "Our platform combines AI technology with trusted sources to help you verify news articles, social media posts, and claims quickly and reliably. No expertise required.",
+    "storyP2": "Our platform combines a multi-source coverage feed with AI verification against search and trusted-style sources. Check perspective on the feed, then verify claims on the home page. No expertise required.",
     "featuresTitle": "What makes us different",
     "features": {
       "trustworthy": { "title": "Trustworthy verification", "desc": "We check against multiple reliable sources, not just one." },
