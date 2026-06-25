@@ -151,7 +151,7 @@ const Settings = () => {
                 <Eye className="h-5 w-5" />
                 {t('settings.appearance')}
               </CardTitle>
-              <CardDescription>Customize how VerifyNews looks to you</CardDescription>
+              <CardDescription>Customize how Facets looks to you</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-3">

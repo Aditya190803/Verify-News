@@ -20,6 +20,9 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				display: ['"Source Serif 4"', 'Georgia', 'serif'],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

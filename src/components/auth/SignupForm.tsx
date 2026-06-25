@@ -55,7 +55,7 @@ const SignupForm = ({ email, setEmail, password, setPassword }: SignupFormProps)
       await signup(email, password);
       toast({
         title: "Account created successfully",
-        description: "Welcome to VerifyNews!"
+        description: "Welcome to Facets!"
       });
     } catch (error: unknown) {
       const err = error as Error;

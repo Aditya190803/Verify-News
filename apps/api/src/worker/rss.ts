@@ -7,7 +7,7 @@ import { attachArticleToStory } from './storyMatch';
 
 const parser = new Parser({
   timeout: 20_000,
-  headers: { 'User-Agent': 'VerifyNews/0.1 (+https://github.com/verify-news)' },
+  headers: { 'User-Agent': 'Facets/0.1 (+https://github.com/Aditya190803/Verify-News)' },
 });
 
 function hashContent(title: string, url: string): string {

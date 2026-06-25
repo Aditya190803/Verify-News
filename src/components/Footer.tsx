@@ -1,6 +1,7 @@
 
 import { Link } from 'react-router-dom';
 import { APP_METADATA } from '@/lib/constants';
+import { FACETS } from '@/lib/brand';
 import { useTranslation } from 'react-i18next';
 
 export const Footer = () => {
@@ -10,7 +11,7 @@ export const Footer = () => {
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} {APP_METADATA.NAME}. {t('footer.builtForTruth')}
+            © {new Date().getFullYear()} {APP_METADATA.NAME}. {FACETS.tagline}
           </p>
           <div className="flex items-center gap-6 text-sm">
             <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">

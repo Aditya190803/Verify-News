@@ -1,15 +1,14 @@
-
-
+import Logo from '@/components/Logo';
+import { FACETS } from '@/lib/brand';
 
 const WelcomeHeader = () => (
   <div className="text-center mb-8">
-    <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mx-auto mb-4">
-      <span className="text-primary-foreground font-bold text-xl">V</span>
+    <div className="flex justify-center mb-4">
+      <Logo size="lg" showText={false} />
     </div>
-    <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
-    <p className="mt-2 text-muted-foreground">
-      Sign in to save your verification history
-    </p>
+    <p className="text-xs font-medium uppercase tracking-widest text-primary mb-1">{FACETS.name}</p>
+    <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
+    <p className="mt-2 text-sm text-muted-foreground">Sign in to save follows, plans, and verification history</p>
   </div>
 );
 

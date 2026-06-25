@@ -57,12 +57,12 @@ describe('VerificationWidget Component', () => {
 
     it('shows widget title', () => {
       renderWidget();
-      expect(screen.getByText(/verifynews widget/i)).toBeInTheDocument();
+      expect(screen.getByText(/facets widget/i)).toBeInTheDocument();
     });
 
     it('shows powered by text in footer', () => {
       renderWidget();
-      expect(screen.getByText(/powered by verifynews ai/i)).toBeInTheDocument();
+      expect(screen.getByText(/powered by facets/i)).toBeInTheDocument();
     });
   });
 

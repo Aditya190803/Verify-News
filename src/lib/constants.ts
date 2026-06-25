@@ -8,7 +8,7 @@
 // ============================================
 export const STORAGE_KEYS = {
   /** User's theme preference */
-  THEME: 'verifynews-theme',
+  THEME: 'facets-theme',
   /** Whether to show search history sidebar */
   SHOW_SEARCH_HISTORY: 'showSearchHistory',
   /** Stack Auth access token */
@@ -33,10 +33,10 @@ export const API_ENDPOINTS = {
 // App Metadata
 // ============================================
 export const APP_METADATA = {
-  NAME: 'VerifyNews',
-  DESCRIPTION: 'AI-powered news verification platform',
-  URL: 'https://verifynews.app',
-  TWITTER_HANDLE: '@verifynewsapp',
+  NAME: 'Facets',
+  DESCRIPTION: 'Multi-source coverage and AI fact-checking',
+  URL: 'https://facets.news',
+  TWITTER_HANDLE: '@facetsnews',
 } as const;
 
 // ============================================

@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "VerifyNews",
+    "appName": "Facets",
     "home": "Home",
     "about": "About",
     "contact": "Contact",
@@ -36,7 +36,7 @@
     "closeMobileMenu": "Close mobile menu"
   },
   "footer": {
-    "builtForTruth": "Built for truth."
+    "builtForTruth": "Many sides. One story."
   },
   "auth": {
     "signIn": "Sign in",
@@ -70,7 +70,7 @@
     }
   },
   "verification": {
-    "title": "Verify News",
+    "title": "Fact-check",
     "description": "Check if news is true or false",
     "placeholder": "Enter news headline or content to verify...",
     "verified": "Verified",
@@ -110,10 +110,10 @@
     "serverError": "Server error. Please try again."
   },
   "about": {
-    "heroTitle": "Fighting misinformation, one fact at a time",
-    "heroDesc": "VerifyNews was built to give everyone the power to verify information before believing or sharing it.",
+    "heroTitle": "See the story from every side",
+    "heroDesc": "Facets groups coverage across outlets and helps you fact-check claims before you share.",
     "storyTitle": "Our story",
-    "storyP1": "In today's world of viral content and instant sharing, it's harder than ever to know what's true. We built VerifyNews because we believe everyone deserves access to accurate information—without spending hours fact-checking on their own.",
+    "storyP1": "Headlines travel faster than context. Facets shows how left, center, and right publishers cover the same event, then lets you verify a claim with AI and cited sources.",
     "storyP2": "Our platform combines a multi-source coverage feed with AI verification against search and trusted-style sources. Check perspective on the feed, then verify claims on the home page. No expertise required.",
     "featuresTitle": "What makes us different",
     "features": {

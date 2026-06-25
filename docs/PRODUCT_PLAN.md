@@ -1,4 +1,4 @@
-# Verify News — Product & Technical Plan
+# Facets — Product & Technical Plan
 
 **North star:** RSS and licensed news aggregation with a **Ground News–style bias and coverage UX**, shipped as **open-source self-host** and a **hosted B2C subscription** product.
 

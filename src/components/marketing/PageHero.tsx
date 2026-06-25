@@ -31,7 +31,7 @@ export function PageHero({
         {eyebrow ? (
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-primary mb-3">{eyebrow}</p>
         ) : null}
-        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground text-balance">{title}</h1>
+        <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-foreground text-balance">{title}</h1>
         <p
           className={cn(
             'mt-4 text-base sm:text-lg text-muted-foreground leading-relaxed max-w-[65ch]',

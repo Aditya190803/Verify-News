@@ -30,7 +30,7 @@ app.use(
 
 app.use('*', authMiddleware);
 
-app.get('/health', (c) => c.json({ ok: true, service: 'verify-news-api' }));
+app.get('/health', (c) => c.json({ ok: true, service: 'facets-api' }));
 
 app.route('/feeds', feeds);
 app.route('/stories', stories);
@@ -93,6 +93,8 @@ const port = Number(process.env.PORT ?? 3001);
 const workerEnabled = process.env.WORKER_ENABLED === 'true';
 const pollMs = Number(process.env.FEED_POLL_INTERVAL_MS ?? 900_000);
 
+let pollTimer: ReturnType<typeof setInterval> | undefined;
+
 if (workerEnabled) {
   const run = async () => {
     try {
@@ -104,12 +106,17 @@ if (workerEnabled) {
     }
   };
   void run();
-  setInterval(() => void run(), pollMs);
+  pollTimer = setInterval(() => void run(), pollMs);
   console.log(`[worker] RSS poll every ${pollMs}ms`);
 }
 
-console.log(`API listening on :${port}`);
-export default {
-  port,
-  fetch: app.fetch,
-};
+const server = Bun.serve({ port, fetch: app.fetch });
+console.log(`API listening on :${server.port}`);
+
+// ponytail: stop listener + worker on --watch reload (avoids EADDRINUSE)
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    if (pollTimer) clearInterval(pollTimer);
+    server.stop(true);
+  });
+}

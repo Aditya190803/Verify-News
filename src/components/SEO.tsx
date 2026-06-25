@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { FACETS } from '@/lib/brand';
 
 interface SEOProps {
   title: string;
@@ -21,7 +22,7 @@ export const SEO = ({ title, description, image, url, type = 'website', article 
   return (
     <Helmet>
       {/* Basic Meta Tags */}
-      <title>{title} | VerifyNews</title>
+      <title>{title} | {FACETS.name}</title>
       <meta name="description" content={description} />
       
       {/* Open Graph Meta Tags */}
@@ -30,7 +31,7 @@ export const SEO = ({ title, description, image, url, type = 'website', article 
       <meta property="og:description" content={description} />
       <meta property="og:image" content={ogImage} />
       <meta property="og:url" content={fullUrl} />
-      <meta property="og:site_name" content="VerifyNews" />
+      <meta property="og:site_name" content={FACETS.name} />
       
       {/* Twitter Card Meta Tags */}
       <meta name="twitter:card" content="summary_large_image" />

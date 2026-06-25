@@ -372,7 +372,7 @@ const VerificationResult = memo(({ className }: VerificationResultProps) => {
     
     const url = `${window.location.origin}/result/${currentSlug}`;
     const reportText = `
-🔍 VerifyNews Report
+🔍 Facets report
 -------------------
 Content: ${originalContent}
 Veracity: ${getStatusText()} (${result.confidence}%)
@@ -386,7 +386,7 @@ Check the full report here: ${url}
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'VerifyNews Result',
+          title: 'Facets result',
           text: reportText,
           url,
         });

@@ -81,7 +81,7 @@ export const VerificationWidget: React.FC<VerificationWidgetProps> = ({
           <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
               <Shield className="w-4 h-4 text-primary" />
-              VerifyNews Widget
+              Facets Widget
             </CardTitle>
             {compact && (
               <Button 
@@ -143,7 +143,7 @@ export const VerificationWidget: React.FC<VerificationWidgetProps> = ({
           </CardContent>
           <CardFooter className="p-2 bg-muted/30 flex justify-center">
             <p className="text-[9px] text-muted-foreground">
-              Powered by VerifyNews AI
+              Powered by Facets
             </p>
           </CardFooter>
         </>

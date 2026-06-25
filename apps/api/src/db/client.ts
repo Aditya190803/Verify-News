@@ -1,11 +1,9 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
+import { databaseUrl } from '../lib/env';
 
-const url = process.env.DATABASE_URL;
-if (!url) {
-  throw new Error('DATABASE_URL is required');
-}
+const url = databaseUrl();
 
 // ponytail: one connection per API process; pool sizing when traffic matters
 const client = postgres(url, { max: 10 });

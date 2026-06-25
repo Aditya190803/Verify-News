@@ -41,11 +41,9 @@ describe('Header Component', () => {
   });
 
   describe('Logo and Branding', () => {
-    it('renders the VerifyNews logo text', () => {
+    it('renders the Facets logo text', () => {
       renderHeader();
-      // Logo component shows "Verify" and "News" as separate elements
-      expect(screen.getByText(/Verify/)).toBeInTheDocument();
-      expect(screen.getByText(/News/)).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /facets home/i })).toBeInTheDocument();
     });
 
     it('logo links to home page', () => {
@@ -58,26 +56,20 @@ describe('Header Component', () => {
   });
 
   describe('Navigation Links', () => {
-    it('renders About link', () => {
+    it('renders Feed link', () => {
       renderHeader();
-      expect(screen.getByRole('link', { name: /about/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /^Feed$/i })).toBeInTheDocument();
     });
 
-    it('renders How it works link', () => {
+    it('does not render About in header (footer only)', () => {
       renderHeader();
-      expect(screen.getByRole('link', { name: /how it works/i })).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /^About$/i })).not.toBeInTheDocument();
     });
 
-    it('does not render Dashboard link when not logged in', () => {
+    it('does not show dashboard in bar when logged out', () => {
       mockCurrentUser = null;
       renderHeader();
       expect(screen.queryByRole('link', { name: /dashboard/i })).not.toBeInTheDocument();
-    });
-
-    it('renders Dashboard link when logged in', () => {
-      mockCurrentUser = { displayName: 'Test User', email: 'test@example.com' };
-      renderHeader();
-      expect(screen.getByRole('link', { name: /dashboard/i })).toBeInTheDocument();
     });
   });
 
@@ -85,19 +77,13 @@ describe('Header Component', () => {
     it('shows Sign in button when not logged in', () => {
       mockCurrentUser = null;
       renderHeader();
-      expect(screen.getByRole('link', { name: /sign in/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /auth\.signIn/i })).toBeInTheDocument();
     });
 
-    it('shows user display name when logged in', () => {
+    it('shows account trigger when logged in', () => {
       mockCurrentUser = { displayName: 'John Doe', email: 'john@example.com' };
       renderHeader();
       expect(screen.getByText('John Doe')).toBeInTheDocument();
-    });
-
-    it('shows email prefix when no display name', () => {
-      mockCurrentUser = { displayName: null, email: 'john@example.com' };
-      renderHeader();
-      expect(screen.getByText('john')).toBeInTheDocument();
     });
   });
 

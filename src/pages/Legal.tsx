@@ -9,7 +9,7 @@ const Legal = () => (
       <h2>Privacy</h2>
       <p>
         We store account data via Stack Auth and optional verification history in Appwrite or Postgres
-        when using the aggregation API. RSS ingestion stores headlines, summaries, and links only. Payments on hosted Verify News use Razorpay (INR). AI verify
+        when using the aggregation API. RSS ingestion stores headlines, summaries, and links only. Payments on hosted Facets use Razorpay (INR). AI verify
         may send content to third-party models (OpenRouter, Google) when configured on the server.
       </p>
       <h2>Terms</h2>

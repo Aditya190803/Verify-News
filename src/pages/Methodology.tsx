@@ -7,7 +7,7 @@ const Methodology = () => (
     <main className="container max-w-2xl py-8 prose prose-neutral dark:prose-invert">
       <h1>Bias &amp; coverage methodology</h1>
       <p>
-        Verify News shows <strong>how different outlets cover the same story</strong>, not whether a
+        Facets shows <strong>how different outlets cover the same story</strong>, not whether a
         story is true. Fact-checking is a separate step (AI verify).
       </p>
       <h2>Outlet labels</h2>
