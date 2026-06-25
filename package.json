@@ -9,6 +9,10 @@
   ],
   "scripts": {
     "dev": "vite",
+    "dev:next": "next dev -p 3000",
+    "build:next": "next build",
+    "start:next": "next start",
+    "convex:dev": "convex dev",
     "api:dev": "bun run --cwd apps/api dev",
     "api:migrate": "bun run --cwd apps/api db:migrate",
     "api:seed": "bun run --cwd apps/api db:seed",
@@ -21,6 +25,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@clerk/nextjs": "7.5.8",
     "@google/generative-ai": "^0.24.0",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
@@ -59,6 +64,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
+    "convex": "1.42.0",
     "date-fns": "^3.6.0",
     "dotenv": "^17.2.3",
     "embla-carousel-react": "^8.3.0",
@@ -67,6 +73,7 @@
     "i18next-http-backend": "^3.0.2",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.462.0",
+    "next": "16.2.9",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
@@ -78,6 +85,7 @@
     "react-router-dom": "^6.26.2",
     "react-window": "^2.2.3",
     "recharts": "^2.12.7",
+    "rss-parser": "3.13.0",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.3",

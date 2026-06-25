@@ -8,23 +8,23 @@ import { KeyboardShortcutsDialog } from "./components/KeyboardShortcutsDialog";
 import Footer from "@/components/Footer";
 
 // Lazy load route components for code splitting
-const Index = lazy(() => import("./pages/Index"));
-const SearchResults = lazy(() => import("./pages/SearchResults"));
-const About = lazy(() => import("./pages/About"));
-const HowItWorks = lazy(() => import("./pages/HowItWorks"));
-const Login = lazy(() => import("./pages/Login"));
-const Results = lazy(() => import("./pages/Results"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const OAuthCallback = lazy(() => import("./pages/OAuthCallback"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const Settings = lazy(() => import("./pages/Settings"));
-const Feed = lazy(() => import("./pages/Feed"));
-const StoryDetail = lazy(() => import("./pages/StoryDetail"));
-const Methodology = lazy(() => import("./pages/Methodology"));
-const Following = lazy(() => import("./pages/Following"));
-const Pricing = lazy(() => import("./pages/Pricing"));
-const Legal = lazy(() => import("./pages/Legal"));
+const Index = lazy(() => import("./views/Index"));
+const SearchResults = lazy(() => import("./views/SearchResults"));
+const About = lazy(() => import("./views/About"));
+const HowItWorks = lazy(() => import("./views/HowItWorks"));
+const Login = lazy(() => import("./views/Login"));
+const Results = lazy(() => import("./views/Results"));
+const Dashboard = lazy(() => import("./views/Dashboard"));
+const NotFound = lazy(() => import("./views/NotFound"));
+const OAuthCallback = lazy(() => import("./views/OAuthCallback"));
+const ResetPassword = lazy(() => import("./views/ResetPassword"));
+const Settings = lazy(() => import("./views/Settings"));
+const Feed = lazy(() => import("./views/Feed"));
+const StoryDetail = lazy(() => import("./views/StoryDetail"));
+const Methodology = lazy(() => import("./views/Methodology"));
+const Following = lazy(() => import("./views/Following"));
+const Pricing = lazy(() => import("./views/Pricing"));
+const Legal = lazy(() => import("./views/Legal"));
 
 // Loading fallback component
 const PageLoader = () => (
