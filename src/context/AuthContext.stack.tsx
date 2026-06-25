@@ -44,6 +44,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const sdkUser = await stackClientApp.getUser() as StackSDKUser | null;
       const appUser = convertToAppUser(sdkUser);
       setCurrentUser(appUser);
+      try {
+        if (appUser?.uid) localStorage.setItem('vn_user_id', appUser.uid);
+        else localStorage.removeItem('vn_user_id');
+      } catch { /* ignore */ }
       
       // Sync user to Appwrite in the background (don't block UI)
       if (appUser && sdkUser) {
@@ -159,6 +163,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logger.error('Error logging out:', error);
     }
     setCurrentUser(null);
+    try {
+      localStorage.removeItem('vn_user_id');
+    } catch { /* ignore */ }
   };
 
   // Social login (Google) - uses the @stackframe/js SDK

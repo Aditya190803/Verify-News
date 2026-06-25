@@ -3,8 +3,15 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "vite",
+    "api:dev": "bun run --cwd apps/api dev",
+    "api:migrate": "bun run --cwd apps/api db:migrate",
+    "api:seed": "bun run --cwd apps/api db:seed",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
@@ -74,6 +81,7 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.3",
+    "vercel": "^50.41.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

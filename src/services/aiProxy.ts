@@ -10,9 +10,12 @@ import { VerificationResult, SearchResponse, SearchArticle, MediaFile } from '@/
 import { logger } from '@/lib/logger';
 import { VerificationResultSchema } from '@/lib/schemas';
 
-// Backend API endpoint for AI services
-// In production, this would be your actual backend API URL
-const AI_PROXY_BASE_URL = import.meta.env.VITE_AI_PROXY_URL || '/api/ai';
+import { apiBaseUrl, apiHeaders } from '@/config/api';
+
+function proxyBaseUrl(): string {
+  if (apiBaseUrl) return apiBaseUrl;
+  return import.meta.env.VITE_AI_PROXY_URL || '/api/ai';
+}
 
 /**
  * Generic function to call the AI proxy backend
@@ -26,10 +29,12 @@ async function callAIProxy<T>(
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
-    const response = await fetch(`${AI_PROXY_BASE_URL}/${endpoint}`, {
+    const auth = await apiHeaders();
+    const response = await fetch(`${proxyBaseUrl()}/${endpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...auth,
       },
       body: JSON.stringify(payload),
       signal: controller.signal,
@@ -61,13 +66,13 @@ export const verifyWithProxy = async (
   content: string,
   searchResults: SearchResponse[] = []
 ): Promise<VerificationResult> => {
-  const result = await callAIProxy<VerificationResult>('verify', {
+  const raw = await callAIProxy<{ success?: boolean; data: VerificationResult } | VerificationResult>('verify', {
     content,
     searchResults,
-    provider: 'fallback', // Backend will handle provider selection
+    provider: 'fallback',
   });
+  const result = 'data' in raw && raw.data ? raw.data : (raw as VerificationResult);
 
-  // Validate the response
   const parsed = VerificationResultSchema.safeParse(result);
   if (!parsed.success) {
     logger.error('AI proxy response validation failed:', parsed.error.format());
@@ -160,7 +165,7 @@ const fileToBase64 = (file: File): Promise<string> => {
  * Check if AI proxy service is available
  */
 export const isAIProxyAvailable = (): boolean => {
-  return import.meta.env.VITE_USE_AI_PROXY === 'true';
+  return import.meta.env.VITE_USE_AI_PROXY === 'true' || Boolean(apiBaseUrl);
 };
 
 /**
@@ -168,7 +173,7 @@ export const isAIProxyAvailable = (): boolean => {
  */
 export const getAIProxyConfig = () => {
   return {
-    baseUrl: AI_PROXY_BASE_URL,
+    baseUrl: proxyBaseUrl(),
     enabled: isAIProxyAvailable(),
     timeout: 30000,
   };

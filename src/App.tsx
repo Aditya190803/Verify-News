@@ -19,6 +19,12 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const OAuthCallback = lazy(() => import("./pages/OAuthCallback"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Settings = lazy(() => import("./pages/Settings"));
+const Feed = lazy(() => import("./pages/Feed"));
+const StoryDetail = lazy(() => import("./pages/StoryDetail"));
+const Methodology = lazy(() => import("./pages/Methodology"));
+const Following = lazy(() => import("./pages/Following"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const Legal = lazy(() => import("./pages/Legal"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -58,6 +64,12 @@ const App = () => {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/feed" element={<Feed />} />
+            <Route path="/story/:slug" element={<StoryDetail />} />
+            <Route path="/methodology" element={<Methodology />} />
+            <Route path="/following" element={<Following />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/legal" element={<Legal />} />
             <Route path="/search-results" element={<SearchResults />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/settings" element={<Settings />} />

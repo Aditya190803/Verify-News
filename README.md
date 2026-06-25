@@ -129,7 +129,26 @@ npm run test:coverage  # With coverage
 - **Testing:** Vitest, React Testing Library
 - **Deployment:** Vercel
 
+## Roadmap (aggregation + bias UX)
+
+Product direction: **RSS/licensed aggregation**, **Ground News–style bias/coverage UX**, **OSS self-host**, and **hosted B2C subscription**.
+
+- **[Status](docs/STATUS.md)** — done / left checklist
+- **[Product plan](docs/PRODUCT_PLAN.md)** — architecture, data model, phases, billing
+- **[Self-host (Phase 0)](docs/SELF_HOST.md)** — Docker Compose, API, feed poll
+- **[Phase 0 issues](docs/PHASE_0_ISSUES.md)** — checklist for GitHub
+
+Quick try:
+
+```bash
+docker compose up --build
+# In .env.local: VITE_API_URL=http://localhost:3001
+bun run dev
+# Open /feed — then: curl -X POST http://localhost:3001/feeds/poll
+# Put OPENROUTER_API_KEY or GEMINI_API_KEY in apps/api/.env for server-side verify when VITE_API_URL is set
+```
+
 ## Future Enhancements
-- Real-time misinformation alerts
-- AI-powered sentiment analysis
-- Multi-Modal Support
+- Story clustering across outlets (Phase 1)
+- Server-side verify (move API keys off the client)
+- Stripe subscription tiers (Phase 4)

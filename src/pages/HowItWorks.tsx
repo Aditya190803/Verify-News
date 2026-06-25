@@ -1,128 +1,136 @@
-
-
-import Header from '@/components/Header';
 import { Link } from 'react-router-dom';
-import { 
-  FileText, 
-  Search, 
-  CheckCircle,
-  ArrowRight,
-  Lightbulb,
-  Shield,
-  Zap
-} from 'lucide-react';
+import { ArrowRight, CheckCircle, FileText, Layers, Search, Shield, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
+import { MarketingShell } from '@/components/marketing/MarketingShell';
+import { PageHero } from '@/components/marketing/PageHero';
+import { PageSection } from '@/components/marketing/PageSection';
+import { RelatedLinks } from '@/components/marketing/RelatedLinks';
+
+const verifySteps = [
+  {
+    step: '01',
+    title: 'Share what you want to check',
+    description:
+      'Paste a URL, article excerpt, or social post. Text-first today; media verify is on the roadmap when the API supports it.',
+    icon: FileText,
+  },
+  {
+    step: '02',
+    title: 'Search and analyze',
+    description:
+      'The API can run web search (e.g. Tavily) and an LLM pass over trusted-style sources. You see confidence, verdict, and links.',
+    icon: Search,
+  },
+  {
+    step: '03',
+    title: 'Read the verdict yourself',
+    description:
+      'True, false, or needs context: always with citations. Save history when signed in. Limits depend on your plan.',
+    icon: CheckCircle,
+  },
+];
 
 const HowItWorks = () => {
   const { t } = useTranslation();
+
+  const strengths = [
+    {
+      icon: Zap,
+      title: t('howItWorks.feature.realTime.title'),
+      desc: t('howItWorks.feature.realTime.desc'),
+    },
+    {
+      icon: Shield,
+      title: t('howItWorks.feature.trustedSources.title'),
+      desc: t('howItWorks.feature.trustedSources.desc'),
+    },
+    {
+      icon: Layers,
+      title: 'Coverage is separate',
+      desc: 'The feed shows who covered a story and from which lean. That is not the same as an AI fact-check.',
+    },
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1">
-        {/* Hero */}
-        <div className="bg-muted/30 border-b border-border/50">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
-              {t('howItWorks.heroTitle')}
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {t('howItWorks.heroDesc')}
-            </p>
-          </div>
-        </div>
+    <MarketingShell>
+      <PageHero
+        eyebrow="How it works"
+        title={t('howItWorks.heroTitle')}
+        description={t('howItWorks.heroDesc')}
+        align="center"
+      />
 
-        {/* Steps */}
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16">
-          <div className="space-y-16">
-            {[
-              {
-                step: 1,
-                title: "Share what you want to check",
-                description: "Paste a URL, article text, social media post, or any claim you've seen. We handle all text-based content.",
-                icon: <FileText className="h-6 w-6" />,
-              },
-              {
-                step: 2,
-                title: "We search trusted sources",
-                description: "Our AI scans reputable news outlets, fact-checking organizations, and verified databases to find relevant information.",
-                icon: <Search className="h-6 w-6" />,
-              },
-              {
-                step: 3,
-                title: "Get a clear answer",
-                description: "Within seconds, you'll see whether the claim is true, false, or needs more context—with links to sources so you can verify yourself.",
-                icon: <CheckCircle className="h-6 w-6" />,
-              },
-            ].map((item, index) => (
-              <div key={index} className="flex gap-6">
-                <div className="flex-shrink-0">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                    {item.icon}
-                  </div>
-                </div>
-                <div className="flex-1 pt-1">
-                  <div className="inline-block bg-primary/10 text-primary text-xs font-medium px-2 py-1 rounded-md mb-3">
-                    Step {item.step}
-                  </div>
-                  <h3 className="text-xl font-semibold mb-3">{item.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">{item.description}</p>
-                </div>
+      <PageSection title="Verify a claim" description="Three steps on the home page and API /verify route." width="content">
+        <ol className="space-y-12">
+          {verifySteps.map((item) => (
+            <li key={item.step} className="flex gap-5 sm:gap-8">
+              <div className="shrink-0 w-12 text-right">
+                <span className="text-xs font-semibold tabular-nums text-primary">{item.step}</span>
               </div>
-            ))}
-          </div>
-        </div>
+              <div className="flex-1 min-w-0 pb-12 border-b border-border/50 last:border-0 last:pb-0">
+                <item.icon className="h-5 w-5 text-primary mb-3" aria-hidden />
+                <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-[60ch]">{item.description}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </PageSection>
 
-        {/* What makes it work */}
-        <div className="bg-muted/30 border-y border-border/50">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16">
-            <h2 className="text-2xl font-semibold text-center mb-12">{t('howItWorks.featuresTitle')}</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                {
-                  icon: <Lightbulb className="h-5 w-5" />,
-                  title: t('howItWorks.feature.smartUnderstanding.title'),
-                  description: t('howItWorks.feature.smartUnderstanding.desc')
-                },
-                {
-                  icon: <Shield className="h-5 w-5" />,
-                  title: t('howItWorks.feature.trustedSources.title'),
-                  description: t('howItWorks.feature.trustedSources.desc')
-                },
-                {
-                  icon: <Zap className="h-5 w-5" />,
-                  title: t('howItWorks.feature.realTime.title'),
-                  description: t('howItWorks.feature.realTime.desc')
-                },
-              ].map((feature, index) => (
-                <div key={index} className="text-center">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <span className="text-primary">{feature.icon}</span>
-                  </div>
-                  <h3 className="font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground">{feature.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* CTA */}
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 text-center">
-          <h2 className="text-2xl font-semibold mb-4">{t('howItWorks.ctaTitle')}</h2>
-          <p className="text-muted-foreground mb-8">{t('howItWorks.ctaDesc')}</p>
-          <Link to="/">
-            <Button size="lg" className="group">
-              {t('common.startVerifying')}
-              <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-            </Button>
+      <PageSection title="Browse coverage" description="Use the feed when you want perspective, not a single verdict." width="content" tone="muted">
+        <p className="text-sm text-muted-foreground leading-relaxed max-w-[65ch]">
+          RSS items cluster into stories. Each story lists outlets, a bias bar, and optional blindspot text when you follow
+          publishers on{' '}
+          <Link to="/following" className="text-primary underline underline-offset-4">
+            Following
           </Link>
+          . Labels come from curated seed data: see{' '}
+          <Link to="/methodology" className="text-primary underline underline-offset-4">
+            Methodology
+          </Link>
+          .
+        </p>
+        <Button variant="outline" className="mt-6" asChild>
+          <Link to="/feed">Open feed</Link>
+        </Button>
+      </PageSection>
+
+      <PageSection title={t('howItWorks.featuresTitle')} width="content">
+        <ul className="grid gap-10 sm:grid-cols-3">
+          {strengths.map((f) => (
+            <li key={f.title}>
+              <f.icon className="h-5 w-5 text-primary mb-3" aria-hidden />
+              <h3 className="font-semibold text-foreground">{f.title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+            </li>
+          ))}
+        </ul>
+      </PageSection>
+
+      <PageSection width="content">
+        <div className="text-center sm:text-left sm:flex sm:items-center sm:justify-between gap-6">
+          <div>
+            <h2 className="text-xl font-semibold">{t('howItWorks.ctaTitle')}</h2>
+            <p className="text-sm text-muted-foreground mt-2">{t('howItWorks.ctaDesc')}</p>
+          </div>
+          <Button size="lg" className="group mt-6 sm:mt-0 shrink-0" asChild>
+            <Link to="/">
+              {t('common.startVerifying')}
+              <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          </Button>
         </div>
-      </main>
-      
-      {/* Footer rendered globally in App */}
-    </div>
+      </PageSection>
+
+      <RelatedLinks
+        links={[
+          { to: '/about', label: 'About' },
+          { to: '/feed', label: 'Feed' },
+          { to: '/pricing', label: 'Pricing' },
+        ]}
+      />
+    </MarketingShell>
   );
 };
 

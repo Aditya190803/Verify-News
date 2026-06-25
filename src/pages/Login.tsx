@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/context/AuthContext';
@@ -16,13 +16,26 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useTranslation();
+
+  const redirectTo = (() => {
+    const raw = searchParams.get('redirect') ?? searchParams.get('returnUrl') ?? '';
+    if (!raw.startsWith('/') || raw.startsWith('//')) return '/';
+    try {
+      const path = raw.split('?')[0];
+      if (path.includes('://')) return '/';
+    } catch {
+      return '/';
+    }
+    return raw;
+  })();
 
   useEffect(() => {
     if (currentUser) {
-      navigate('/');
+      navigate(redirectTo, { replace: true });
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, navigate, redirectTo]);
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/30">
