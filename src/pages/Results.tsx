@@ -127,7 +127,7 @@ const Results = () => {
                   title={verificationData.title || verificationData.query || 'Verification Result'}
                   description={verificationData.result ?
                     JSON.parse(verificationData.result).explanation?.substring(0, 200) :
-                    'Check out this fact-checked verification on VerifyNews'}
+                    'Check out this fact-check on Facets'}
                 />
               )
             )}

@@ -8,6 +8,7 @@ import { MarketingShell } from '@/components/marketing/MarketingShell';
 import { PageSection } from '@/components/marketing/PageSection';
 import { RelatedLinks } from '@/components/marketing/RelatedLinks';
 import { fetchStories, type ApiStory } from '@/services/aggregationApi';
+import { FACETS } from '@/lib/brand';
 import { AlertCircle, ArrowRight, ExternalLink, Layers, Newspaper, RefreshCw } from 'lucide-react';
 
 function FeedSkeleton() {
@@ -50,10 +51,11 @@ const Feed = () => {
     <MarketingShell>
       <div className="border-b border-border/60 bg-gradient-to-b from-muted/40 to-background">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-primary">Coverage</p>
-          <h1 className="mt-2 text-3xl sm:text-[2rem] font-semibold tracking-tight text-foreground text-balance">
+          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-primary">{FACETS.name} · Coverage</p>
+          <h1 className="font-display mt-2 text-3xl sm:text-[2rem] font-semibold tracking-tight text-foreground text-balance">
             Stories from many angles
           </h1>
+          <p className="mt-1 text-xs text-muted-foreground tracking-wide">{FACETS.tagline}</p>
           <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed max-w-[58ch]">
             Headlines clustered from RSS. The bar shows how left, center, and right outlets cover the same event. Not a
             truth score:{' '}

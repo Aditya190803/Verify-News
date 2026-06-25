@@ -1,4 +1,4 @@
-# Self-host Verify News (Phase 0)
+# Self-host Facets (Phase 0)
 
 ## Requirements
 

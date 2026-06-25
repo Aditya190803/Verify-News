@@ -1,4 +1,4 @@
-# Verify News — status
+# Facets — status
 
 Last updated: 2026-03-25
 

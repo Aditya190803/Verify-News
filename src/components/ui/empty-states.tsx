@@ -115,7 +115,7 @@ export const NoHistoryEmptyState = ({ onStartVerification }: NoHistoryEmptyState
       action={
         onStartVerification
           ? {
-              label: 'Verify News',
+              label: 'Fact-check',
               onClick: onStartVerification,
               icon: <ShieldCheck className="mr-2 h-4 w-4" />,
             }

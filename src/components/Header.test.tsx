@@ -41,11 +41,9 @@ describe('Header Component', () => {
   });
 
   describe('Logo and Branding', () => {
-    it('renders the VerifyNews logo text', () => {
+    it('renders the Facets logo text', () => {
       renderHeader();
-      // Logo component shows "Verify" and "News" as separate elements
-      expect(screen.getByText(/Verify/)).toBeInTheDocument();
-      expect(screen.getByText(/News/)).toBeInTheDocument();
+      expect(screen.getByText('Facets')).toBeInTheDocument();
     });
 
     it('logo links to home page', () => {

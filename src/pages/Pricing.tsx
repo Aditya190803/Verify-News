@@ -19,6 +19,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Check, Server, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { FACETS } from '@/lib/brand';
 
 declare global {
   interface Window {
@@ -176,7 +177,7 @@ const Pricing = () => {
         key: order.keyId,
         amount: Number(order.amount),
         currency: String(order.currency ?? 'INR'),
-        name: 'Verify News',
+        name: FACETS.name,
         description: `${String(order.planName)} — monthly`,
         order_id: String(order.orderId),
         prefill: { email: currentUser.email, name: currentUser.displayName ?? undefined },

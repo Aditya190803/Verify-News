@@ -1,7 +1,9 @@
-# VerifyNews 📰✅
+# Facets
+
+**Many sides. One story.**
 
 ## Overview
-VerifyNews is a modern, AI-powered news verification platform built with React and TypeScript. It helps users fact-check news articles and headlines in real-time using advanced web search capabilities and Google's Gemini AI for intelligent analysis. The application provides instant credibility assessments, source verification, and corrected information when misinformation is detected.
+Facets is a news product for seeing **coverage spread** across outlets (Ground News–style bias bar) and **AI fact-checking** in one stack. Built with React, TypeScript, and `apps/api` (Bun + Postgres + RSS). It helps users fact-check news articles and headlines in real-time using advanced web search capabilities and Google's Gemini AI for intelligent analysis. The application provides instant credibility assessments, source verification, and corrected information when misinformation is detected.
 
 **🌐 Live Demo**: [https://verifynews.adityamer.dev/](https://verifynews.adityamer.dev/)  
 **🤖 Get Gemini API Key**: [Google AI Studio](https://aistudio.google.com/app/apikey)

@@ -22,9 +22,9 @@ export default defineConfig(() => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'manifest.json'],
       manifest: {
-        name: 'VerifyNews',
-        short_name: 'VerifyNews',
-        description: 'AI-powered news verification platform',
+        name: 'Facets',
+        short_name: 'Facets',
+        description: 'Many sides. One story.',
         theme_color: '#ffffff',
         icons: [
           {
