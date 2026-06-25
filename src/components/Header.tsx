@@ -1,9 +1,16 @@
 import { useState, memo } from 'react';
 import { cn } from '@/lib/utils';
-import { Menu, X, User, LogOut } from 'lucide-react';
+import { Menu, X, User, LogOut, LayoutDashboard, Settings } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import Logo from '@/components/Logo';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
@@ -13,164 +20,180 @@ interface HeaderProps {
   className?: string;
 }
 
+const primaryNav = [
+  { path: '/feed', label: 'Feed' },
+  { path: '/following', label: 'Following' },
+  { path: '/pricing', label: 'Pricing' },
+] as const;
+
 const Header = memo(({ className }: HeaderProps) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const { currentUser, logout } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
-  
-  const isActive = (path: string) => location.pathname === path;
+
+  const isActive = (path: string) =>
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
   const handleLogout = async () => {
     try {
       await logout();
-      toast({
-        title: t('auth.toastLoggedOutTitle'),
-        description: t('auth.toastLoggedOutDesc')
-      });
+      toast({ title: t('auth.toastLoggedOutTitle'), description: t('auth.toastLoggedOutDesc') });
       navigate('/');
-    } catch (_error) {
+    } catch {
       toast({
         title: t('auth.toastLogoutFailedTitle'),
         description: t('auth.toastLogoutFailedDesc'),
-        variant: "destructive"
+        variant: 'destructive',
       });
     }
   };
 
-  const navLinks = [
-    { path: '/feed', label: 'Feed' },
-    { path: '/following', label: 'Following' },
-    { path: '/pricing', label: 'Pricing' },
-    ...(currentUser ? [{ path: '/dashboard', label: t('dashboard.title') }] : []),
-    { path: '/about', label: t('common.about') },
-    { path: '/how-it-works', label: t('common.howItWorks') },
-  ];
+  const navClass = (path: string) =>
+    cn(
+      'text-sm transition-colors',
+      isActive(path) ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-foreground',
+    );
 
   return (
-    <header className={cn('w-full py-4 px-4 sm:px-6 bg-background/95 sticky top-0 z-50 border-b border-border/50', className)}>
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
-        {/* Logo */}
-        <div className="flex items-center">
-          <Link to="/" className="flex items-center" aria-label="Navigate to home page">
-            <Logo size="md" showText className="hidden sm:flex" />
-            <Logo size="sm" showText={false} className="sm:hidden" />
-          </Link>
-        </div>
+    <header
+      className={cn(
+        'sticky top-0 z-50 w-full border-b border-border/50 bg-background/95',
+        className,
+      )}
+    >
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+        <Link to="/" className="shrink-0" aria-label="Facets home">
+          <Logo size="sm" showText className="sm:hidden" />
+          <Logo size="md" showText className="hidden sm:flex" />
+        </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-1" aria-label="Main navigation">
-          {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={cn(
-                "px-4 py-2 text-sm rounded-lg transition-colors",
-                isActive(link.path)
-                  ? "text-foreground bg-muted font-medium"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              )}
-              aria-label={t('aria.navigateToPage', { page: link.label })}
-              aria-current={isActive(link.path) ? 'page' : undefined}
-            >
+        <nav className="hidden md:flex items-center gap-6" aria-label="Main">
+          {primaryNav.map((link) => (
+            <Link key={link.path} to={link.path} className={navClass(link.path)}>
               {link.label}
             </Link>
           ))}
         </nav>
 
-        {/* Desktop Auth */}
-        <div className="hidden lg:flex items-center gap-4">
-          <LanguageSwitcher />
+        <div className="hidden md:flex items-center gap-2">
           {currentUser ? (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
-                <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center">
-                  <User className="h-3.5 w-3.5 text-primary" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-2 max-w-[10rem]">
+                  <User className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                  <span className="truncate">
+                    {currentUser.displayName || currentUser.email?.split('@')[0]}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard" className="cursor-pointer">
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    {t('dashboard.title')}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    {t('common.settings')}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-2">
+                  <LanguageSwitcher />
                 </div>
-                <span className="text-sm text-foreground max-w-[120px] truncate">
-                  {currentUser.displayName || currentUser.email?.split('@')[0]}
-                </span>
-              </div>
-              <Button onClick={handleLogout} variant="ghost" size="sm" className="text-muted-foreground">
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => void handleLogout()} className="text-destructive focus:text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  {t('auth.signOut')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
-            <Link to="/login" aria-label={t('aria.signInToAccount')}>
-              <Button size="sm">{t('auth.signIn')}</Button>
-            </Link>
+            <>
+              <div className="hidden lg:block">
+                <LanguageSwitcher />
+              </div>
+              <Button size="sm" asChild>
+                <Link to="/login">{t('auth.signIn')}</Link>
+              </Button>
+            </>
           )}
         </div>
 
-        {/* Mobile Menu Button */}
-        <div className="lg:hidden flex items-center">
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg hover:bg-muted transition-colors"
-            aria-label={mobileMenuOpen ? t('aria.closeMobileMenu') : t('aria.openMobileMenu')}
-            aria-expanded={mobileMenuOpen}
-            aria-controls="mobile-navigation"
-          >
-            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
-        </div>
+        <button
+          type="button"
+          className="md:hidden p-2 rounded-md text-foreground hover:bg-muted"
+          onClick={() => setMobileOpen((o) => !o)}
+          aria-expanded={mobileOpen}
+          aria-label={mobileOpen ? t('aria.closeMobileMenu') : t('aria.openMobileMenu')}
+        >
+          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
       </div>
-      
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 top-[65px] z-50 bg-background">
-          <nav className="flex flex-col p-4 gap-1" aria-label="Mobile navigation">
-            {navLinks.map((link) => (
+
+      {mobileOpen && (
+        <div className="md:hidden border-t border-border/50 bg-background px-4 py-3 pb-5">
+          <nav className="flex flex-col gap-1" aria-label="Mobile">
+            {primaryNav.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  "px-4 py-3 text-base rounded-lg transition-colors",
-                  isActive(link.path)
-                    ? "bg-muted text-foreground font-medium"
-                    : "text-muted-foreground hover:bg-muted/50"
-                )}
-                aria-label={t('aria.navigateToPage', { page: link.label })}
-                aria-current={isActive(link.path) ? 'page' : undefined}
+                onClick={() => setMobileOpen(false)}
+                className={cn('rounded-md px-3 py-2.5', navClass(link.path), isActive(link.path) && 'bg-muted/60')}
               >
                 {link.label}
               </Link>
             ))}
-            
-            <div className="h-px bg-border my-4" />
-            
+            <Link
+              to="/"
+              onClick={() => setMobileOpen(false)}
+              className={cn('rounded-md px-3 py-2.5', navClass('/'))}
+            >
+              {t('common.verify')}
+            </Link>
+          </nav>
+          <div className="mt-4 pt-4 border-t border-border/50 flex flex-col gap-3">
+            <LanguageSwitcher />
             {currentUser ? (
               <>
-                <div className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg" aria-label="Current user information">
-                  <User className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="font-medium">{currentUser.displayName || t('auth.user')}</p>
-                    <p className="text-sm text-muted-foreground">{currentUser.email}</p>
-                  </div>
-                </div>
+                <p className="px-3 text-xs text-muted-foreground truncate">{currentUser.email}</p>
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="px-3 py-2 text-sm">
+                  {t('dashboard.title')}
+                </Link>
+                <Link to="/settings" onClick={() => setMobileOpen(false)} className="px-3 py-2 text-sm">
+                  {t('common.settings')}
+                </Link>
                 <Button
-                  onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
                   variant="outline"
-                  className="mt-2"
-                  aria-label={t('aria.signOutOfAccount')}
+                  size="sm"
+                  className="mx-3"
+                  onClick={() => {
+                    void handleLogout();
+                    setMobileOpen(false);
+                  }}
                 >
-                  <LogOut className="h-4 w-4 mr-2" />
                   {t('auth.signOut')}
                 </Button>
               </>
             ) : (
-              <Link to="/login" onClick={() => setMobileMenuOpen(false)} aria-label={t('aria.signInToAccount')}>
-                <Button className="w-full">{t('auth.signIn')}</Button>
-              </Link>
+              <Button size="sm" className="mx-3" asChild>
+                <Link to="/login" onClick={() => setMobileOpen(false)}>
+                  {t('auth.signIn')}
+                </Link>
+              </Button>
             )}
-          </nav>
+          </div>
         </div>
       )}
     </header>
   );
 });
+
+Header.displayName = 'Header';
 
 export default Header;
