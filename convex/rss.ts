@@ -8,7 +8,7 @@ import { cleanHeadline, isLikelyNewsHeadline } from './lib/headline';
 
 const parser = new Parser({
   timeout: 20_000,
-  headers: { 'User-Agent': 'Facets/0.1 (+https://github.com/Aditya190803/Verify-News)' },
+  headers: { 'User-Agent': 'Facets/0.1 (+https://github.com/Aditya190803/Facets)' },
 });
 
 function hashContent(title: string, url: string): string {

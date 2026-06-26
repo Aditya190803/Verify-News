@@ -40,8 +40,8 @@ bun run dev           # terminal 2 → http://localhost:3000
 ### Install
 
 ```bash
-git clone https://github.com/Aditya190803/Verify-News.git
-cd Verify-News
+git clone https://github.com/Aditya190803/Facets.git
+cd Facets
 bun install
 cp .env.example .env.local
 bun run env:clerk

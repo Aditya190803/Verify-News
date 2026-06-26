@@ -168,7 +168,7 @@ class ErrorBoundary extends Component<Props, State> {
             <p className="mt-6 text-sm text-muted-foreground">
               If this problem persists, please{' '}
               <a
-                href="https://github.com/Aditya190803/Verify-News/issues"
+                href="https://github.com/Aditya190803/Facets/issues"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
