@@ -1,41 +1,53 @@
 import type { Appearance } from '@clerk/types';
 
-/** Embed Clerk inside Facets cards — tokens come from shadcn theme + CSS variables. */
-export const facetsClerkAppearance: Appearance = {
-  elements: {
-    rootBox: 'w-full mx-auto',
-    cardBox: 'w-full shadow-none',
-    card: 'shadow-none border-0 bg-transparent p-0 gap-3 w-full',
-    header: 'hidden',
-    headerTitle: 'hidden',
-    headerSubtitle: 'hidden',
-    socialButtonsBlockButton:
-      'border border-input bg-background hover:bg-muted/50 transition-colors h-10 text-sm font-medium',
-    socialButtonsBlockButtonText: 'text-foreground font-medium',
-    formButtonPrimary: 'h-10 text-sm font-medium shadow-none',
-    formFieldInput: 'h-10 text-sm',
-    formFieldLabel: 'text-sm font-medium text-foreground',
-    footerActionLink: 'text-primary font-medium hover:underline underline-offset-4',
-    identityPreviewEditButton: 'text-primary',
-    dividerLine: 'bg-border',
-    dividerText: 'text-muted-foreground text-xs',
-    footer: 'bg-transparent',
-    footerActionText: 'text-muted-foreground text-sm',
-    formFieldInputShowPasswordButton: 'text-muted-foreground',
-    otpCodeFieldInput: 'border-input',
-    formResendCodeLink: 'text-primary',
-    alert: 'rounded-lg border border-border bg-muted/30',
+/** Match LoginForm / SignupForm: h-11, rounded-lg, email-first, Google last. */
+export const facetsClerkAppearanceEmbedded: Appearance = {
+  variables: {
+    borderRadius: '0.5rem',
   },
-  layout: {
-    socialButtonsPlacement: 'top',
+  elements: {
+    rootBox: 'w-full',
+    cardBox: 'w-full shadow-none',
+    card: 'shadow-none border-0 bg-transparent p-0 gap-6 w-full',
+    header: '!hidden',
+    headerTitle: '!hidden',
+    headerSubtitle: '!hidden',
+    logoBox: '!hidden',
+    logoImage: '!hidden',
+    main: 'gap-6',
+    form: 'gap-6',
+    formFieldRow: 'gap-2',
+    formFieldLabelRow: 'w-full gap-2',
+    formFieldLabel: 'text-sm font-medium text-foreground',
+    formFieldHintText: 'text-xs text-muted-foreground',
+    phoneInputBox: 'clerk-facets-phone',
+    formFieldInputGroup: 'clerk-facets-input-group',
+    formButtonPrimary:
+      'w-full h-11 rounded-lg text-sm font-medium shadow-none bg-primary text-primary-foreground hover:bg-primary/90',
+    formFieldAction: 'text-xs text-muted-foreground hover:text-foreground transition-colors',
+    formFieldAction__forgotPassword: 'text-xs text-muted-foreground hover:text-foreground',
+    socialButtons: 'gap-3 w-full',
+    socialButtonsBlockButton: 'clerk-facets-oauth',
+    socialButtonsBlockButtonText: 'text-foreground font-medium',
+    dividerRow: 'py-2 w-full',
+    dividerLine: 'bg-border',
+    dividerText: 'text-muted-foreground text-xs uppercase tracking-wide',
+    footer: '!hidden',
+    footerAction: '!hidden',
+    footerActionText: '!hidden',
+    footerActionLink: '!hidden',
+    identityPreviewEditButton: 'text-primary text-sm',
+    formFieldInputShowPasswordButton: 'text-muted-foreground',
+    otpCodeFieldInput: 'rounded-lg border-input h-11',
+    formResendCodeLink: 'text-primary text-sm',
+    alert: 'rounded-lg border border-border bg-muted/30 text-sm',
+    alternativeMethodsBlockButton: 'h-11 rounded-lg border border-input',
+  },
+  options: {
+    socialButtonsPlacement: 'bottom',
+    socialButtonsVariant: 'blockButton',
     showOptionalFields: true,
   },
 };
 
-export const facetsClerkAppearanceEmbedded: Appearance = {
-  ...facetsClerkAppearance,
-  elements: {
-    ...facetsClerkAppearance.elements,
-    card: 'shadow-none border-0 bg-transparent px-0 py-2 sm:px-2 w-full',
-  },
-};
+export const facetsClerkAppearance: Appearance = facetsClerkAppearanceEmbedded;

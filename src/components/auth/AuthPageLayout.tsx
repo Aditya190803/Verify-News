@@ -1,58 +1,78 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
-import { MarketingShell } from '@/components/marketing/MarketingShell';
-import { PageHero } from '@/components/marketing/PageHero';
-import { PageSection } from '@/components/marketing/PageSection';
-import { RelatedLinks } from '@/components/marketing/RelatedLinks';
-import { FACETS } from '@/lib/brand';
+import { useEffect } from 'react';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+const THEME_STORAGE_KEY = 'facets-ui-theme';
 
 type AuthPageLayoutProps = {
-  eyebrow: string;
-  title: string;
-  description: string;
+  mode: 'sign-in' | 'sign-up';
   children: ReactNode;
-  alternate: { label: string; href: string };
 };
 
-/** Same chrome as Feed / Pricing / Blindspot. */
-export function AuthPageLayout({
-  eyebrow,
-  title,
-  description,
-  children,
-  alternate,
-}: AuthPageLayoutProps) {
+function ForceLightMode({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove('dark');
+    root.classList.add('light');
+
+    return () => {
+      const stored = localStorage.getItem(THEME_STORAGE_KEY) ?? 'light';
+      root.classList.remove('light', 'dark');
+
+      if (stored === 'system') {
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light';
+        root.classList.add(systemTheme);
+      } else {
+        root.classList.add(stored);
+      }
+    };
+  }, []);
+
   return (
-    <MarketingShell>
-      <PageHero eyebrow={eyebrow} title={title} description={description}>
-        <p className="text-sm text-muted-foreground">
-          {alternate.label}{' '}
-          <Link to={alternate.href} className="text-primary font-medium hover:underline underline-offset-4">
-            {alternate.href === '/sign-up' ? 'Create account' : 'Sign in'}
-          </Link>
-        </p>
-      </PageHero>
+    <div className="light min-h-screen flex flex-col bg-neutral-100" style={{ colorScheme: 'light' }}>
+      {children}
+    </div>
+  );
+}
 
-      <PageSection width="narrow" className="!pt-6 !pb-12 sm:!pb-14">
-        <div className="rounded-lg border border-border/80 bg-card px-4 py-6 sm:px-8 sm:py-8">{children}</div>
-        <p className="mt-6 text-center text-xs text-muted-foreground leading-relaxed max-w-md mx-auto">
-          By continuing you agree to our{' '}
-          <Link to="/legal" className="text-foreground/80 hover:text-foreground underline underline-offset-2">
-            terms & privacy
-          </Link>
-          . {FACETS.tagline}
-        </p>
-      </PageSection>
+export function AuthPageLayout({ mode, children }: AuthPageLayoutProps) {
+  const legal =
+    mode === 'sign-up'
+      ? 'By creating an account, you agree to our'
+      : 'By signing in, you agree to our';
 
-      <RelatedLinks
-        links={[
-          { to: '/feed', label: 'Coverage feed' },
-          { to: '/methodology', label: 'Bias methodology' },
-          { to: '/', label: 'Verify a headline' },
-        ]}
-      />
-    </MarketingShell>
+  return (
+    <ForceLightMode>
+      <header className="w-full px-4 sm:px-6 lg:px-8 pt-5 sm:pt-7">
+        <Button variant="outline" size="default" className="gap-2 bg-white" asChild>
+          <Link href="/">
+            <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+            Go back home
+          </Link>
+        </Button>
+      </header>
+
+      <main className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
+        <div className="w-full max-w-[26rem] flex flex-col items-center">
+          {children}
+          <p className="mt-6 text-center text-xs text-muted-foreground leading-relaxed max-w-sm">
+            {legal}{' '}
+            <Link
+              href="/legal"
+              className="text-foreground/80 hover:text-foreground underline underline-offset-2"
+            >
+              terms of service and privacy policy
+            </Link>
+            .
+          </p>
+        </div>
+      </main>
+    </ForceLightMode>
   );
 }

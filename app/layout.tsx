@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
-import { shadcn } from '@clerk/ui/themes';
+import { ui } from '@clerk/ui';
 import { NextAppProviders } from '@/components/NextAppProviders';
 import { SiteChrome } from '@/components/SiteChrome';
 import './globals.css';
 import { FACETS, facetsSiteUrl } from '@/lib/brand';
-import { facetsClerkAppearance } from '@/lib/clerkAppearance';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         className="min-h-screen flex flex-col antialiased"
         suppressHydrationWarning
       >
-        <ClerkProvider appearance={{ theme: shadcn, elements: facetsClerkAppearance.elements }}>
+        <ClerkProvider ui={ui}>
           <NextAppProviders>
             <SiteChrome>{children}</SiteChrome>
           </NextAppProviders>
