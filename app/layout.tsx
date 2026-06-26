@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
+import { shadcn } from '@clerk/ui/themes';
 import { NextAppProviders } from '@/components/NextAppProviders';
 import Footer from '@/components/Footer';
 import './globals.css';
@@ -16,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen flex flex-col antialiased">
-        <ClerkProvider>
+        <ClerkProvider appearance={{ theme: shadcn }}>
           <NextAppProviders>
             <div className="flex-1 flex flex-col">{children}</div>
             <Footer />

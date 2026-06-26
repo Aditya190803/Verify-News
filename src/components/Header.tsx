@@ -14,6 +14,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import Logo from '@/components/Logo';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { ClerkNavAuth, isClerkNavEnabled } from '@/components/auth/ClerkNavAuth';
 import { useTranslation } from 'react-i18next';
 
 interface HeaderProps {
@@ -79,7 +80,9 @@ const Header = memo(({ className }: HeaderProps) => {
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
-          {currentUser ? (
+          {isClerkNavEnabled() ? (
+            <ClerkNavAuth />
+          ) : currentUser ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2 max-w-[10rem]">
@@ -158,6 +161,10 @@ const Header = memo(({ className }: HeaderProps) => {
             </Link>
           </nav>
           <div className="mt-4 pt-4 border-t border-border/50 flex flex-col gap-3">
+            {isClerkNavEnabled() ? (
+              <ClerkNavAuth compact />
+            ) : (
+              <>
             <LanguageSwitcher />
             {currentUser ? (
               <>
@@ -186,6 +193,8 @@ const Header = memo(({ className }: HeaderProps) => {
                   {t('auth.signIn')}
                 </Link>
               </Button>
+            )}
+              </>
             )}
           </div>
         </div>
