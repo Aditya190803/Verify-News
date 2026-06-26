@@ -114,7 +114,10 @@ export const UI_TEXT = {
 // ============================================
 export const ROUTES = {
   HOME: '/',
-  LOGIN: '/login',
+  SIGN_IN: '/sign-in',
+  SIGN_UP: '/sign-up',
+  /** @deprecated Use SIGN_IN — /login redirects for legacy links */
+  LOGIN: '/sign-in',
   DASHBOARD: '/dashboard',
   ABOUT: '/about',
   HOW_IT_WORKS: '/how-it-works',

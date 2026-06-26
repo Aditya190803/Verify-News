@@ -9,7 +9,6 @@ export function countBySide(spread: Partial<Record<BiasLabel, number>>) {
   let left = 0;
   let right = 0;
   let center = 0;
-  let lowFact = 0;
   let total = 0;
   for (const [label, n] of Object.entries(spread)) {
     const c = n ?? 0;
@@ -27,7 +26,7 @@ export function computeStoryBlindspot(
   spread: Partial<Record<BiasLabel, number>>,
   lowFactualityShare: number,
 ): { side: BlindspotSide; reason: string } {
-  const { left, right, center, total } = countBySide(spread);
+  const { left, right, total } = countBySide(spread);
   if (total < 3) return { side: 'none', reason: 'too_few_sources' };
   if (lowFactualityShare > 0.35) return { side: 'none', reason: 'low_factuality_cap' };
 

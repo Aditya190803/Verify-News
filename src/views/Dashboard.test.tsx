@@ -72,7 +72,7 @@ describe('Dashboard Component', () => {
     mockCurrentUser = null;
     renderDashboard();
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/login');
+      expect(mockNavigate).toHaveBeenCalledWith('/sign-in');
     });
   });
 

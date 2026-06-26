@@ -117,7 +117,7 @@ const Pricing = () => {
 
   const loginRedirect = (plan?: 'plus' | 'pro') => {
     const dest = plan ? `/pricing?plan=${plan}` : '/pricing';
-    navigate(`/login?${new URLSearchParams({ redirect: dest }).toString()}`);
+    navigate(`/sign-in?${new URLSearchParams({ redirect_url: dest }).toString()}`);
   };
 
   const refreshEnt = useCallback(() => {

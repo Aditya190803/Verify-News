@@ -109,7 +109,7 @@ const Following = () => {
               Your outlet list and bias profile stay on your account and sync with the API.
             </p>
             <Button className="mt-6" asChild>
-              <Link to="/login">Sign in</Link>
+              <Link to="/sign-in">Sign in</Link>
             </Button>
           </div>
         )}
