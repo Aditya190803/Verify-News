@@ -1,5 +1,5 @@
 {
-  "name": "verify-news",
+  "name": "facets",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,6 +12,8 @@
     "start": "next start",
     "convex:dev": "convex dev",
     "env:clerk": "clerk env pull --app app_3Ff8NcoPHzGIjkXQHpcnqZUNK01",
+    "convex:clerk-auth": "node scripts/set-convex-clerk-issuer.mjs",
+    "convex:env-push": "node scripts/push-convex-env-from-local.mjs",
     "lint": "eslint .",
     "test": "vitest",
     "test:run": "vitest run",
@@ -20,7 +22,6 @@
   "dependencies": {
     "@clerk/nextjs": "7.5.8",
     "@clerk/ui": "^1.23.0",
-    "@google/generative-ai": "^0.24.0",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",

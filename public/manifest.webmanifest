@@ -1,0 +1,10 @@
+{
+  "name": "Facets",
+  "short_name": "Facets",
+  "description": "India news coverage from many angles",
+  "start_url": "/feed",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": []
+}

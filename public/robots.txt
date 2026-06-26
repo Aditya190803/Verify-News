@@ -1,0 +1,5 @@
+# Static fallback; prefer /robots from app/robots.ts when using Next.
+User-agent: *
+Allow: /
+
+Sitemap: https://facets.adityamer.dev/sitemap.xml

@@ -16,14 +16,14 @@ interface CacheConfig {
   ttl?: number;
   /** Maximum cache size (default: 100 entries) */
   maxSize?: number;
-  /** Storage key prefix (default: 'verify-news-cache') */
+  /** Storage key prefix (default: 'facets-cache') */
   prefix?: string;
 }
 
 const DEFAULT_CONFIG: Required<CacheConfig> = {
   ttl: 24 * 60 * 60 * 1000, // 24 hours
   maxSize: 100,
-  prefix: 'verify-news-cache',
+  prefix: 'facets-cache',
 };
 
 class VerificationCache {
@@ -195,7 +195,7 @@ class VerificationCache {
 export const verificationTextCache = new VerificationCache({
   ttl: 24 * 60 * 60 * 1000, // 24 hours
   maxSize: 100,
-  prefix: 'verify-news-text-cache',
+  prefix: 'facets-text-cache',
 });
 
 /**
@@ -205,7 +205,7 @@ export const verificationTextCache = new VerificationCache({
 export const verificationMediaCache = new VerificationCache({
   ttl: 7 * 24 * 60 * 60 * 1000, // 7 days
   maxSize: 50,
-  prefix: 'verify-news-media-cache',
+  prefix: 'facets-media-cache',
 });
 
 /**
@@ -214,7 +214,7 @@ export const verificationMediaCache = new VerificationCache({
 export const searchResultsCache = new VerificationCache({
   ttl: 6 * 60 * 60 * 1000, // 6 hours
   maxSize: 50,
-  prefix: 'verify-news-search-cache',
+  prefix: 'facets-search-cache',
 });
 
 export default VerificationCache;

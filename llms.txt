@@ -1,37 +1,24 @@
-# Verify-News
+# Facets
 
-> A React-based fake news verifier that detects misinformation by analyzing text, images, audio, and video using DuckDuckGo search and Gemini LLM.
+> Next.js news verifier + India RSS coverage feed. Convex backend, Clerk auth, OpenCode Big Pickle for fact-check.
 
-## Overview
-Verify-News is a comprehensive misinformation detection platform that analyzes text, images, audio, and video content to verify news authenticity. It uses DuckDuckGo search and Google Gemini LLM to cross-reference claims and provide corrected information.
+## Stack
+- Next.js 16 (App Router)
+- Convex (RSS, stories, verify, billing)
+- Clerk
+- Optional client search: Exa / Tavily (`NEXT_PUBLIC_EXA_API_KEY`, `NEXT_PUBLIC_TAVILY_API_KEY`)
+- Vitest for unit tests
 
-## Key Features
-- **Multi-modal Verification** — Analyze text, images, audio, and video for misinformation
-- **AI-Powered Analysis** — Uses Gemini LLM for deep fact-checking
-- **Search Integration** — Cross-references claims via DuckDuckGo search
-- **Corrected Information** — Provides accurate information when content is false
-- **Verification History** — Stores past verifications for future reference
-- **Dashboard** — View verification trends and statistics
-- **Multi-language Support** — Internationalization (i18n) built-in
-- **Keyboard Shortcuts** — Full keyboard navigation support
-- **Share Results** — Easily share verification results
+## Key routes
+- `/` — verify
+- `/feed` — clustered stories (RSS + Exa widen)
+- `/blindspot` — skewed coverage feed
+- `/result/[slug]` — saved verification
+- `/dashboard` — history
 
-## Pages
-- `/` — Landing page
-- `/dashboard` — Verification dashboard
-- `/results` — Verification results
-- `/search-results` — Search results
-- `/about` — About the platform
-- `/how-it-works` — How verification works
-- `/login` — Sign in
-- `/settings` — User settings
-
-## Tech Stack
-- React + Vite
-- TypeScript
-- Stack Auth
-- Appwrite
-- Gemini LLM
-- DuckDuckGo Search API
-- Tailwind CSS
-- shadcn/ui
+## Docs (repo)
+- `docs/STATUS.md` — stack, commands, pre-prod checklist
+- `docs/LOCAL_DEV.md` — dev setup
+- `docs/ENV.md` — env vars
+- `docs/FEED_PIPELINE.md` — RSS + Exa ingest
+- `docs/GROUND_NEWS_GAP_PLAN.md` — product parity notes

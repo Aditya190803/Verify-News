@@ -67,7 +67,7 @@ const LoginForm = ({ email, setEmail, password, setPassword }: LoginFormProps) =
       
       toast({
         title: "Login successful",
-        description: "Welcome back to VerifyNews!"
+        description: "Welcome back to Facets!"
       });
     } catch (error: unknown) {
       const err = error as Error;
