@@ -1,10 +1,10 @@
 import { AuthPageLayout } from '@/components/auth/AuthPageLayout';
-import { ClerkSignInEmbed } from '@/components/auth/ClerkSignInEmbed';
+import { ClerkAuthEmbed } from '@/components/auth/ClerkAuthEmbed';
 
 export default function SignInPage() {
   return (
     <AuthPageLayout mode="sign-in">
-      <ClerkSignInEmbed signUpUrl="/sign-up" fallbackRedirectUrl="/feed" />
+      <ClerkAuthEmbed mode="sign-in" signUpUrl="/sign-up" fallbackRedirectUrl="/feed" />
     </AuthPageLayout>
   );
 }

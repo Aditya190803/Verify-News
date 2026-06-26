@@ -6,7 +6,7 @@ type AuthFormSkeletonProps = {
 
 /** Form placeholder while Clerk hydrates (header is shown separately). */
 export function AuthFormSkeleton({ mode = 'sign-in' }: AuthFormSkeletonProps) {
-  const fieldCount = mode === 'sign-up' ? 2 : 2;
+  const fieldCount = 2;
 
   return (
     <div
