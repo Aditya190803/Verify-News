@@ -1,5 +1,7 @@
 # Local development
 
+Env layout: **[ENV.md](./ENV.md)** (Next vs Convex vs Clerk vs Razorpay).
+
 ## Setup
 
 ```bash
@@ -8,17 +10,16 @@ cp .env.example .env.local
 bun run env:clerk
 ```
 
-Add Convex URL from `bun run convex:dev` output to `.env.local`:
+`npx convex dev` fills **LOCAL → Next.js** Convex URLs in `.env.local`.
 
-- `NEXT_PUBLIC_CONVEX_URL`
-- `CONVEX_DEPLOYMENT`
-
-## Convex env (dashboard)
+Push **UPLOAD → Convex** vars:
 
 ```bash
-npx convex env set CLERK_JWT_ISSUER_DOMAIN "https://YOUR.clerk.accounts.dev"
-npx convex env set GEMINI_API_KEY "optional-for-verify"
+bun run convex:clerk-auth   # issuer only
+bun run convex:env-push     # OPENCODE_API_KEY (Big Pickle), Razorpay, etc.
 ```
+
+**Clerk Dashboard:** Convex integration ON + JWT template `convex` (see ENV.md).
 
 ## Run
 
@@ -29,7 +30,8 @@ bun run dev          # terminal 2 → http://localhost:3000
 
 ```bash
 npx convex run seed:seedOutlets
-npx convex run rss:pollAll
+npx convex run feedPoll:refreshFeed   # RSS seed + Exa widen (see FEED_PIPELINE.md)
+# bun run convex:env-push  # EXA_API_KEY + OPENCODE on Convex
 ```
 
 ## Scripts

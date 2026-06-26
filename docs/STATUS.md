@@ -1,50 +1,46 @@
 # Facets — status
 
-Last updated: 2026-03-25
+Last updated: 2026-03-26
+
+## Stack
+
+| Layer | Tech |
+|-------|------|
+| Web | Next.js 16 (App Router), Vercel |
+| Backend | Convex (RSS, stories, verify, billing, history) |
+| Auth | Clerk (+ Convex JWT template `convex`) |
+| Verify AI | OpenCode Zen **Big Pickle** (`OPENCODE_API_KEY` on Convex) |
+| Billing | Razorpay (Convex actions + Next webhook) |
 
 ## Done
 
-| Area | Items |
+- Next-only app; Vite / `apps/api` / Appwrite / Stack removed
+- Feed, story detail, following, pricing, dashboard on Convex
+- Clerk sign-in/up; middleware-protected routes
+- Verify action + monthly limits; `by_contentHash` index for result lookup
+- Env layout: `docs/ENV.md`, `convex:env-push`, `convex:clerk-auth`
+- Prod pass: stub votes/privacy removed; Razorpay errors logged
+
+## Before production
+
+| Item | Notes |
 |------|--------|
-| **Docs** | PRODUCT_PLAN, SELF_HOST, STATUS (this file), PHASE_0_ISSUES |
-| **API** | RSS ingest, clustering, stories, outlets, verify (AI), Tavily search, follows, blindspot, feed rank |
-| **Auth** | Bearer Stack token → user id; dev `AUTH_TRUST_HEADER` + `VITE_AUTH_TRUST_HEADER` |
-| **Billing** | Razorpay orders + checkout UI, confirm + webhook, plan limits, usage on /pricing |
-| **Web** | /feed, /story, /following, /pricing, /methodology, /legal, entitlements on pricing |
-| **OSS** | docker-compose db+api; optional `docker/Dockerfile.web` |
-
-## In progress / partial
-
-| Area | Gap |
-|------|-----|
-| **Stack token verify** | API calls Stack `/users/me`; confirm against your Stack project in prod |
-| **Razorpay** | Set `RAZORPAY_*` + `BILLING_ENABLED=true`; test mode keys for dev |
-| **History** | Verifications in Postgres when using API; Appwrite still primary in web |
-| **Outlets** | ~10 seeded; expand pack + stable RSS URLs |
-| **Clustering** | Heuristic only; no embeddings |
-
-## Not started
-
-| Area | Notes |
-|------|--------|
-| Licensed wire APIs | Contracts |
-| Custom user RSS feeds | Tier feature |
-| Email alerts | Phase 4 |
-| Admin UI | Feed/bias ops |
-| `apps/web` move | Still root Vite app |
-| Media verify on API | Client only |
-| CI: block client AI keys in prod | Policy |
-
-## Env quick reference
-
-**API:** `DATABASE_URL`, `STACK_PROJECT_ID`, AI keys, `BILLING_ENABLED`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `RAZORPAY_PRICE_PLUS_INR`, `RAZORPAY_PRICE_PRO_INR`, `WEB_URL`
-
-**Web:** `VITE_API_URL`, `VITE_STACK_*`, `VITE_AUTH_TRUST_HEADER` (dev fallback)
+| Convex env | `OPENCODE_API_KEY`, `CLERK_JWT_ISSUER_DOMAIN`, optional `RAZORPAY_*`, `GEMINI` → **Big Pickle only** |
+| Clerk | Convex integration + JWT template `convex`; prod instance on Vercel |
+| Smoke | Sign-in → verify → dashboard → feed (`seed:seedOutlets` + `feedPoll:refreshFeed`) |
+| Vercel | LOCAL env block from `.env.example` |
+| Merge | `feat/next-convex-clerk` after preview smoke |
 
 ## Commands
 
 ```bash
-docker compose up --build
-bun run api:migrate && bun run api:seed && bun run api:dev
-bun run dev   # VITE_API_URL=http://localhost:3001
+bun run convex:dev
+bun run dev
+bun run convex:clerk-auth
+bun run convex:env-push
+npx convex run seed:seedOutlets
+npx convex run feedPoll:refreshFeed
+npx convex run rssMutations:recomputeCanonicalTitles  # after title/cluster changes
 ```
+
+See [`LOCAL_DEV.md`](./LOCAL_DEV.md), [`ENV.md`](./ENV.md).

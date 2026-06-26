@@ -15,12 +15,12 @@ export function ClerkNavAuth({ compact }: { compact?: boolean }) {
               <LanguageSwitcher />
             </div>
           )}
-          <SignInButton mode="redirect" forceRedirectUrl="/dashboard">
+          <SignInButton mode="redirect">
             <Button size="sm" variant={compact ? 'outline' : 'ghost'}>
               Sign in
             </Button>
           </SignInButton>
-          <SignUpButton mode="redirect" forceRedirectUrl="/dashboard">
+          <SignUpButton mode="redirect">
             <Button size="sm">Sign up</Button>
           </SignUpButton>
         </div>
