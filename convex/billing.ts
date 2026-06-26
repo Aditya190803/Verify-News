@@ -1,15 +1,10 @@
 import { v } from 'convex/values';
 import { internalMutation, mutation, query } from './_generated/server';
-import { internal } from './_generated/api';
 import { entitlementsForPlan, normalizePlan } from './lib/entitlements';
 import { planCatalog, PLAN_LIMITS } from './lib/plans';
-
-function monthStartMs() {
-  const start = new Date();
-  start.setDate(1);
-  start.setHours(0, 0, 0, 0);
-  return start.getTime();
-}
+import { monthStartMs } from './lib/time';
+import { upsertSubscriptionForUser } from './lib/subscriptions';
+import { normalizePaidPlan, planPricePaise } from './lib/planPricing';
 
 export const plans = query({
   args: {},
@@ -53,19 +48,13 @@ export const upsertSubscription = internalMutation({
     currentPeriodEnd: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const existing = await ctx.db
-      .query('subscriptions')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
-      .first();
-    const row = {
+    await upsertSubscriptionForUser(ctx, {
       userId: args.userId,
       plan: args.plan,
       status: args.status,
       razorpayCustomerId: args.paymentRef,
       currentPeriodEnd: args.currentPeriodEnd,
-    };
-    if (existing) await ctx.db.patch(existing._id, row);
-    else await ctx.db.insert('subscriptions', row);
+    });
   },
 });
 
@@ -74,26 +63,43 @@ export const applyWebhookPayment = mutation({
     userId: v.string(),
     plan: v.string(),
     paymentId: v.string(),
+    amountPaise: v.number(),
+    currency: v.string(),
     sharedSecret: v.string(),
   },
   handler: async (ctx, args) => {
     if (args.sharedSecret !== process.env.CONVEX_WEBHOOK_SHARED_SECRET) {
       throw new Error('unauthorized');
     }
-    const periodEnd = Date.now() + 30 * 86_400_000;
-    const existing = await ctx.db
-      .query('subscriptions')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+    if (args.currency !== 'INR') throw new Error('invalid currency');
+
+    const paidPlan = normalizePaidPlan(args.plan);
+    const expectedPaise = planPricePaise(paidPlan);
+    if (expectedPaise === null || args.amountPaise !== expectedPaise) {
+      throw new Error('amount mismatch');
+    }
+
+    const dup = await ctx.db
+      .query('paymentEvents')
+      .withIndex('by_paymentId', (q) => q.eq('paymentId', args.paymentId))
       .first();
-    const row = {
+    if (dup) return { ok: true as const, duplicate: true };
+
+    const periodEnd = Date.now() + 30 * 86_400_000;
+    await upsertSubscriptionForUser(ctx, {
       userId: args.userId,
-      plan: args.plan,
+      plan: paidPlan,
       status: 'active',
       razorpayCustomerId: args.paymentId,
       currentPeriodEnd: periodEnd,
-    };
-    if (existing) await ctx.db.patch(existing._id, row);
-    else await ctx.db.insert('subscriptions', row);
+    });
+    await ctx.db.insert('paymentEvents', {
+      paymentId: args.paymentId,
+      userId: args.userId,
+      plan: paidPlan,
+      amountPaise: args.amountPaise,
+      processedAt: Date.now(),
+    });
+    return { ok: true as const, duplicate: false };
   },
 });
-

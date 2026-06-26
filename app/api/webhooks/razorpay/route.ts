@@ -22,20 +22,38 @@ export async function POST(req: Request) {
 
   const event = JSON.parse(raw) as {
     event: string;
-    payload?: { payment?: { entity?: { id?: string; notes?: Record<string, string> } } };
+    payload?: {
+      payment?: {
+        entity?: {
+          id?: string;
+          amount?: number;
+          currency?: string;
+          notes?: Record<string, string>;
+        };
+      };
+    };
   };
 
   if (event.event === 'payment.captured') {
     const pay = event.payload?.payment?.entity;
     const userId = pay?.notes?.userId;
     const plan = pay?.notes?.plan === 'pro' ? 'pro' : 'plus';
-    if (userId && pay?.id) {
-      await fetchMutation(api.billing.applyWebhookPayment, {
-        userId,
-        plan,
-        paymentId: pay.id,
-        sharedSecret: shared,
-      });
+    const amountPaise = pay?.amount;
+    const currency = pay?.currency ?? 'INR';
+    if (userId && pay?.id && typeof amountPaise === 'number') {
+      try {
+        await fetchMutation(api.billing.applyWebhookPayment, {
+          userId,
+          plan,
+          paymentId: pay.id,
+          amountPaise,
+          currency,
+          sharedSecret: shared,
+        });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'apply failed';
+        return NextResponse.json({ error: msg }, { status: 400 });
+      }
     }
   }
 

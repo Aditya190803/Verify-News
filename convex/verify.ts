@@ -57,7 +57,15 @@ export const run = action({
   args: {
     content: v.string(),
     articleUrl: v.optional(v.string()),
-    searchResults: v.optional(v.array(v.any())),
+    searchResults: v.optional(
+      v.array(
+        v.object({
+          title: v.optional(v.string()),
+          url: v.optional(v.string()),
+          snippet: v.optional(v.string()),
+        }),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -102,7 +110,12 @@ export const run = action({
       contentHash,
       veracity: data.veracity,
       confidence: data.confidence,
-      resultJson: JSON.stringify({ success, data }),
+      resultJson: JSON.stringify({
+        success,
+        data,
+        slug: contentHash,
+        contentPreview: content.slice(0, 120),
+      }),
     });
 
     return { success, data };

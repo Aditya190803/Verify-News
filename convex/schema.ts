@@ -77,6 +77,14 @@ export default defineSchema({
     currentPeriodEnd: v.optional(v.number()),
   }).index('by_user', ['userId']),
 
+  paymentEvents: defineTable({
+    paymentId: v.string(),
+    userId: v.string(),
+    plan: v.string(),
+    amountPaise: v.number(),
+    processedAt: v.number(),
+  }).index('by_paymentId', ['paymentId']),
+
   verifications: defineTable({
     userId: v.optional(v.string()),
     storyId: v.optional(v.id('storyClusters')),

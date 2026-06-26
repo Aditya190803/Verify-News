@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import VerificationResult from '@/components/VerificationResult';
 import { useNews } from '@/context/NewsContext';
 import { getVerificationBySlug, VerificationDocument } from '@/services/appwrite';
+import { fetchVerificationBySlug, isConvexBackend } from '@/services/aggregation';
 import { VerificationResult as VerificationResultType } from '@/types/news';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -38,36 +39,48 @@ const Results = () => {
     if (urlSlug) {
       setLoading(true);
       setFetching(true);
-      getVerificationBySlug(urlSlug, currentUser?.uid)
-        .then((data) => {
-          if (data && data.result) {
-            // result is stored as a JSON string in Appwrite; parse if necessary
-            let parsedResult: VerificationResultType | null = null;
-            try {
-              parsedResult = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
-            } catch (e) {
-              logger.warn('Failed to parse verification result JSON:', e);
-            }
-
-            setFetchedResult(parsedResult);
-            setFetchedQuery(data.query || '');
-            setVerificationData(data); // Store full verification data
-
-            if (parsedResult) {
-              setResult(parsedResult);
-              setStatus('verified');
-            } else {
-              setStatus('error');
-            }
-
-            // Set the original query/content in context for VerificationResult component
-            setSearchQuery(data.query || '');
-            setNewsContent(data.content || data.query || '');
-          } else {
+      (async () => {
+        if (isConvexBackend()) {
+          const row = await fetchVerificationBySlug(urlSlug);
+          if (!row?.result?.data) {
             setFetchedResult(null);
             setStatus('error');
+            return;
           }
-        })
+          const parsedResult = row.result.data as VerificationResultType;
+          const preview = row.result.contentPreview ?? parsedResult.explanation ?? '';
+          setFetchedResult(parsedResult);
+          setFetchedQuery(preview);
+          setSearchQuery(preview);
+          setNewsContent(preview);
+          setResult(parsedResult);
+          setStatus('verified');
+          return;
+        }
+        const data = await getVerificationBySlug(urlSlug, currentUser?.uid);
+        if (data && data.result) {
+          let parsedResult: VerificationResultType | null = null;
+          try {
+            parsedResult = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
+          } catch (e) {
+            logger.warn('Failed to parse verification result JSON:', e);
+          }
+          setFetchedResult(parsedResult);
+          setFetchedQuery(data.query || '');
+          setVerificationData(data);
+          if (parsedResult) {
+            setResult(parsedResult);
+            setStatus('verified');
+          } else {
+            setStatus('error');
+          }
+          setSearchQuery(data.query || '');
+          setNewsContent(data.content || data.query || '');
+        } else {
+          setFetchedResult(null);
+          setStatus('error');
+        }
+      })()
         .catch((error) => {
           logger.error('Error fetching by slug:', error);
           setFetchedResult(null);

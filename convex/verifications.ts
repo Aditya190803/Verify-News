@@ -1,12 +1,26 @@
 import { v } from 'convex/values';
 import { internalMutation, query } from './_generated/server';
 import { entitlementsForPlan, normalizePlan } from './lib/entitlements';
+import { monthStartMs } from './lib/time';
 
-function monthStartMs() {
-  const start = new Date();
-  start.setDate(1);
-  start.setHours(0, 0, 0, 0);
-  return start.getTime();
+type StoredResult = {
+  success?: boolean;
+  data?: {
+    veracity?: string;
+    confidence?: number;
+    explanation?: string;
+    sources?: { name: string; url: string }[];
+  };
+  contentPreview?: string;
+  slug?: string;
+};
+
+function parseStored(json: string): StoredResult {
+  try {
+    return JSON.parse(json) as StoredResult;
+  } catch {
+    return {};
+  }
 }
 
 export const save = internalMutation({
@@ -42,13 +56,48 @@ export const listForUser = query({
       .order('desc')
       .take(args.limit ?? 50);
     return {
-      verifications: rows.map((r) => ({
-        id: r._id,
-        veracity: r.veracity,
-        confidence: r.confidence,
-        createdAt: new Date(r.createdAt).toISOString(),
-        result: JSON.parse(r.resultJson) as unknown,
-      })),
+      verifications: rows.map((r) => {
+        const stored = parseStored(r.resultJson);
+        const slug = stored.slug ?? r.contentHash;
+        const preview = stored.contentPreview ?? stored.data?.explanation?.slice(0, 80) ?? 'Verification';
+        return {
+          id: r._id,
+          slug,
+          query: preview,
+          title: preview,
+          timestamp: new Date(r.createdAt).toISOString(),
+          resultType: 'verification' as const,
+          veracity: r.veracity,
+          confidence: r.confidence,
+          result: stored.data,
+        };
+      }),
+    };
+  },
+});
+
+export const getBySlugOrHash = query({
+  args: { slug: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const rows = await ctx.db.query('verifications').order('desc').take(500);
+    const row = rows.find((r) => {
+      const stored = parseStored(r.resultJson);
+      return r.contentHash === args.slug || stored.slug === args.slug;
+    });
+    if (!row) return null;
+    if (row.userId && identity?.subject !== row.userId) {
+      return null;
+    }
+    const stored = parseStored(row.resultJson);
+    return {
+      id: row._id,
+      slug: stored.slug ?? row.contentHash,
+      contentHash: row.contentHash,
+      veracity: row.veracity,
+      confidence: row.confidence,
+      createdAt: row.createdAt,
+      result: stored,
     };
   },
 });
