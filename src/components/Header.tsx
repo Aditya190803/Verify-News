@@ -1,20 +1,9 @@
 import { useState, memo } from 'react';
 import { cn } from '@/lib/utils';
-import { Menu, X, User, LogOut, LayoutDashboard, Settings } from 'lucide-react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useToast } from '@/hooks/use-toast';
+import { Menu, X } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import Logo from '@/components/Logo';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { ClerkNavAuth, isClerkNavEnabled } from '@/components/auth/ClerkNavAuth';
+import { ClerkNavAuth } from '@/components/auth/ClerkNavAuth';
 import { useTranslation } from 'react-i18next';
 
 interface HeaderProps {
@@ -29,28 +18,11 @@ const primaryNav = [
 
 const Header = memo(({ className }: HeaderProps) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { currentUser, logout } = useAuth();
-  const { toast } = useToast();
   const { t } = useTranslation();
 
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      toast({ title: t('auth.toastLoggedOutTitle'), description: t('auth.toastLoggedOutDesc') });
-      navigate('/');
-    } catch {
-      toast({
-        title: t('auth.toastLogoutFailedTitle'),
-        description: t('auth.toastLogoutFailedDesc'),
-        variant: 'destructive',
-      });
-    }
-  };
 
   const navClass = (path: string) =>
     cn(
@@ -80,52 +52,7 @@ const Header = memo(({ className }: HeaderProps) => {
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
-          {isClerkNavEnabled() ? (
-            <ClerkNavAuth />
-          ) : currentUser ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2 max-w-[10rem]">
-                  <User className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-                  <span className="truncate">
-                    {currentUser.displayName || currentUser.email?.split('@')[0]}
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuItem asChild>
-                  <Link to="/dashboard" className="cursor-pointer">
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    {t('dashboard.title')}
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/settings" className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    {t('common.settings')}
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <div className="px-2 py-2">
-                  <LanguageSwitcher />
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => void handleLogout()} className="text-destructive focus:text-destructive">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  {t('auth.signOut')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <>
-              <div className="hidden lg:block">
-                <LanguageSwitcher />
-              </div>
-              <Button size="sm" asChild>
-                <Link to="/login">{t('auth.signIn')}</Link>
-              </Button>
-            </>
-          )}
+          <ClerkNavAuth />
         </div>
 
         <button
@@ -160,42 +87,8 @@ const Header = memo(({ className }: HeaderProps) => {
               {t('common.verify')}
             </Link>
           </nav>
-          <div className="mt-4 pt-4 border-t border-border/50 flex flex-col gap-3">
-            {isClerkNavEnabled() ? (
-              <ClerkNavAuth compact />
-            ) : (
-              <>
-            <LanguageSwitcher />
-            {currentUser ? (
-              <>
-                <p className="px-3 text-xs text-muted-foreground truncate">{currentUser.email}</p>
-                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="px-3 py-2 text-sm">
-                  {t('dashboard.title')}
-                </Link>
-                <Link to="/settings" onClick={() => setMobileOpen(false)} className="px-3 py-2 text-sm">
-                  {t('common.settings')}
-                </Link>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mx-3"
-                  onClick={() => {
-                    void handleLogout();
-                    setMobileOpen(false);
-                  }}
-                >
-                  {t('auth.signOut')}
-                </Button>
-              </>
-            ) : (
-              <Button size="sm" className="mx-3" asChild>
-                <Link to="/login" onClick={() => setMobileOpen(false)}>
-                  {t('auth.signIn')}
-                </Link>
-              </Button>
-            )}
-              </>
-            )}
+          <div className="mt-4 pt-4 border-t border-border/50">
+            <ClerkNavAuth compact />
           </div>
         </div>
       )}

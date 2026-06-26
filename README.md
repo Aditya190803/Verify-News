@@ -3,7 +3,7 @@
 **Many sides. One story.**
 
 ## Overview
-Facets is a news product for seeing **coverage spread** across outlets (Ground News–style bias bar) and **AI fact-checking** in one stack. Built with React, TypeScript, and `apps/api` (Bun + Postgres + RSS). It helps users fact-check news articles and headlines in real-time using advanced web search capabilities and Google's Gemini AI for intelligent analysis. The application provides instant credibility assessments, source verification, and corrected information when misinformation is detected.
+Facets is a news product for seeing **coverage spread** across outlets (Ground News–style bias bar) and **AI fact-checking** in one stack. Built with **Next.js**, **Convex**, and **Clerk**. It helps users fact-check news articles and headlines in real-time using advanced web search capabilities and Google's Gemini AI for intelligent analysis. The application provides instant credibility assessments, source verification, and corrected information when misinformation is detected.
 
 **🌐 Live Demo**: [https://verifynews.adityamer.dev/](https://verifynews.adityamer.dev/)  
 **🤖 Get Gemini API Key**: [Google AI Studio](https://aistudio.google.com/app/apikey)
@@ -22,7 +22,15 @@ Facets is a news product for seeing **coverage spread** across outlets (Ground N
 - ⚡ **Real-time Updates** - Instant verification results with loading states
 - 📱 **Responsive Design** - Optimized for desktop, tablet, and mobile devices
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Next + Convex + Clerk)
+
+**Local dev:** [`docs/LOCAL_DEV.md`](docs/LOCAL_DEV.md) · copy **`.env.example`** → `.env.local` · `clerk env pull --app app_3Ff8NcoPHzGIjkXQHpcnqZUNK01`
+
+```bash
+bun install
+bun run convex:dev    # terminal 1
+bun run dev:next      # terminal 2 → http://localhost:3000
+```
 
 ### Prerequisites
 - **Node.js** (v18 or higher)

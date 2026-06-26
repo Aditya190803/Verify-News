@@ -6,7 +6,10 @@ import type {
   BillingPlansResponse,
   RazorpayOrderResponse,
 } from './types';
-import { isAuthError } from './legacyHttp';
+function isAuthError(err: unknown) {
+  const msg = err instanceof Error ? err.message : String(err);
+  return msg.includes('Not authenticated') || msg.includes('401');
+}
 
 function client() {
   const c = getConvexHttpClient();

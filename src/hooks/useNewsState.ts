@@ -71,7 +71,6 @@ export function useNewsState() {
    * Automatically updates status and stores results
    */
   const { searchQuery, setSearchQuery, searchNews } = useSearch({
-    userId: currentUser?.uid,
     onSearchStart: () => setStatus('searching'),
     onSearchEnd: (newArticles) => {
       setArticles(newArticles);
@@ -80,7 +79,6 @@ export function useNewsState() {
       setStatus('idle');
     },
     onSearchError: () => setStatus('error'),
-    refreshHistory: refreshSearchHistory
   });
 
   /**
@@ -88,10 +86,9 @@ export function useNewsState() {
    * Supports both text and media verification
    */
   const { verifyNews, verifyMedia } = useVerification({
-    userId: currentUser?.uid,
     refreshHistory: refreshSearchHistory,
     onStatusChange: setStatus,
-    onResultReady: setResult
+    onResultReady: setResult,
   });
 
   /**
@@ -140,7 +137,7 @@ export function useNewsState() {
       await verifyNews(title || url, url, null, slug, llmTitle);
     } else if (extractedUrls.length > 0) {
       // Input contains URLs with text - search for articles first
-      const searchResults = await searchNews(value, slug, llmTitle);
+      const searchResults = await searchNews(value);
       if (searchResults && searchResults.length > 0) {
         await verifyNews(searchResults[0].snippet, value, searchResults[0], slug, llmTitle);
       }

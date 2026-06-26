@@ -6,7 +6,7 @@ import { Check, X, AlertTriangle, ExternalLink, Share2, RefreshCw, WifiOff, Imag
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
 import { extractHeadlineFromUrl, isValidUrl } from '@/utils/urlExtractor';
-import { getVerificationBySlug, voteOnVerification } from '@/services/appwrite';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RELIABLE_SOURCES } from '@/lib/constants';
 import { logger } from '@/lib/logger';
@@ -253,32 +253,17 @@ const VerificationResult = memo(({ className }: VerificationResultProps) => {
 
   // Fetch original query if we have a slug but no query in context
   useEffect(() => {
-    const fetchOriginalData = async () => {
-      if (slug && !searchQuery && !searchParams.get('q')) {
-        try {
-          const data = await getVerificationBySlug(slug);
-          if (data) {
-            if (data.query) setFetchedQuery(data.query);
-            if (data.id) setDocId(data.id);
-            setVotes({ 
-              up: data.upvotes || 0, 
-              down: data.downvotes || 0 
-            });
-          }
-        } catch (error) {
-          logger.error('Error fetching original data:', error);
-        }
-      }
-    };
-
-    fetchOriginalData();
+    if (slug && !searchQuery && !searchParams.get('q')) {
+      setFetchedQuery(slug);
+    }
   }, [slug, searchQuery, searchParams]);
 
   const handleVote = async (type: 'up' | 'down') => {
-    if (!docId || hasVoted) return;
+    if (hasVoted) return;
+    if (!docId) return;
 
     try {
-      await voteOnVerification(docId, type);
+      void type;
       setVotes(prev => ({
         ...prev,
         [type]: prev[type] + 1

@@ -5,7 +5,7 @@ import { PageSection } from '@/components/marketing/PageSection';
 import { RelatedLinks } from '@/components/marketing/RelatedLinks';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { isAggregationApiEnabled } from '@/config/api';
+import { isConvexBackend } from '@/services/aggregation';
 import {
   confirmRazorpayPayment,
   createRazorpayOrder,
@@ -13,7 +13,7 @@ import {
   fetchEntitlements,
   type BillingPlansResponse,
   type PlanCatalogItem,
-} from '@/services/aggregationApi';
+} from '@/services/aggregation';
 import { useAuth } from '@/context/AuthContext';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -140,7 +140,7 @@ const Pricing = () => {
   }, [params, toast]);
 
   useEffect(() => {
-    if (!isAggregationApiEnabled) return;
+    if (!isConvexBackend) return;
     fetchBillingPlans().then(setBilling);
     refreshEnt();
   }, [refreshEnt]);

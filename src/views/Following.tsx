@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
-import { isAggregationApiEnabled } from '@/config/api';
+import { isConvexBackend } from '@/services/aggregation';
 import { MarketingShell } from '@/components/marketing/MarketingShell';
 import { PageHero } from '@/components/marketing/PageHero';
 import { PageSection } from '@/components/marketing/PageSection';
@@ -14,7 +14,7 @@ import {
   unfollowOutlet,
   setBiasProfile,
   type ApiOutlet,
-} from '@/services/aggregationApi';
+} from '@/services/aggregation';
 import {
   Select,
   SelectContent,
@@ -40,7 +40,7 @@ const Following = () => {
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    if (!isAggregationApiEnabled || !currentUser) {
+    if (!isConvexBackend || !currentUser) {
       setLoading(false);
       return;
     }
@@ -94,14 +94,14 @@ const Following = () => {
       />
 
       <PageSection width="narrow">
-        {!isAggregationApiEnabled && (
+        {!isConvexBackend && (
           <p className="text-sm text-muted-foreground">
-            Connect the aggregation API with <code className="text-xs bg-muted px-1 rounded">VITE_API_URL</code> to manage
+            Connect the Convex with <code className="text-xs bg-muted px-1 rounded">NEXT_PUBLIC_CONVEX_URL</code> to manage
             follows.
           </p>
         )}
 
-        {isAggregationApiEnabled && !currentUser && (
+        {isConvexBackend && !currentUser && (
           <div className="rounded-lg border border-border bg-muted/25 px-6 py-10 text-center">
             <LogIn className="h-8 w-8 text-primary mx-auto mb-4" aria-hidden />
             <p className="font-medium text-foreground">Sign in to save follows</p>
@@ -114,7 +114,7 @@ const Following = () => {
           </div>
         )}
 
-        {currentUser && isAggregationApiEnabled && (
+        {currentUser && isConvexBackend && (
           <>
             <div className="mb-10 pb-8 border-b border-border/60">
               <label htmlFor="lean-select" className="flex items-center gap-2 text-sm font-medium text-foreground">

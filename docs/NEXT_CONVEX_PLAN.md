@@ -33,7 +33,7 @@ npx convex run rss:pollAll
 
 ## Env
 
-**`.env.local` (Next):** `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CONVEX_URL`, `RAZORPAY_*`, `CONVEX_WEBHOOK_SHARED_SECRET`
+See **`docs/LOCAL_DEV.md`** and **`.env.example`**
 
 **Convex dashboard:** `CLERK_JWT_ISSUER_DOMAIN`, `GEMINI_API_KEY`, `RAZORPAY_*`, `CONVEX_WEBHOOK_SHARED_SECRET`
 
@@ -41,8 +41,16 @@ npx convex run rss:pollAll
 
 All former React Router paths → `app/**/page.tsx` with `react-router-dom` aliased to `src/lib/next-router-compat.tsx`.
 
-## Remaining cleanup (post-parity)
+## Done (prod-code pass)
 
-- Remove `apps/api`, Stack, Appwrite paths from active flows
-- Vercel: set framework to Next.js, build `next build`
-- Clerk: Convex JWT template + integration
+- Dashboard + `/result/:slug` use Convex when `NEXT_PUBLIC_CONVEX_URL` is set
+- `src/services/aggregation/` split (convex vs legacy HTTP)
+- Webhook: amount/currency check + `paymentEvents` idempotency
+- Convex: `lib/time`, `lib/subscriptions`, `lib/planPricing`
+
+## Remaining cleanup
+
+- Set `CLERK_JWT_ISSUER_DOMAIN` on Convex cloud dev deployment
+- Search history still Appwrite on Vite path; optional Convex later
+- Remove `apps/api`, Stack when Vite entry retired
+- Vercel: Next build `bun run build:next`

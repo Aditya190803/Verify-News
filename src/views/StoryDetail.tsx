@@ -3,8 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import { BiasBar, BiasLegend } from '@/components/BiasBar';
 import { Button } from '@/components/ui/button';
-import { fetchStory, type ApiStory } from '@/services/aggregationApi';
-import { isAggregationApiEnabled } from '@/config/api';
+import { fetchStory, type ApiStory } from '@/services/aggregation';
+import { isConvexBackend } from '@/services/aggregation';
 import { ExternalLink, ShieldCheck } from 'lucide-react';
 import { useNews } from '@/context/NewsContext';
 import { useAuth } from '@/context/AuthContext';
@@ -18,7 +18,7 @@ const StoryDetail = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!slug || !isAggregationApiEnabled) return;
+    if (!slug || !isConvexBackend) return;
     fetchStory(slug)
       .then(setStory)
       .catch((e) => setError(e instanceof Error ? e.message : 'Failed'));
@@ -43,11 +43,11 @@ const StoryDetail = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="container max-w-3xl py-8 flex-1">
-        {!isAggregationApiEnabled && (
-          <p className="text-sm">Set VITE_API_URL to load stories.</p>
+        {!isConvexBackend && (
+          <p className="text-sm">Configure Convex in .env.local.</p>
         )}
         {error && <p className="text-destructive text-sm">{error}</p>}
-        {!story && !error && isAggregationApiEnabled && (
+        {!story && !error && isConvexBackend && (
           <p className="text-muted-foreground text-sm">Loading…</p>
         )}
         {story && (

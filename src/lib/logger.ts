@@ -1,14 +1,8 @@
+import { isDevBuild } from '@/lib/runtimeEnv';
+
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-function isDev() {
-  try {
-    return Boolean(import.meta.env?.DEV);
-  } catch {
-    return process.env.NODE_ENV !== 'production';
-  }
-}
-
-const DEFAULT_LEVEL: LogLevel = isDev() ? 'debug' : 'info';
+const DEFAULT_LEVEL: LogLevel = isDevBuild() ? 'debug' : 'info';
 
 const levels: Record<LogLevel, number> = { debug: 0, info: 1, warn: 2, error: 3 };
 

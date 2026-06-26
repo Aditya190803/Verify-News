@@ -17,6 +17,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { rankSearchResultsWithFallback } from '@/services/aiProviders';
 import { RELIABLE_SOURCES } from '@/lib/constants';
 import { logger } from '@/lib/logger';
+import { viteEnv } from '@/lib/runtimeEnv';
 import { SearchArticle, SearchResponse, NewsArticle } from '@/types/news';
 
 /**
@@ -35,7 +36,8 @@ import { SearchArticle, SearchResponse, NewsArticle } from '@/types/news';
  * }
  * ```
  */
-const getApiKey = (name: string) => import.meta.env[name] || (typeof process !== 'undefined' ? process.env[name] : undefined);
+const getApiKey = (name: string) =>
+  viteEnv(name) || (typeof process !== 'undefined' ? process.env[name] : undefined);
 
 // Cache configuration
 const SEARCH_CACHE_KEY = 'verify_news_search_cache';
@@ -799,13 +801,13 @@ export const generateSearchVariations = (query: string): string[] => {
  */
 export const extractKeywordsWithLLM = async (content: string): Promise<string[]> => {
   try {
-    if (!import.meta.env.VITE_GEMINI_API_KEY) {
+    if (!getApiKey('VITE_GEMINI_API_KEY')) {
       logger.warn('Gemini API key not available, falling back to basic keyword extraction');
       return extractBasicKeywords(content);
     }
 
-    const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: import.meta.env.VITE_GEMINI_MODEL || "gemini-2.5-flash" });
+    const genAI = new GoogleGenerativeAI(getApiKey('VITE_GEMINI_API_KEY')!);
+    const model = genAI.getGenerativeModel({ model: getApiKey('VITE_GEMINI_MODEL') || 'gemini-2.5-flash' });
 
     const prompt = `
     Extract the most important keywords and phrases from this news content that would be useful for fact-checking and verification searches. Focus on:

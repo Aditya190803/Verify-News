@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { apiBaseUrl, isAggregationApiEnabled } from '@/config/api';
+import { isConvexBackend } from '@/services/aggregation';
 import { BiasBar, BiasLegend } from '@/components/BiasBar';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MarketingShell } from '@/components/marketing/MarketingShell';
 import { PageSection } from '@/components/marketing/PageSection';
 import { RelatedLinks } from '@/components/marketing/RelatedLinks';
-import { fetchStories, type ApiStory } from '@/services/aggregationApi';
+import { fetchStories, type ApiStory } from '@/services/aggregation';
 import { FACETS } from '@/lib/brand';
 import { AlertCircle, ArrowRight, ExternalLink, Layers, Newspaper, RefreshCw } from 'lucide-react';
 
@@ -31,7 +31,7 @@ const Feed = () => {
   const [loading, setLoading] = useState(true);
 
   const load = () => {
-    if (!isAggregationApiEnabled) {
+    if (!isConvexBackend()) {
       setLoading(false);
       return;
     }
@@ -79,12 +79,12 @@ const Feed = () => {
       </div>
 
       <PageSection width="content" className="!py-8 sm:!py-10">
-        {!isAggregationApiEnabled && (
+        {!isConvexBackend() && (
           <div className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-5 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground mb-1">API not connected</p>
+            <p className="font-medium text-foreground mb-1">Convex not connected</p>
             <p className="leading-relaxed">
-              In dev, requests use <code className="text-xs bg-muted px-1 rounded">/api</code> (proxied to port 3001) or
-              set <code className="text-xs bg-muted px-1 rounded">VITE_API_URL</code> in <code className="text-xs">.env.local</code>.
+              Set <code className="text-xs bg-muted px-1 rounded">NEXT_PUBLIC_CONVEX_URL</code> in{' '}
+              <code className="text-xs">.env.local</code> and run <code className="text-xs">bun run convex:dev</code>.
             </p>
           </div>
         )}
@@ -99,8 +99,7 @@ const Feed = () => {
               <p className="text-sm font-medium text-foreground">Could not load stories</p>
               <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{error}</p>
               <p className="text-xs text-muted-foreground mt-2">
-                API base: <code className="bg-muted px-1 rounded">{apiBaseUrl || '(none)'}</code> · Run{' '}
-                <code className="bg-muted px-1 rounded">bun run api:dev</code>
+                See <code className="bg-muted px-1 rounded">docs/LOCAL_DEV.md</code>
               </p>
               <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => load()}>
                 <RefreshCw className="h-3.5 w-3.5 mr-1.5" aria-hidden />
@@ -112,7 +111,7 @@ const Feed = () => {
 
         {loading && !error && <FeedSkeleton />}
 
-        {!loading && !error && isAggregationApiEnabled && stories.length > 0 && (
+        {!loading && !error && isConvexBackend() && stories.length > 0 && (
           <>
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-border/60">
               <p className="text-sm text-muted-foreground">
@@ -165,12 +164,13 @@ const Feed = () => {
           </>
         )}
 
-        {!loading && isAggregationApiEnabled && stories.length === 0 && !error && (
+        {!loading && isConvexBackend() && stories.length === 0 && !error && (
           <div className="rounded-lg border border-dashed border-border bg-muted/20 text-center py-14 px-6">
             <Newspaper className="h-9 w-9 text-muted-foreground/40 mx-auto mb-3" aria-hidden />
             <p className="font-medium text-foreground">Feed is empty</p>
             <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto leading-relaxed">
-              Seed outlets and poll RSS on the API, then refresh this page.
+              Run <code className="text-xs">npx convex run seed:seedOutlets</code> and{' '}
+              <code className="text-xs">npx convex run rss:pollAll</code>, then refresh.
             </p>
             <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => load()}>
               Refresh

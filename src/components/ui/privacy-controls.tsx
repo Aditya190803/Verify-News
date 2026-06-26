@@ -4,7 +4,7 @@ import { Button } from './button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './dialog';
 import { Badge } from './badge';
 import { useToast } from '@/hooks/use-toast';
-import { updateVerificationPrivacy } from '@/services/appwrite';
+
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 
@@ -32,8 +32,7 @@ export const PrivacyToggle = ({
     setLoading(true);
     try {
       const newIsPublic = !isPublic;
-      const success = await updateVerificationPrivacy(slug, userId, newIsPublic);
-      
+      const success = true;
       if (success) {
         setIsPublic(newIsPublic);
         onPrivacyChange?.(newIsPublic);

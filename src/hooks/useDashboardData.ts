@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getUserHistoryByType } from '@/services/appwrite';
-import { fetchUserVerificationsForDashboard, isConvexBackend } from '@/services/aggregation';
+import { fetchUserVerificationsForDashboard } from '@/services/aggregation';
 import { logger } from '@/lib/logger';
 import { SearchHistoryItem } from '@/types/news';
 
@@ -24,29 +23,6 @@ function countByVeracity(verifications: SearchHistoryItem[]) {
   return { trueCount, falseCount, uncertainCount };
 }
 
-function convexRowsToHistory(
-  rows: {
-    id: string;
-    slug?: string;
-    query: string;
-    title?: string;
-    timestamp: string;
-    veracity?: string;
-    confidence?: number;
-  }[],
-): SearchHistoryItem[] {
-  return rows.map((r) => ({
-    id: r.id,
-    query: r.query,
-    title: r.title,
-    timestamp: r.timestamp,
-    resultType: 'verification',
-    slug: r.slug,
-    veracity: r.veracity,
-    confidence: r.confidence,
-  }));
-}
-
 export const useDashboardData = (userId: string | undefined) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -58,14 +34,17 @@ export const useDashboardData = (userId: string | undefined) => {
     setLoading(true);
     setError(null);
     try {
-      let verifications: SearchHistoryItem[];
-
-      if (isConvexBackend()) {
-        const rows = await fetchUserVerificationsForDashboard(100);
-        verifications = convexRowsToHistory(rows ?? []);
-      } else {
-        verifications = await getUserHistoryByType(userId, 'verification', 100);
-      }
+      const rows = await fetchUserVerificationsForDashboard(100);
+      const verifications: SearchHistoryItem[] = (rows ?? []).map((r) => ({
+        id: r.id,
+        query: r.query,
+        title: r.title,
+        timestamp: r.timestamp,
+        resultType: 'verification',
+        slug: r.slug,
+        veracity: r.veracity,
+        confidence: r.confidence,
+      }));
 
       const { trueCount, falseCount, uncertainCount } = countByVeracity(verifications);
       setStats({

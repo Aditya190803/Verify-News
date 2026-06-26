@@ -41,9 +41,3 @@ export function ClerkNavAuth({ compact }: { compact?: boolean }) {
     </>
   );
 }
-
-export function isClerkNavEnabled() {
-  return Boolean(
-    typeof process !== 'undefined' && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-  );
-}

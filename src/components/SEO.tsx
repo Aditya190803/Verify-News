@@ -15,7 +15,9 @@ interface SEOProps {
 }
 
 export const SEO = ({ title, description, image, url, type = 'website', article }: SEOProps) => {
-  const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const siteUrl =
+    (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SITE_URL : undefined) ||
+    (typeof window !== 'undefined' ? window.location.origin : 'https://facets.news');
   const fullUrl = url ? `${siteUrl}${url}` : window.location.href;
   const ogImage = image || `${siteUrl}/og-image.png`;
 

@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "react-i18next";
-import { getUserSettings, saveUserSettings } from "@/services/appwrite";
+
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -28,43 +28,10 @@ const Settings = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const loadSettings = async () => {
-      if (user?.id) {
-        setIsLoading(true);
-        try {
-          const dbSettings = await getUserSettings(user.id);
-          if (dbSettings) {
-            setSettings({
-              theme: dbSettings.theme,
-              notifications: dbSettings.notifications,
-              emailNotifications: dbSettings.emailNotifications,
-              privateProfile: dbSettings.privateProfile,
-              dataCollection: dbSettings.dataCollection,
-              language: dbSettings.language,
-            });
-            
-            // Sync with localStorage for offline/immediate use
-            localStorage.setItem("theme", dbSettings.theme);
-            localStorage.setItem("notifications", String(dbSettings.notifications));
-            localStorage.setItem("emailNotifications", String(dbSettings.emailNotifications));
-            localStorage.setItem("privateProfile", String(dbSettings.privateProfile));
-            localStorage.setItem("dataCollection", String(dbSettings.dataCollection));
-            localStorage.setItem("language", dbSettings.language);
-            
-            if (dbSettings.language) {
-              i18n.changeLanguage(dbSettings.language);
-            }
-          }
-        } catch (error) {
-          console.error("Failed to load settings from DB:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadSettings();
-  }, [user?.id, i18n]);
+    if (typeof window === 'undefined') return;
+    const lang = localStorage.getItem('language');
+    if (lang) i18n.changeLanguage(lang);
+  }, [i18n]);
 
   const handleSettingChange = (key: string, value: string | boolean) => {
     setSettings((prev) => ({
@@ -88,11 +55,6 @@ const Settings = () => {
       localStorage.setItem("privateProfile", String(settings.privateProfile));
       localStorage.setItem("dataCollection", String(settings.dataCollection));
       localStorage.setItem("language", settings.language);
-
-      // Save to DB if user is logged in
-      if (user?.id) {
-        await saveUserSettings(user.id, settings);
-      }
 
       toast({
         title: "Settings saved",
