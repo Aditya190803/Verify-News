@@ -1,3 +1,4 @@
+'use client';
 
 import { Link } from 'react-router-dom';
 import { APP_METADATA } from '@/lib/constants';

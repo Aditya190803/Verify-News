@@ -31,9 +31,11 @@ class NewsContextErrorBoundary extends Component<{ children: ReactNode }, { hasE
 
   render() {
     if (this.state.hasError) {
-      // Still render children so the error boundary doesn't break the entire app
-      // The error will be caught by parent error boundaries
-      return this.props.children;
+      return (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-foreground">
+          Something went wrong loading verification. Refresh the page or try again.
+        </div>
+      );
     }
     return this.props.children;
   }
@@ -61,11 +63,13 @@ export function NewsProvider({ children }: { children: ReactNode }) {
   } catch (error) {
     logger.error('Failed to initialize NewsProvider:', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     });
-    
-    // Return null to prevent app crash, but log the error
-    return null;
+    return (
+      <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-foreground m-4">
+        Verification could not start. Refresh the page.
+      </div>
+    );
   }
 }
 

@@ -25,10 +25,11 @@ export const ThemeProviderContext = createContext<ThemeProviderState>(initialSta
 export function ThemeProvider({
   children,
   defaultTheme = "system",
-  storageKey = "vite-ui-theme",
+  storageKey = "facets-ui-theme",
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === 'undefined') return defaultTheme;
     const storedTheme = localStorage.getItem(storageKey);
     // For existing users, if they have "dark" or "light" stored, keep it
     // For new users or if no preference is stored, default to "system"
@@ -67,7 +68,7 @@ export function ThemeProvider({
   const value = {
     theme,
     setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
+      if (typeof window !== 'undefined') localStorage.setItem(storageKey, theme);
       setTheme(theme);
     },
   };

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useNewsState } from '@/hooks/useNewsState';
+import { normalizeVeracity } from '@/lib/veracityUi';
 
 interface VerificationWidgetProps {
   compact?: boolean;
@@ -40,10 +41,9 @@ export const VerificationWidget: React.FC<VerificationWidgetProps> = ({
   const getVeracityIcon = () => {
     if (!result) return <Shield className="w-5 h-5 text-muted-foreground" />;
     
-    switch (result.veracity) {
-      case 'verified':
+    switch (normalizeVeracity(result.veracity)) {
+      case 'true':
         return <CheckCircle2 className="w-5 h-5 text-green-500" />;
-      case 'misleading':
       case 'false':
         return <AlertCircle className="w-5 h-5 text-destructive" />;
       default:
@@ -54,9 +54,8 @@ export const VerificationWidget: React.FC<VerificationWidgetProps> = ({
   const getVeracityColor = () => {
     if (!result) return 'text-muted-foreground';
     
-    switch (result.veracity) {
-      case 'verified': return 'text-green-600 dark:text-green-400';
-      case 'misleading':
+    switch (normalizeVeracity(result.veracity)) {
+      case 'true': return 'text-green-600 dark:text-green-400';
       case 'false': return 'text-destructive';
       default: return 'text-yellow-600 dark:text-yellow-400';
     }

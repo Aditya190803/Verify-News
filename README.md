@@ -3,93 +3,68 @@
 **Many sides. One story.**
 
 ## Overview
-Facets is a news product for seeing **coverage spread** across outlets (Ground News–style bias bar) and **AI fact-checking** in one stack. Built with React, TypeScript, and `apps/api` (Bun + Postgres + RSS). It helps users fact-check news articles and headlines in real-time using advanced web search capabilities and Google's Gemini AI for intelligent analysis. The application provides instant credibility assessments, source verification, and corrected information when misinformation is detected.
+Facets is a news product for seeing **coverage spread** across outlets (Ground News–style bias bar) and **AI fact-checking** in one stack. Built with **Next.js**, **Convex**, and **Clerk**. It helps users fact-check news articles and headlines using Convex-backed verify with **OpenCode Zen Big Pickle**. The application provides instant credibility assessments, source verification, and corrected information when misinformation is detected.
 
-**🌐 Live Demo**: [https://verifynews.adityamer.dev/](https://verifynews.adityamer.dev/)  
-**🤖 Get Gemini API Key**: [Google AI Studio](https://aistudio.google.com/app/apikey)
+**🌐 Live Demo**: [https://facets.adityamer.dev/](https://facets.adityamer.dev/)  
+**🤖 Verify AI**: [OpenCode Zen](https://opencode.ai/docs/zen/) — model **big-pickle** (`OPENCODE_API_KEY` on Convex)
 
 ## ✨ Features
 - 🔍 **Smart Text Analysis** - Accepts news headlines, articles, or any text for verification
-- 🌐 **Multi-Source Verification** - Uses LangSearch API to find reliable sources across the web
-- 🤖 **AI-Powered Fact-Checking** - Leverages Google Gemini AI for intelligent authenticity analysis
+- 🌐 **Multi-Source Verification** - Uses Exa (and Tavily fallback) for web context before AI verify
+- 🤖 **AI-Powered Fact-Checking** - OpenCode **Big Pickle** on Convex
 - ✅ **Credibility Scoring** - Provides detailed credibility assessments with confidence levels
 - 📝 **Corrected Information** - Offers accurate information when misinformation is detected
 - 📱 **Social Sharing** - Share verified results across social media platforms
-- 💾 **History Tracking** - Stores past verifications in Appwrite Database
-- 🔐 **User Authentication** - Secure login with Appwrite Auth (Email/Password + Google OAuth)
+- 💾 **History Tracking** - Verifications in Convex per user
+- 🔐 **User Authentication** - Clerk (sign-in / sign-up)
 - 🌙 **Theme Support** - Dark/Light mode toggle for better user experience
 - 📊 **Analytics Dashboard** - Track verification history and patterns
 - ⚡ **Real-time Updates** - Instant verification results with loading states
 - 📱 **Responsive Design** - Optimized for desktop, tablet, and mobile devices
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Next + Convex + Clerk)
+
+**Local dev:** [`docs/LOCAL_DEV.md`](docs/LOCAL_DEV.md) · copy **`.env.example`** → `.env.local` · `clerk env pull --app app_3Ff8NcoPHzGIjkXQHpcnqZUNK01`
+
+```bash
+bun install
+bun run convex:dev    # terminal 1
+bun run dev           # terminal 2 → http://localhost:3000
+```
 
 ### Prerequisites
-- **Node.js** (v18 or higher)
-- **npm** or **yarn**
-- **Appwrite account** (free tier available) - handles both database and authentication
-- **Google AI Studio account** - Get your free API key at [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
+- **Bun** or Node 18+
+- **Clerk** app (Facets) + **Convex** project
+- **OpenCode Zen** API key for verify → `OPENCODE_API_KEY` on Convex ([docs](https://opencode.ai/docs/zen/))
 
-### Installation
+### Install
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/Aditya190803/Verify-News.git
-   cd Verify-News
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Environment Setup:**
-   
-   Copy the example environment file and add your API keys:
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Update the `.env` file with your own API keys:
-   ```env
-   # Appwrite Configuration (Database & Authentication)
-   # Get these from: https://cloud.appwrite.io/
-   VITE_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
-   VITE_APPWRITE_PROJECT_ID=your-project-id
-   VITE_APPWRITE_DATABASE_ID=your-database-id
-   
-   # Gemini AI Configuration
-   # Get your API key from: https://aistudio.google.com/app/apikey
-   VITE_GEMINI_API_KEY=your-gemini-api-key
-   
-   # LangSearch Configuration (optional)
-   VITE_LANGSEARCH_API_KEY=your-langsearch-api-key
-   ```
-
-4. **Start the development server:**
-   ```bash
-   npm run dev
-   ```
-   
-   🎉 **Your app will be available at:** `http://localhost:5173`
-
-### 📦 Build for Production
 ```bash
-npm run build
-npm run preview  # Preview production build locally
+git clone https://github.com/Aditya190803/Facets.git
+cd Facets
+bun install
+cp .env.example .env.local
+bun run env:clerk
+bun run convex:dev   # links deployment, terminal 1
+bun run dev          # :3000, terminal 2
+bun run convex:clerk-auth
+# add OPENCODE_API_KEY in .env.local UPLOAD section, then:
+bun run convex:env-push
 ```
 
-### 🧪 Run Tests
+See [`docs/ENV.md`](docs/ENV.md) and [`docs/LOCAL_DEV.md`](docs/LOCAL_DEV.md).
+
+### Build & test
 ```bash
-npm test           # Watch mode
-npm run test:run   # Single run
-npm run test:coverage  # With coverage
+bun run build
+bun run test:run
 ```
 
-### Current Services Enabled:
-✅ **Authentication** - Email/Password + Google Sign-in (Stack Auth)  
-✅ **Database** - User data and verification history (Appwrite)  
-✅ **Hosting** - Static web hosting (Vercel)  
+### Services
+✅ **Auth** — Clerk  
+✅ **Data** — Convex  
+✅ **Verify** — Big Pickle on Convex  
+✅ **Deploy** — Vercel (Next.js)  
 
 ## 📱 Usage Guide
 
@@ -118,39 +93,27 @@ npm run test:coverage  # With coverage
 - 🗳️ Political claims and statements
 
 ## Tech Stack
-- **Frontend:** React 18, TypeScript, Vite
-- **UI Framework:** Tailwind CSS, shadcn/ui components
-- **State Management:** React Context API, React Query
-- **Authentication:** Stack Auth
-- **Database:** Appwrite
-- **AI/ML:** Google Gemini AI for fact-checking
-- **Search:** LangSearch API integration
-- **Routing:** React Router DOM
-- **Form Handling:** React Hook Form with Zod validation
-- **Icons:** Lucide React
+- **Web:** Next.js 16 (App Router), React 18, TypeScript
+- **UI:** Tailwind CSS, shadcn/ui, Radix
+- **Backend / data:** Convex (RSS, stories, verify, billing, history)
+- **Auth:** Clerk (+ Convex JWT)
+- **Verify AI:** OpenCode Zen **Big Pickle** (`OPENCODE_API_KEY` on Convex)
+- **Billing:** Razorpay (Convex actions + webhook)
+- **Client search (optional context for verify):** Exa / Tavily in `src/utils/search/`
 - **Testing:** Vitest, React Testing Library
-- **Deployment:** Vercel
+- **Deploy:** Vercel
 
-## Roadmap (aggregation + bias UX)
+See [`docs/STATUS.md`](docs/STATUS.md) for setup and commands.
 
-Product direction: **RSS/licensed aggregation**, **Ground News–style bias/coverage UX**, **OSS self-host**, and **hosted B2C subscription**.
+## Docs
 
-- **[Status](docs/STATUS.md)** — done / left checklist
-- **[Product plan](docs/PRODUCT_PLAN.md)** — architecture, data model, phases, billing
-- **[Self-host (Phase 0)](docs/SELF_HOST.md)** — Docker Compose, API, feed poll
-- **[Phase 0 issues](docs/PHASE_0_ISSUES.md)** — checklist for GitHub
-
-Quick try:
-
-```bash
-docker compose up --build
-# In .env.local: VITE_API_URL=http://localhost:3001
-bun run dev
-# Open /feed — then: curl -X POST http://localhost:3001/feeds/poll
-# Put OPENROUTER_API_KEY or GEMINI_API_KEY in apps/api/.env for server-side verify when VITE_API_URL is set
-```
+- **[Status](docs/STATUS.md)** — stack, commands, pre-prod checklist
+- **[Local dev](docs/LOCAL_DEV.md)** — Next + Convex + Clerk
+- **[Env](docs/ENV.md)** — variables (Vercel + Convex)
+- **[Feed pipeline](docs/FEED_PIPELINE.md)** — RSS seed + Exa widen
+- **[Ground News gap plan](docs/GROUND_NEWS_GAP_PLAN.md)** — coverage UX roadmap
 
 ## Future Enhancements
-- Story clustering across outlets (Phase 1)
-- Server-side verify (move API keys off the client)
-- Stripe subscription tiers (Phase 4)
+- Deeper story clustering / entity linking
+- Server-side Exa proxy (keys off client)
+- Additional billing providers

@@ -1,0 +1,121 @@
+import { useEffect, lazy, Suspense, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Header from '@/components/Header';
+import { useAuth } from '@/context/AuthContext';
+import { SkeletonDashboard } from '@/components/ui/skeleton-loaders';
+import { NoContentEmptyState } from '@/components/ui/empty-states';
+import RateLimitStatus from '@/components/RateLimitStatus';
+import { useTranslation } from 'react-i18next';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import { fetchCoverageDiet } from '@/services/aggregation';
+import { BiasBar } from '@/components/BiasBar';
+
+// Modular components - lazy loaded
+const StatsOverview = lazy(() => import('@/components/dashboard/StatsOverview'));
+const ResultsBreakdown = lazy(() => import('@/components/dashboard/ResultsBreakdown'));
+const RecentVerifications = lazy(() => import('@/components/dashboard/RecentVerifications'));
+
+const Dashboard = () => {
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const { stats, loading, error } = useDashboardData(currentUser?.uid);
+  const [diet, setDiet] = useState<{ spread: Record<string, number>; total: number } | null>(null);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    fetchCoverageDiet().then((d) => setDiet(d.diet ?? null)).catch(() => {});
+  }, [currentUser]);
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    if (!currentUser) {
+      navigate('/sign-in');
+    }
+  }, [currentUser, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 max-w-5xl mx-auto px-4 py-8 w-full">
+          <SkeletonDashboard />
+        </main>
+      </div>
+    );
+  }
+
+  if (error || !stats || stats.totalVerifications === 0) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 max-w-5xl mx-auto px-4 py-8 w-full">
+          <NoContentEmptyState
+            type="verifications"
+            onAction={() => navigate('/')}
+            actionLabel="Start verifying"
+          />
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      
+      <main className="flex-1">
+        {/* Header */}
+        <div className="bg-muted/30 border-b border-border/50">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
+            <h1 className="text-3xl font-bold mb-2">{t('dashboard.title')}</h1>
+            <p className="text-muted-foreground">
+              {t('dashboard.subtitle')}
+            </p>
+          </div>
+        </div>
+
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+          {/* Rate Limit Status */}
+          <RateLimitStatus />
+
+          {diet && diet.total > 0 && (
+            <div className="mb-8 rounded-lg border p-4">
+              <h2 className="text-sm font-semibold mb-1">My coverage diet (followed outlets)</h2>
+              <p className="text-xs text-muted-foreground mb-3">Bias mix of outlets you follow — not what you clicked.</p>
+              <BiasBar spread={diet.spread} className="h-2.5 max-w-md" />
+            </div>
+          )}
+
+          {/* Stats Overview */}
+          <Suspense fallback={<div className="h-48 bg-muted/20 rounded-lg animate-pulse" />}>
+            <StatsOverview
+              total={stats.totalVerifications}
+              trueCount={stats.trueCount}
+              falseCount={stats.falseCount}
+              uncertainCount={stats.uncertainCount}
+            />
+          </Suspense>
+
+          {/* Breakdown */}
+          <Suspense fallback={<div className="h-64 bg-muted/20 rounded-lg animate-pulse mt-6" />}>
+            <ResultsBreakdown
+              total={stats.totalVerifications}
+              trueCount={stats.trueCount}
+              falseCount={stats.falseCount}
+              uncertainCount={stats.uncertainCount}
+            />
+          </Suspense>
+
+          {/* Recent Activity */}
+          <Suspense fallback={<div className="h-32 bg-muted/20 rounded-lg animate-pulse mt-6" />}>
+            <RecentVerifications verifications={stats.recentVerifications} />
+          </Suspense>
+        </div>
+      </main>
+      
+      {/* Footer rendered globally in App */}
+    </div>
+  );
+};
+
+export default Dashboard;

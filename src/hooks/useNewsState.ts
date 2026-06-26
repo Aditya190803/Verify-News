@@ -1,7 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { useSearchHistoryContext } from '../context/SearchHistoryContext';
-import { getLLMGeneratedTitle } from '@/utils/llmHelpers';
 import { NewsArticle, VerificationResult, VerificationStatus, MediaFile } from '@/types/news';
 import { useSearch } from './useSearch';
 import { useVerification } from './useVerification';
@@ -62,8 +60,6 @@ export function useNewsState() {
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
   const [mediaFile, setMediaFile] = useState<MediaFile | null>(null);
   
-  // Auth and history context for user-specific features
-  const { currentUser } = useAuth();
   const { refreshSearchHistory } = useSearchHistoryContext();
 
   /**
@@ -71,7 +67,6 @@ export function useNewsState() {
    * Automatically updates status and stores results
    */
   const { searchQuery, setSearchQuery, searchNews } = useSearch({
-    userId: currentUser?.uid,
     onSearchStart: () => setStatus('searching'),
     onSearchEnd: (newArticles) => {
       setArticles(newArticles);
@@ -80,7 +75,6 @@ export function useNewsState() {
       setStatus('idle');
     },
     onSearchError: () => setStatus('error'),
-    refreshHistory: refreshSearchHistory
   });
 
   /**
@@ -88,10 +82,9 @@ export function useNewsState() {
    * Supports both text and media verification
    */
   const { verifyNews, verifyMedia } = useVerification({
-    userId: currentUser?.uid,
     refreshHistory: refreshSearchHistory,
     onStatusChange: setStatus,
-    onResultReady: setResult
+    onResultReady: setResult,
   });
 
   /**
@@ -118,14 +111,9 @@ export function useNewsState() {
   const handleUnifiedInput = async (value: string, media?: MediaFile) => {
     if (!value.trim() && !media) return;
 
-    // Generate unique slug and title for this verification
-    const slug = Math.random().toString(36).substring(2, 15);
-    const llmTitle = await getLLMGeneratedTitle(value || 'Media Verification');
-
-    // Handle media verification (images, audio, video)
     if (media) {
-      await verifyMedia(media, value, slug, llmTitle);
-      return slug;
+      await verifyMedia(media, value);
+      return;
     }
 
     // Extract URLs from the input
@@ -137,19 +125,17 @@ export function useNewsState() {
       setStatus('verifying');
       const url = extractedUrls[0];
       const title = await extractHeadlineFromUrl(url);
-      await verifyNews(title || url, url, null, slug, llmTitle);
+      await verifyNews(title || url, url, null);
     } else if (extractedUrls.length > 0) {
       // Input contains URLs with text - search for articles first
-      const searchResults = await searchNews(value, slug, llmTitle);
+      const searchResults = await searchNews(value);
       if (searchResults && searchResults.length > 0) {
-        await verifyNews(searchResults[0].snippet, value, searchResults[0], slug, llmTitle);
+        await verifyNews(searchResults[0].snippet, value, searchResults[0]);
       }
     } else {
       // Plain text claim - verify directly
-      await verifyNews(value, value, null, slug, llmTitle);
+      await verifyNews(value, value, null);
     }
-    
-    return slug;
   };
 
   return {

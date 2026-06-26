@@ -21,8 +21,8 @@ export const STORAGE_KEYS = {
 // API Endpoints
 // ============================================
 export const API_ENDPOINTS = {
-  /** LangSearch API base URL */
-  LANGSEARCH: 'https://api.langsearch.io/v1/web-search',
+  /** Exa search API */
+  EXA_SEARCH: 'https://api.exa.ai/search',
   /** Stack Auth API base URL */
   STACK_AUTH: 'https://api.stack-auth.com/api/v1',
   /** Appwrite default endpoint */
@@ -114,7 +114,10 @@ export const UI_TEXT = {
 // ============================================
 export const ROUTES = {
   HOME: '/',
-  LOGIN: '/login',
+  SIGN_IN: '/sign-in',
+  SIGN_UP: '/sign-up',
+  /** @deprecated Use SIGN_IN — /login redirects for legacy links */
+  LOGIN: '/sign-in',
   DASHBOARD: '/dashboard',
   ABOUT: '/about',
   HOW_IT_WORKS: '/how-it-works',

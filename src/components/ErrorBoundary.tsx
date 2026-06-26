@@ -2,6 +2,7 @@ import { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { logger } from '@/lib/logger';
+import { isDevBuild, isProdBuild } from '@/lib/runtimeEnv';
 
 interface Props {
   children: ReactNode;
@@ -53,7 +54,7 @@ class ErrorBoundary extends Component<Props, State> {
     });
 
     // Log to error reporting service in production
-    if (import.meta.env.PROD) {
+    if (isProdBuild()) {
       this.reportError(error, errorInfo);
     }
   }
@@ -135,7 +136,7 @@ class ErrorBoundary extends Component<Props, State> {
             </div>
 
             {/* Error details in development */}
-            {import.meta.env.DEV && this.state.error && (
+            {isDevBuild() && this.state.error && (
               <div className="mb-6 p-4 bg-muted/50 rounded-lg text-left">
                 <p className="text-sm font-mono text-destructive mb-2">
                   {this.state.error.message}
@@ -167,7 +168,7 @@ class ErrorBoundary extends Component<Props, State> {
             <p className="mt-6 text-sm text-muted-foreground">
               If this problem persists, please{' '}
               <a
-                href="https://github.com/Aditya190803/Verify-News/issues"
+                href="https://github.com/Aditya190803/Facets/issues"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"

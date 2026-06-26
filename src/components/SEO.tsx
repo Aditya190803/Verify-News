@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async';
-import { FACETS } from '@/lib/brand';
+import { FACETS, facetsSiteUrl } from '@/lib/brand';
 
 interface SEOProps {
   title: string;
@@ -15,7 +15,8 @@ interface SEOProps {
 }
 
 export const SEO = ({ title, description, image, url, type = 'website', article }: SEOProps) => {
-  const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const siteUrl =
+    (typeof window !== 'undefined' ? window.location.origin : undefined) || facetsSiteUrl();
   const fullUrl = url ? `${siteUrl}${url}` : window.location.href;
   const ogImage = image || `${siteUrl}/og-image.png`;
 
