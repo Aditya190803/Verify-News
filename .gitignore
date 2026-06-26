@@ -15,6 +15,10 @@ build
 .env.development.local
 .env.test.local
 .env.production.local
+.env.vercel.prod
+.env.vercel.dev
+.env.clerk.prod
+.env.clerk.tmp
 
 # Logs
 npm-debug.log*

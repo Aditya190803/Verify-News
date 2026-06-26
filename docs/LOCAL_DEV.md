@@ -10,7 +10,7 @@ cp .env.example .env.local
 bun run env:clerk
 ```
 
-`npx convex dev` fills **LOCAL → Next.js** Convex URLs in `.env.local`.
+`npx convex dev` fills **LOCAL → Next.js** Convex URLs in `.env.local` (it may overwrite Clerk keys — run `bun run env:clerk` again if auth breaks).
 
 Push **UPLOAD → Convex** vars:
 
