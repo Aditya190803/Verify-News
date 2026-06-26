@@ -19,7 +19,7 @@ const ACCEPTED_TYPES = {
   video: ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime']
 };
 
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB limit for Gemini
+const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 const MediaUpload: React.FC<MediaUploadProps> = ({
   onMediaSelect,

@@ -41,7 +41,7 @@ export const SourceSchema = z.object({
 export type Source = z.infer<typeof SourceSchema>;
 
 /**
- * Schema for verification result from Gemini API
+ * Schema for verification result from AI verify
  */
 export const VerificationResultSchema = z.object({
   veracity: NewsVeracitySchema,
@@ -149,7 +149,7 @@ export type SignupFormData = z.infer<typeof SignupFormSchema>;
 /**
  * Schema for Gemini API verification response (raw JSON)
  */
-export const GeminiResponseSchema = z.object({
+export const VerifyAIResponseSchema = z.object({
   veracity: z.enum(['true', 'false', 'partially-true', 'unverified']),
   confidence: z.number(),
   explanation: z.string(),

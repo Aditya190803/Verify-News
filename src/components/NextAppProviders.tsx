@@ -9,6 +9,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { ConvexClientProvider } from '@/components/ConvexClientProvider';
 import { ConvexAuthSync } from '@/components/ConvexAuthSync';
 import { AuthProvider } from '@/context/AuthContext';
+import { NewsProvider } from '@/context/NewsContext';
 import '@/config/i18n';
 
 const queryClient = new QueryClient();
@@ -21,10 +22,12 @@ export function NextAppProviders({ children }: { children: ReactNode }) {
           <ConvexClientProvider>
             <AuthProvider>
               <ConvexAuthSync />
-            <TooltipProvider>
-              {children}
-              <Toaster />
-            </TooltipProvider>
+              <NewsProvider>
+                <TooltipProvider>
+                  {children}
+                  <Toaster />
+                </TooltipProvider>
+              </NewsProvider>
             </AuthProvider>
           </ConvexClientProvider>
         </ThemeProvider>

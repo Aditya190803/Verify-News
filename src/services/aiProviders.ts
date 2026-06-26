@@ -44,6 +44,6 @@ export const getMediaTypeFromMime = (mimeType: string): 'image' | 'audio' | 'vid
   return 'text';
 };
 
-export async function verifyMediaWithGemini(_mediaFile: MediaFile): Promise<VerificationResult> {
+export async function verifyMediaWithBigPickle(_mediaFile: MediaFile): Promise<VerificationResult> {
   return verifyWithFallback('');
 }

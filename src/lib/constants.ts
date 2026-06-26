@@ -21,8 +21,8 @@ export const STORAGE_KEYS = {
 // API Endpoints
 // ============================================
 export const API_ENDPOINTS = {
-  /** LangSearch API base URL */
-  LANGSEARCH: 'https://api.langsearch.io/v1/web-search',
+  /** Exa search API */
+  EXA_SEARCH: 'https://api.exa.ai/search',
   /** Stack Auth API base URL */
   STACK_AUTH: 'https://api.stack-auth.com/api/v1',
   /** Appwrite default endpoint */

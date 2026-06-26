@@ -31,12 +31,12 @@ vi.mock('../services/aiProviders', () => ({
     sources: [],
     provider: 'OpenRouter'
   }),
-  verifyMediaWithGemini: vi.fn().mockResolvedValue({
+  verifyMediaWithBigPickle: vi.fn().mockResolvedValue({
     veracity: 'true',
     confidence: 80,
     explanation: 'Media verified',
     sources: [],
-    provider: 'Gemini'
+    provider: 'Big Pickle'
   }),
   rankSearchResultsWithFallback: vi.fn().mockImplementation((_, results) => Promise.resolve(results)),
   generateTitleWithFallback: vi.fn().mockResolvedValue('Test Title'),
