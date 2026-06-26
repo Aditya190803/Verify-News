@@ -1,0 +1,46 @@
+/**
+ * Facets auth — bordered Clerk controls.
+ * Tailwind classes in appearance.elements often don't reach @clerk/ui internals;
+ * these rules target Clerk's cl-* classes inside .facets-auth-clerk.
+ */
+.facets-auth-clerk .cl-formFieldInput,
+.facets-auth-clerk .cl-formFieldInputGroup,
+.facets-auth-clerk .cl-input,
+.facets-auth-clerk .cl-formFieldInput input,
+.facets-auth-clerk .cl-formFieldInputGroup input {
+  min-height: 2.5rem;
+  border: 1px solid hsl(var(--input));
+  border-radius: var(--radius);
+  background-color: hsl(var(--background));
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+}
+
+.facets-auth-clerk .cl-formFieldInput:focus-within,
+.facets-auth-clerk .cl-formFieldInputGroup:focus-within,
+.facets-auth-clerk .cl-input:focus,
+.facets-auth-clerk .cl-formFieldInput input:focus,
+.facets-auth-clerk .cl-formFieldInputGroup input:focus {
+  outline: none;
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 2px color-mix(in srgb, hsl(var(--ring)) 25%, transparent);
+}
+
+.facets-auth-clerk .cl-socialButtonsBlockButton {
+  min-height: 2.5rem;
+  border: 1px solid hsl(var(--input));
+  border-radius: var(--radius);
+  background-color: hsl(var(--background));
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+}
+
+.facets-auth-clerk .cl-socialButtonsBlockButton:hover {
+  background-color: hsl(var(--muted));
+}
+
+.facets-auth-clerk .cl-formButtonPrimary,
+.facets-auth-clerk .cl-formButtonPrimary.cl-button {
+  min-height: 2.5rem;
+  border: 1px solid hsl(var(--primary));
+  border-radius: var(--radius);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.06);
+}

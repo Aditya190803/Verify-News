@@ -2,8 +2,9 @@
 
 import { SignIn, SignUp } from '@clerk/nextjs';
 import type { ComponentProps } from 'react';
+import { AuthFormSkeleton } from '@/components/auth/AuthFormSkeleton';
 import { ClerkAuthCard } from '@/components/auth/ClerkAuthCard';
-import { facetsAuthClerkAppearance } from '@/lib/clerkAuthAppearance';
+import { facetsAuthEmbedAppearance } from '@/lib/clerkAuthAppearance';
 
 type SignInProps = ComponentProps<typeof SignIn>;
 type SignUpProps = ComponentProps<typeof SignUp>;
@@ -14,18 +15,31 @@ type ClerkAuthEmbedProps =
 
 export function ClerkAuthEmbed(props: ClerkAuthEmbedProps) {
   const { mode, ...clerkProps } = props;
+  const appearance = facetsAuthEmbedAppearance;
 
   if (mode === 'sign-in') {
     return (
       <ClerkAuthCard mode="sign-in">
-        <SignIn appearance={facetsAuthClerkAppearance} {...(clerkProps as SignInProps)} />
+        <SignIn
+          routing="path"
+          path="/sign-in"
+          appearance={appearance}
+          fallback={<AuthFormSkeleton mode="sign-in" />}
+          {...(clerkProps as SignInProps)}
+        />
       </ClerkAuthCard>
     );
   }
 
   return (
     <ClerkAuthCard mode="sign-up">
-      <SignUp appearance={facetsAuthClerkAppearance} {...(clerkProps as SignUpProps)} />
+      <SignUp
+        routing="path"
+        path="/sign-up"
+        appearance={appearance}
+        fallback={<AuthFormSkeleton mode="sign-up" />}
+        {...(clerkProps as SignUpProps)}
+      />
     </ClerkAuthCard>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
 import { ui } from '@clerk/ui';
+import { facetsClerkAppearance } from '@/lib/clerkAuthAppearance';
 import { NextAppProviders } from '@/components/NextAppProviders';
 import { SiteChrome } from '@/components/SiteChrome';
 import './globals.css';
@@ -23,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         className="min-h-screen flex flex-col antialiased"
         suppressHydrationWarning
       >
-        <ClerkProvider ui={ui}>
+        <ClerkProvider ui={ui} appearance={facetsClerkAppearance}>
           <NextAppProviders>
             <SiteChrome>{children}</SiteChrome>
           </NextAppProviders>

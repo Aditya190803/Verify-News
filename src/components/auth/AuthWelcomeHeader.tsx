@@ -19,7 +19,7 @@ export function AuthWelcomeHeader({ mode }: { mode: Mode }) {
   const { title, description } = copy[mode];
 
   return (
-    <div className="text-center pb-5 border-b border-neutral-100">
+    <div className="text-center pb-4 border-b border-border/60">
       <Link
         href="/"
         className="inline-flex justify-center mb-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"

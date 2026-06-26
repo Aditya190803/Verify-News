@@ -1,1 +1,3 @@
 @import '../src/index.css';
+@import '@clerk/ui/themes/shadcn.css';
+@import '../src/styles/clerk-auth.css';

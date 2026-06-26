@@ -35,7 +35,7 @@ function ForceLightMode({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div className="light min-h-screen flex flex-col bg-neutral-100" style={{ colorScheme: 'light' }}>
+    <div className="light min-h-screen flex flex-col bg-background" style={{ colorScheme: 'light' }}>
       {children}
     </div>
   );
@@ -50,7 +50,7 @@ export function AuthPageLayout({ mode, children }: AuthPageLayoutProps) {
   return (
     <ForceLightMode>
       <header className="w-full px-4 sm:px-6 lg:px-8 pt-5 sm:pt-7">
-        <Button variant="outline" size="default" className="gap-2 bg-white" asChild>
+        <Button variant="outline" size="default" className="gap-2 bg-card" asChild>
           <Link href="/">
             <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
             Go back home
