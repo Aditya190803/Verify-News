@@ -1,10 +1,23 @@
 {
   "name": "Facets",
   "short_name": "Facets",
-  "description": "India news coverage from many angles",
-  "start_url": "/feed",
+  "description": "Many sides. One story. Coverage spread and AI fact-check.",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
-  "icons": []
+  "background_color": "#faf8f5",
+  "theme_color": "#c45c3a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-icon",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }

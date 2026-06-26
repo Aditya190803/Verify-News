@@ -15,6 +15,10 @@ export const metadata: Metadata = {
   description: FACETS.tagline,
   manifest: '/manifest.webmanifest',
   applicationName: FACETS.name,
+  icons: {
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+    apple: [{ url: '/apple-icon', type: 'image/png', sizes: '180x180' }],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
