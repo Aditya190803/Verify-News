@@ -5,12 +5,22 @@ export type ApiStory = {
   sourceCount: number;
   biasSpread: Record<string, number>;
   blindspot?: { message: string; storyHeavySide: string } | null;
+  blindspotSide?: 'left' | 'right' | null;
+  blindspotReason?: string | null;
+  biasCompareSummary?: string | null;
   articles: {
     id: string;
     url: string;
     title: string;
     summary: string | null;
-    outlet?: { id?: string; name: string; biasLabel: string; domain: string };
+    outlet?: {
+      id?: string;
+      name: string;
+      biasLabel: string;
+      domain: string;
+      factuality?: string;
+      ownershipCategory?: string | null;
+    };
   }[];
 };
 
@@ -20,6 +30,7 @@ export type ApiOutlet = {
   domain: string;
   biasLabel: string;
   factuality: string;
+  ownershipCategory?: string | null;
 };
 
 export type PlanCatalogItem = {
@@ -37,7 +48,7 @@ export type BillingPlansResponse = {
   billingEnabled: boolean;
   razorpayKeyId: string | null;
   catalog: PlanCatalogItem[];
-  plans: Record<string, { verificationsPerMonth: number; customFeeds: number; blindspot: boolean }>;
+  plans: Record<string, { verificationsPerMonth: number; customFeeds: number; blindspot: boolean; biasCompare?: boolean; feedFilters?: boolean }>;
 };
 
 export type RazorpayOrderResponse = {

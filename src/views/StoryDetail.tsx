@@ -5,7 +5,10 @@ import { BiasBar, BiasLegend } from '@/components/BiasBar';
 import { Button } from '@/components/ui/button';
 import { fetchStory, type ApiStory } from '@/services/aggregation';
 import { isConvexBackend } from '@/services/aggregation';
-import { ExternalLink, ShieldCheck } from 'lucide-react';
+import { ExternalLink, ShieldCheck, Sparkles } from 'lucide-react';
+import { FactualityBadge } from '@/components/FactualityBadge';
+import { HeadlineCompare } from '@/components/HeadlineCompare';
+import { generateBiasCompare } from '@/services/aggregation';
 import { useNews } from '@/context/NewsContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -13,6 +16,8 @@ const StoryDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const [story, setStory] = useState<ApiStory | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [compareSummary, setCompareSummary] = useState<string | null>(null);
+  const [compareLoading, setCompareLoading] = useState(false);
   const { currentUser } = useAuth();
   const { setNewsContent, setSearchQuery, setSelectedArticle } = useNews();
   const navigate = useNavigate();
@@ -20,7 +25,10 @@ const StoryDetail = () => {
   useEffect(() => {
     if (!slug || !isConvexBackend) return;
     fetchStory(slug)
-      .then(setStory)
+      .then((s) => {
+        setStory(s);
+        setCompareSummary(s?.biasCompareSummary ?? null);
+      })
       .catch((e) => setError(e instanceof Error ? e.message : 'Failed'));
   }, [slug]);
 
@@ -58,6 +66,42 @@ const StoryDetail = () => {
             </p>
             <BiasBar spread={story.biasSpread} className="mb-2" />
             <BiasLegend />
+            {story.blindspotReason && (
+              <p className="mt-3 text-xs text-amber-800 dark:text-amber-200 bg-amber-500/10 border border-amber-500/20 rounded-md px-3 py-2">
+                Blindspot: {story.blindspotReason}{' '}
+                <Link to="/blindspot" className="underline">
+                  Explore feed
+                </Link>
+              </p>
+            )}
+            <HeadlineCompare story={story} />
+            {(compareSummary || story.biasCompareSummary) && (
+              <div className="mt-6 rounded-lg border bg-muted/30 p-4 text-sm leading-relaxed">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Bias comparison</p>
+                {compareSummary || story.biasCompareSummary}
+              </div>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              disabled={compareLoading}
+              onClick={async () => {
+                if (!slug) return;
+                setCompareLoading(true);
+                try {
+                  const r = await generateBiasCompare(slug);
+                  if (r.summary) setCompareSummary(r.summary);
+                  else if (r.error) setError(r.error);
+                } finally {
+                  setCompareLoading(false);
+                }
+              }}
+            >
+              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              {compareLoading ? 'Generating…' : 'Generate bias comparison (Plus/Pro)'}
+            </Button>
             {story.blindspot?.message && (
               <p className="mt-4 text-sm border-l-4 border-primary pl-3 bg-muted/30 py-2 rounded-r">
                 {story.blindspot.message}
@@ -69,15 +113,27 @@ const StoryDetail = () => {
                 <Link to="/pricing" className="underline">Pricing</Link> for blindspot.
               </p>
             )}
-            <div className="mt-6 space-y-3">
-              {story.articles.map((a) => (
+            <p className="text-xs text-muted-foreground mb-3">
+              {story.articles.length} articles from{' '}
+              {new Set(story.articles.map((a) => a.outlet?.id ?? a.id)).size} outlets — how each side is covering it
+            </p>
+            <div className="mt-4 space-y-3">
+              {[...story.articles]
+                .sort((a, b) => (a.outlet?.biasLabel ?? '').localeCompare(b.outlet?.biasLabel ?? ''))
+                .map((a) => (
                 <div key={a.id} className="border rounded-lg p-4">
                   <div className="flex justify-between gap-2">
                     <div>
                       <p className="font-medium text-sm">{a.outlet?.name ?? 'Source'}</p>
-                      <p className="text-xs text-muted-foreground capitalize">
-                        {a.outlet?.biasLabel?.replace('-', ' ')}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                        <p className="text-xs text-muted-foreground capitalize">
+                          {a.outlet?.biasLabel?.replace('-', ' ')}
+                        </p>
+                        <FactualityBadge tier={a.outlet?.factuality} />
+                        {a.outlet?.ownershipCategory && (
+                          <span className="text-[10px] text-muted-foreground">{a.outlet.ownershipCategory}</span>
+                        )}
+                      </div>
                     </div>
                     <Button variant="ghost" size="sm" asChild>
                       <a href={a.url} target="_blank" rel="noopener noreferrer">

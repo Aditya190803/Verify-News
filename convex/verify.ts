@@ -4,7 +4,7 @@ import { v } from 'convex/values';
 import { action } from './_generated/server';
 import { internal } from './_generated/api';
 import { createHash } from 'crypto';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { chatJson } from './lib/bigPickle';
 
 type SearchResponse = { title?: string; url?: string; snippet?: string };
 type VerificationResult = {
@@ -37,20 +37,23 @@ Respond ONLY with a JSON object in this format:
 
 function parseAIResponse(text: string): VerificationResult {
   const cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-  return JSON.parse(cleaned) as VerificationResult;
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  const json = start >= 0 && end > start ? cleaned.slice(start, end + 1) : cleaned;
+  try {
+    return JSON.parse(json) as VerificationResult;
+  } catch {
+    console.error('verify: JSON parse failed', cleaned.slice(0, 400));
+    throw new Error('AI returned invalid JSON');
+  }
 }
 
-async function verifyGemini(content: string, searchResults: SearchResponse[]): Promise<VerificationResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  const modelName = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash';
-  if (!apiKey) throw new Error('GEMINI_API_KEY missing');
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: modelName,
-    generationConfig: { temperature: 0.1, responseMimeType: 'application/json' },
-  });
-  const result = await model.generateContent(constructPrompt(content, searchResults));
-  return parseAIResponse(result.response.text());
+async function verifyBigPickle(content: string, searchResults: SearchResponse[]): Promise<VerificationResult> {
+  const raw = await chatJson(
+    'You are a fact-checking assistant. Reply with valid JSON only, no markdown.',
+    constructPrompt(content, searchResults),
+  );
+  return parseAIResponse(raw);
 }
 
 export const run = action({
@@ -75,19 +78,35 @@ export const run = action({
 
     await ctx.runMutation(internal.verifications.assertCanVerifyInternal, {});
 
-    const searchResults = (args.searchResults ?? []) as SearchResponse[];
+    const clientSearch = (args.searchResults ?? []) as SearchResponse[];
+    let searchResults = clientSearch;
+    try {
+      const exa = await ctx.runAction(internal.verifyEnrich.searchCoverageForVerify, { content });
+      const merged = new Map<string, SearchResponse>();
+      for (const r of clientSearch) {
+        if (r.url) merged.set(r.url, r);
+      }
+      for (const r of exa.results) {
+        if (!merged.has(r.url)) {
+          merged.set(r.url, { title: r.title, url: r.url, snippet: r.snippet });
+        }
+      }
+      searchResults = [...merged.values()];
+    } catch (e) {
+      console.warn('verify: server Exa merge skipped', e instanceof Error ? e.message : e);
+    }
     let data: VerificationResult;
     let success = false;
     try {
-      if (process.env.GEMINI_API_KEY) {
-        data = await verifyGemini(content, searchResults);
-        data.provider = 'Gemini';
+      if (process.env.OPENCODE_API_KEY) {
+        data = await verifyBigPickle(content, searchResults);
+        data.provider = 'Big Pickle';
         success = true;
       } else {
         data = {
           veracity: 'unverified',
           confidence: 0,
-          explanation: 'No AI keys on server. Set GEMINI_API_KEY in Convex.',
+          explanation: 'No AI keys on server. Set OPENCODE_API_KEY in Convex.',
           sources: args.articleUrl ? [{ name: 'Original', url: args.articleUrl }] : [],
         };
       }
@@ -107,7 +126,8 @@ export const run = action({
     const contentHash = createHash('sha256').update(content).digest('hex').slice(0, 32);
     await ctx.runMutation(internal.verifications.save, {
       userId,
-      contentHash,
+      slug: contentHash,
+      contentHash: contentHash,
       veracity: data.veracity,
       confidence: data.confidence,
       resultJson: JSON.stringify({
@@ -118,6 +138,6 @@ export const run = action({
       }),
     });
 
-    return { success, data };
+    return { success, data, slug: contentHash };
   },
 });

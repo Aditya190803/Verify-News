@@ -12,6 +12,7 @@ function mapOutlet(row: Doc<'outlets'>): OutletDto {
     domain: row.domain,
     biasLabel: row.biasLabel as BiasLabel,
     factuality: row.factuality as OutletDto['factuality'],
+    ownershipCategory: row.ownershipCategory ?? null,
   };
 }
 
@@ -89,6 +90,9 @@ export async function buildStoryDto(
     biasSpread,
     articles: articleRows,
     blindspot,
+    blindspotSide: (story.blindspotSide as 'left' | 'right' | undefined) ?? null,
+    blindspotReason: story.blindspotReason ?? null,
+    biasCompareSummary: story.biasCompareSummary ?? null,
   };
 }
 

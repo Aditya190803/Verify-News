@@ -21,9 +21,37 @@ export async function convexFetchBillingPlans(): Promise<BillingPlansResponse> {
   return client().query(api.billing.plans, {});
 }
 
-export async function convexFetchStories(limit: number): Promise<ApiStory[]> {
-  const data = await client().query(api.stories.list, { limit });
+export async function convexFetchStories(
+  limit: number,
+  opts?: {
+    searchQ?: string;
+    minOutlets?: number;
+    minLeft?: number;
+    minRight?: number;
+    factualityMin?: string;
+    ownership?: string;
+  },
+): Promise<ApiStory[]> {
+  const data = await client().query(api.stories.list, { limit, ...opts });
   return (data.stories ?? []) as ApiStory[];
+}
+
+export async function convexFetchBlindspot(side: string, limit: number): Promise<ApiStory[]> {
+  const data = await client().query(api.stories.blindspotList, { side, limit });
+  return (data.stories ?? []) as ApiStory[];
+}
+
+export async function convexSearchStories(q: string, limit: number): Promise<ApiStory[]> {
+  const data = await client().query(api.stories.search, { q, limit });
+  return (data.stories ?? []) as ApiStory[];
+}
+
+export async function convexCoverageDiet() {
+  return client().query(api.stories.coverageDiet, {});
+}
+
+export async function convexGenerateBiasCompare(slug: string) {
+  return client().action(api.storyCompare.generateBiasCompare, { slug });
 }
 
 export async function convexFetchStory(idOrSlug: string): Promise<ApiStory | null> {
@@ -86,7 +114,7 @@ export async function convexVerifyViaApi(
   searchResults?: unknown[],
 ) {
   const result = await client().action(api.verify.run, { content, articleUrl, searchResults });
-  return result as { success: boolean; data: VerificationResult };
+  return result as { success: boolean; data: VerificationResult; slug?: string };
 }
 
 export async function convexFetchVerificationBySlug(slug: string) {

@@ -12,6 +12,7 @@ export const list = query({
         domain: row.domain,
         biasLabel: row.biasLabel as BiasLabel,
         factuality: row.factuality,
+        ownershipCategory: row.ownershipCategory ?? null,
       })),
     };
   },

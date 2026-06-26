@@ -46,7 +46,7 @@ export const useVerification = ({
           logger.warn('Search skipped for verify:', searchError);
         }
 
-        const { success, data } = await verifyViaApi(
+        const { success, data, slug: serverSlug } = await verifyViaApi(
           content,
           selectedArticle?.url,
           searchPayload,
@@ -65,8 +65,8 @@ export const useVerification = ({
         onStatusChange('verified');
         refreshHistory();
 
-        const slug = forcedSlug ?? parsedResult.id ?? content.slice(0, 32);
-        navigate(`/result/${slug}`);
+        const slug = serverSlug ?? forcedSlug ?? parsedResult.id;
+        if (slug) navigate(`/result/${slug}`);
       } catch (error) {
         logger.error('Verification failed:', error);
         onStatusChange('error');
@@ -77,7 +77,7 @@ export const useVerification = ({
   );
 
   const verifyMedia = useCallback(
-    async (_mediaFile: MediaFile, _query?: string, forcedSlug?: string) => {
+    async (_mediaFile: MediaFile, _query?: string, _forcedSlug?: string) => {
       onStatusChange('error');
       throw new Error('Media verify is not enabled; use text or URL.');
     },

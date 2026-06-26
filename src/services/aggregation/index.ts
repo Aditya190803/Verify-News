@@ -1,4 +1,5 @@
 import type { VerificationResult } from '@/types/news';
+import { logger } from '@/lib/logger';
 import * as convex from './convexBackend';
 
 export * from './types';
@@ -14,9 +15,32 @@ export async function fetchBillingPlans() {
   return convex.convexFetchBillingPlans();
 }
 
-export async function fetchStories(limit = 40) {
+export async function fetchStories(
+  limit = 40,
+  opts?: Parameters<typeof convex.convexFetchStories>[1],
+) {
   requireConvex();
-  return convex.convexFetchStories(limit);
+  return convex.convexFetchStories(limit, opts);
+}
+
+export async function fetchBlindspotStories(side: 'all' | 'left' | 'right' = 'all', limit = 30) {
+  requireConvex();
+  return convex.convexFetchBlindspot(side, limit);
+}
+
+export async function searchStories(q: string, limit = 25) {
+  requireConvex();
+  return convex.convexSearchStories(q, limit);
+}
+
+export async function fetchCoverageDiet() {
+  requireConvex();
+  return convex.convexCoverageDiet();
+}
+
+export async function generateBiasCompare(slug: string) {
+  requireConvex();
+  return convex.convexGenerateBiasCompare(slug);
 }
 
 export async function fetchStory(idOrSlug: string) {
@@ -58,7 +82,8 @@ export async function createRazorpayOrder(plan: 'plus' | 'pro') {
   requireConvex();
   try {
     return await convex.convexCreateRazorpayOrder(plan);
-  } catch {
+  } catch (e) {
+    logger.error('createRazorpayOrder failed', e);
     return null;
   }
 }
@@ -73,7 +98,8 @@ export async function confirmRazorpayPayment(payload: {
   try {
     await convex.convexConfirmRazorpayPayment(payload);
     return true;
-  } catch {
+  } catch (e) {
+    logger.error('confirmRazorpayPayment failed', e);
     return false;
   }
 }
@@ -82,7 +108,7 @@ export async function verifyViaApi(
   content: string,
   articleUrl?: string,
   searchResults?: unknown[],
-): Promise<{ success: boolean; data: VerificationResult }> {
+): Promise<{ success: boolean; data: VerificationResult; slug?: string }> {
   requireConvex();
   return convex.convexVerifyViaApi(content, articleUrl, searchResults);
 }

@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from 'react';
+import { useEffect, lazy, Suspense, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import { useAuth } from '@/context/AuthContext';
@@ -7,6 +7,8 @@ import { NoContentEmptyState } from '@/components/ui/empty-states';
 import RateLimitStatus from '@/components/RateLimitStatus';
 import { useTranslation } from 'react-i18next';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { fetchCoverageDiet } from '@/services/aggregation';
+import { BiasBar } from '@/components/BiasBar';
 
 // Modular components - lazy loaded
 const StatsOverview = lazy(() => import('@/components/dashboard/StatsOverview'));
@@ -17,6 +19,12 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { stats, loading, error } = useDashboardData(currentUser?.uid);
+  const [diet, setDiet] = useState<{ spread: Record<string, number>; total: number } | null>(null);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    fetchCoverageDiet().then((d) => setDiet(d.diet ?? null)).catch(() => {});
+  }, [currentUser]);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -69,6 +77,14 @@ const Dashboard = () => {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
           {/* Rate Limit Status */}
           <RateLimitStatus />
+
+          {diet && diet.total > 0 && (
+            <div className="mb-8 rounded-lg border p-4">
+              <h2 className="text-sm font-semibold mb-1">My coverage diet (followed outlets)</h2>
+              <p className="text-xs text-muted-foreground mb-3">Bias mix of outlets you follow — not what you clicked.</p>
+              <BiasBar spread={diet.spread} className="h-2.5 max-w-md" />
+            </div>
+          )}
 
           {/* Stats Overview */}
           <Suspense fallback={<div className="h-48 bg-muted/20 rounded-lg animate-pulse" />}>

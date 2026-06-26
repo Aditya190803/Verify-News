@@ -1,4 +1,4 @@
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MarketingShell } from '@/components/marketing/MarketingShell';
 import { PageHero } from '@/components/marketing/PageHero';
 import { PageSection } from '@/components/marketing/PageSection';
@@ -17,7 +17,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Check, Server, Sparkles } from 'lucide-react';
+import { Check, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FACETS } from '@/lib/brand';
 
@@ -321,17 +321,6 @@ const Pricing = () => {
               </div>
             );
           })}
-        </div>
-
-        <div className="mt-12 rounded-lg border border-dashed border-border bg-muted/25 p-6 flex gap-4">
-          <Server className="h-8 w-8 text-muted-foreground shrink-0" aria-hidden />
-          <div>
-            <h3 className="font-semibold text-foreground">Self-host (open source)</h3>
-            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-              Run Docker Compose with your own API keys. No Razorpay on your machine. Details in{' '}
-              <code className="text-xs bg-muted px-1 rounded">docs/SELF_HOST.md</code>.
-            </p>
-          </div>
         </div>
 
         {razorpayConfigured ? (

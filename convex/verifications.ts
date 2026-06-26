@@ -27,6 +27,7 @@ export const save = internalMutation({
   args: {
     userId: v.optional(v.string()),
     storyId: v.optional(v.id('storyClusters')),
+    slug: v.optional(v.string()),
     contentHash: v.string(),
     veracity: v.string(),
     confidence: v.number(),
@@ -36,6 +37,7 @@ export const save = internalMutation({
     await ctx.db.insert('verifications', {
       userId: args.userId,
       storyId: args.storyId,
+      slug: args.slug ?? args.contentHash,
       contentHash: args.contentHash,
       veracity: args.veracity,
       confidence: args.confidence,
@@ -58,7 +60,7 @@ export const listForUser = query({
     return {
       verifications: rows.map((r) => {
         const stored = parseStored(r.resultJson);
-        const slug = stored.slug ?? r.contentHash;
+        const slug = r.slug ?? stored.slug ?? r.contentHash;
         const preview = stored.contentPreview ?? stored.data?.explanation?.slice(0, 80) ?? 'Verification';
         return {
           id: r._id,
@@ -80,19 +82,30 @@ export const getBySlugOrHash = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    const rows = await ctx.db.query('verifications').order('desc').take(500);
-    const row = rows.find((r) => {
-      const stored = parseStored(r.resultJson);
-      return r.contentHash === args.slug || stored.slug === args.slug;
-    });
-    if (!row) return null;
-    if (row.userId && identity?.subject !== row.userId) {
-      return null;
+    const slug = args.slug.trim();
+    if (!slug) return null;
+
+    let row = await ctx.db
+      .query('verifications')
+      .withIndex('by_slug', (q) => q.eq('slug', slug))
+      .order('desc')
+      .first();
+
+    if (!row) {
+      row = await ctx.db
+        .query('verifications')
+        .withIndex('by_contentHash', (q) => q.eq('contentHash', slug))
+        .order('desc')
+        .first();
     }
+
+    if (!row) return null;
+    if (row.userId && identity?.subject !== row.userId) return null;
+
     const stored = parseStored(row.resultJson);
     return {
       id: row._id,
-      slug: stored.slug ?? row.contentHash,
+      slug: row.slug ?? stored.slug ?? row.contentHash,
       contentHash: row.contentHash,
       veracity: row.veracity,
       confidence: row.confidence,

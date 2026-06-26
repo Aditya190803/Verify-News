@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { isConvexBackend } from '@/services/aggregation';
 import { BiasBar, BiasLegend } from '@/components/BiasBar';
@@ -7,7 +7,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { MarketingShell } from '@/components/marketing/MarketingShell';
 import { PageSection } from '@/components/marketing/PageSection';
 import { RelatedLinks } from '@/components/marketing/RelatedLinks';
-import { fetchStories, type ApiStory } from '@/services/aggregation';
+import { fetchStories, searchStories, type ApiStory } from '@/services/aggregation';
+import { FactualityBadge } from '@/components/FactualityBadge';
+import { Input } from '@/components/ui/input';
 import { FACETS } from '@/lib/brand';
 import { AlertCircle, ArrowRight, ExternalLink, Layers, Newspaper, RefreshCw } from 'lucide-react';
 
@@ -29,23 +31,28 @@ const Feed = () => {
   const [stories, setStories] = useState<ApiStory[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchQ, setSearchQ] = useState('');
+  const [minOutlets, setMinOutlets] = useState(0);
 
-  const load = () => {
+  const load = useCallback(() => {
     if (!isConvexBackend()) {
       setLoading(false);
       return;
     }
     setLoading(true);
     setError(null);
-    fetchStories(40)
+    const run = searchQ.trim()
+      ? searchStories(searchQ.trim(), 40)
+      : fetchStories(40, minOutlets >= 2 ? { minOutlets } : undefined);
+    run
       .then(setStories)
       .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load'))
       .finally(() => setLoading(false));
-  };
+  }, [searchQ, minOutlets]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   return (
     <MarketingShell>
@@ -57,8 +64,8 @@ const Feed = () => {
           </h1>
           <p className="mt-1 text-xs text-muted-foreground tracking-wide">{FACETS.tagline}</p>
           <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed max-w-[58ch]">
-            Headlines clustered from RSS. The bar shows how left, center, and right outlets cover the same event. Not a
-            truth score:{' '}
+            RSS from Indian outlets seeds stories; Exa widens coverage so more left, center, and right sources land on the same
+            cluster. Sorted by how many outlets cover each story—not a truth score:{' '}
             <Link to="/" className="text-primary font-medium hover:underline underline-offset-4">
               verify claims
             </Link>{' '}
@@ -113,11 +120,35 @@ const Feed = () => {
 
         {!loading && !error && isConvexBackend() && stories.length > 0 && (
           <>
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-border/60">
-              <p className="text-sm text-muted-foreground">
-                <span className="font-medium text-foreground tabular-nums">{stories.length}</span> stories
-              </p>
-              <BiasLegend />
+            <div className="flex flex-col gap-4 mb-6 pb-4 border-b border-border/60">
+              <div className="flex flex-wrap gap-2 items-center">
+                <Input
+                  placeholder="Search coverage…"
+                  value={searchQ}
+                  onChange={(e) => setSearchQ(e.target.value)}
+                  className="max-w-xs h-9"
+                />
+                <Button type="button" variant="outline" size="sm" onClick={() => load()}>
+                  Search
+                </Button>
+                <label className="text-xs text-muted-foreground flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={minOutlets >= 2}
+                    onChange={(e) => setMinOutlets(e.target.checked ? 2 : 0)}
+                  />
+                  2+ outlets only
+                </label>
+                <Button size="sm" variant="ghost" asChild>
+                  <Link to="/blindspot">Blindspot feed</Link>
+                </Button>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground tabular-nums">{stories.length}</span> stories
+                </p>
+                <BiasLegend />
+              </div>
             </div>
 
             <ul className="space-y-4">
@@ -145,7 +176,7 @@ const Feed = () => {
                     </p>
                   ) : null}
                   <div className="mt-4 flex flex-wrap gap-1.5">
-                    {s.articles.slice(0, 4).map((a) => (
+                    {s.articles.map((a) => (
                       <a
                         key={a.id}
                         href={a.url}
@@ -153,7 +184,10 @@ const Feed = () => {
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted/60 transition-colors"
                       >
-                        {a.outlet?.name ?? 'Source'}
+                        <span className="inline-flex items-center gap-1">
+                          {a.outlet?.name ?? 'Source'}
+                          <FactualityBadge tier={a.outlet?.factuality} className="!text-[9px]" />
+                        </span>
                         <ExternalLink className="h-3 w-3 opacity-50" aria-hidden />
                       </a>
                     ))}
@@ -169,8 +203,9 @@ const Feed = () => {
             <Newspaper className="h-9 w-9 text-muted-foreground/40 mx-auto mb-3" aria-hidden />
             <p className="font-medium text-foreground">Feed is empty</p>
             <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto leading-relaxed">
-              Run <code className="text-xs">npx convex run seed:seedOutlets</code> and{' '}
-              <code className="text-xs">npx convex run rss:pollAll</code>, then refresh.
+              Run <code className="text-xs">npx convex run seed:seedOutlets</code>, set{' '}
+              <code className="text-xs">EXA_API_KEY</code> on Convex, then{' '}
+              <code className="text-xs">npx convex run feedPoll:refreshFeed</code>.
             </p>
             <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => load()}>
               Refresh

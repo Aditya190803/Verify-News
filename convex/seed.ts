@@ -1,5 +1,5 @@
 import { internalMutation } from './_generated/server';
-import { OUTLET_SEED } from './seedData';
+import { OUTLET_IDS, OUTLET_SEED } from './seedData';
 
 export const seedOutlets = internalMutation({
   args: {},
@@ -19,6 +19,7 @@ export const seedOutlets = internalMutation({
           biasLabel: row.biasLabel,
           factuality: row.factuality,
           ratingSource: row.ratingSource,
+          ownershipCategory: row.ownershipCategory,
         });
         n++;
       } else {
@@ -28,6 +29,7 @@ export const seedOutlets = internalMutation({
           biasLabel: row.biasLabel,
           factuality: row.factuality,
           ratingSource: row.ratingSource,
+          ownershipCategory: row.ownershipCategory,
         });
       }
       const feedExt = `feed-${row.id}`;
@@ -47,6 +49,17 @@ export const seedOutlets = internalMutation({
         await ctx.db.patch(feedExisting._id, { url: row.feedUrl, enabled: true });
       }
     }
-    return { outletsUpserted: n, total: OUTLET_SEED.length };
+    let disabled = 0;
+    const feeds = await ctx.db.query('feeds').collect();
+    for (const feed of feeds) {
+      const outlet = await ctx.db.get(feed.outletId);
+      if (!outlet || !OUTLET_IDS.has(outlet.externalId)) {
+        if (feed.enabled) {
+          await ctx.db.patch(feed._id, { enabled: false });
+          disabled++;
+        }
+      }
+    }
+    return { outletsUpserted: n, total: OUTLET_SEED.length, feedsDisabled: disabled };
   },
 });

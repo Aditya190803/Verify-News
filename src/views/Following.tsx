@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
@@ -39,8 +39,8 @@ const Following = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
-    if (!isConvexBackend || !currentUser) {
+  const load = useCallback(async () => {
+    if (!isConvexBackend() || !currentUser) {
       setLoading(false);
       return;
     }
@@ -54,11 +54,11 @@ const Following = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser]);
 
   useEffect(() => {
     void load();
-  }, [currentUser?.uid]);
+  }, [load]);
 
   const toggle = async (id: string) => {
     if (!currentUser) return;

@@ -9,6 +9,7 @@ export default defineSchema({
     biasLabel: v.string(),
     factuality: v.string(),
     ratingSource: v.optional(v.string()),
+    ownershipCategory: v.optional(v.string()),
   }).index('by_externalId', ['externalId']),
 
   feeds: defineTable({
@@ -44,9 +45,15 @@ export default defineSchema({
     slug: v.string(),
     firstSeenAt: v.number(),
     lastUpdatedAt: v.number(),
+    blindspotSide: v.optional(v.string()),
+    blindspotReason: v.optional(v.string()),
+    biasCompareSummary: v.optional(v.string()),
+    biasCompareAt: v.optional(v.number()),
+    searchText: v.optional(v.string()),
   })
     .index('by_slug', ['slug'])
-    .index('by_lastUpdated', ['lastUpdatedAt']),
+    .index('by_lastUpdated', ['lastUpdatedAt'])
+    .index('by_blindspot', ['blindspotSide', 'lastUpdatedAt']),
 
   storyArticles: defineTable({
     storyId: v.id('storyClusters'),
@@ -69,6 +76,14 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index('by_user', ['userId']),
 
+  userTopicFollows: defineTable({
+    userId: v.string(),
+    topic: v.string(),
+    createdAt: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_topic', ['userId', 'topic']),
+
   subscriptions: defineTable({
     userId: v.string(),
     plan: v.string(),
@@ -88,6 +103,7 @@ export default defineSchema({
   verifications: defineTable({
     userId: v.optional(v.string()),
     storyId: v.optional(v.id('storyClusters')),
+    slug: v.optional(v.string()),
     contentHash: v.string(),
     veracity: v.string(),
     confidence: v.number(),
@@ -95,5 +111,7 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index('by_user', ['userId'])
-    .index('by_user_created', ['userId', 'createdAt']),
+    .index('by_user_created', ['userId', 'createdAt'])
+    .index('by_contentHash', ['contentHash'])
+    .index('by_slug', ['slug']),
 });

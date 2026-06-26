@@ -15,7 +15,7 @@ const Methodology = () => (
         Each publisher in our seed list has a <code>bias_label</code> (left, center-left, center,
         center-right, right) and optional <code>factuality</code> tier. Labels come from manual curation
         aligned with public rating organizations (e.g. AllSides, Media Bias/Fact Check) and are
-        versioned in <code>apps/api/data/outlets.seed.json</code>.
+        versioned in <code>convex/seedData.ts</code>. Ingestion: RSS seed + Exa widen — see <code>docs/FEED_PIPELINE.md</code>.
       </p>
       <h2>Coverage bar</h2>
       <p>
@@ -27,6 +27,16 @@ const Methodology = () => (
       <p>
         New RSS items are grouped when headlines are similar (token overlap) and published within the
         same day. This is a simple heuristic; false splits and false merges can occur.
+      </p>
+      <h2>Ownership</h2>
+      <p>
+        Outlets may include an <code>ownershipCategory</code> (independent, media conglomerate, government, etc.) for
+        filter and transparency — Ground-style, hand-seeded in <code>convex/seedData.ts</code>.
+      </p>
+      <h2>Blindspot</h2>
+      <p>
+        Stories flagged when coverage skews left or right (see <code>convex/lib/blindspotFormula.ts</code>). Explore on{' '}
+        <Link to="/blindspot">/blindspot</Link>.
       </p>
       <h2>Corrections</h2>
       <p>

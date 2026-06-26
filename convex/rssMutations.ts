@@ -3,7 +3,23 @@ import { internalMutation } from './_generated/server';
 import type { Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
 import { titlesMatch } from './lib/cluster';
+import { cleanHeadline, pickCanonicalTitle } from './lib/headline';
 import { slugify } from './lib/slug';
+
+async function refreshCanonicalTitle(ctx: MutationCtx, storyId: Id<'storyClusters'>) {
+  const links = await ctx.db
+    .query('storyArticles')
+    .withIndex('by_story', (q) => q.eq('storyId', storyId))
+    .collect();
+  const titles: string[] = [];
+  for (const link of links) {
+    const art = await ctx.db.get(link.articleId);
+    if (art?.title) titles.push(art.title);
+  }
+  if (titles.length === 0) return;
+  const canonicalTitle = pickCanonicalTitle(titles);
+  await ctx.db.patch(storyId, { canonicalTitle, lastUpdatedAt: Date.now() });
+}
 
 async function attachArticleToStory(
   ctx: MutationCtx,
@@ -11,6 +27,7 @@ async function attachArticleToStory(
   title: string,
   publishedAt: number | null,
 ) {
+  title = cleanHeadline(title);
   const since = Date.now() - 72 * 3_600_000;
   const stories = await ctx.db
     .query('storyClusters')
@@ -35,7 +52,7 @@ async function attachArticleToStory(
             relevanceScore: 95,
           });
         }
-        await ctx.db.patch(story._id, { lastUpdatedAt: Date.now() });
+        await refreshCanonicalTitle(ctx, story._id);
         return story._id;
       }
     }
@@ -50,7 +67,7 @@ async function attachArticleToStory(
   if (clash) slug = `${slug}-${now.toString(36)}`;
 
   const storyId = await ctx.db.insert('storyClusters', {
-    canonicalTitle: title,
+    canonicalTitle: pickCanonicalTitle([title]),
     slug,
     firstSeenAt: now,
     lastUpdatedAt: now,
@@ -106,5 +123,17 @@ export const patchFeedError = internalMutation({
   args: { feedId: v.id('feeds'), error: v.string() },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.feedId, { lastFetchedAt: Date.now(), lastError: args.error });
+  },
+});
+
+/** Re-run canonical title pick after clustering rule changes. */
+export const recomputeCanonicalTitles = internalMutation({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const rows = await ctx.db.query('storyClusters').order('desc').take(args.limit ?? 300);
+    for (const s of rows) {
+      await refreshCanonicalTitle(ctx, s._id);
+    }
+    return { stories: rows.length };
   },
 });

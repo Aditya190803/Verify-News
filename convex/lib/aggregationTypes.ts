@@ -1,4 +1,4 @@
-/** Shared DTO shapes (from @verify-news/shared). */
+/** Shared DTO shapes (aligned with @facets/shared). */
 
 export type BiasLabel =
   | 'left'
@@ -16,6 +16,7 @@ export interface OutletDto {
   domain: string;
   biasLabel: BiasLabel;
   factuality: FactualityTier;
+  ownershipCategory?: string | null;
 }
 
 export interface ArticleDto {
@@ -43,4 +44,7 @@ export interface StoryDto {
   biasSpread: Partial<Record<BiasLabel, number>>;
   articles: ArticleDto[];
   blindspot?: BlindspotDto | null;
+  blindspotSide?: 'left' | 'right' | null;
+  blindspotReason?: string | null;
+  biasCompareSummary?: string | null;
 }

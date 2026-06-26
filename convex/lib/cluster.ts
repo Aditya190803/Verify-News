@@ -1,3 +1,5 @@
+import { entityOverlap } from './clusterEntities';
+
 const STOP = new Set(
   'a an the and or but in on at to for of is are was were be been being with from as by it its this that these those not says said will can could would about into over after before during amid'.split(
     ' ',
@@ -37,7 +39,10 @@ export function titlesMatch(
   publishedA?: number | null,
   publishedB?: number | null,
 ): boolean {
-  if (jaccard(titleTokens(a), titleTokens(b)) < 0.35) return false;
+  const j = jaccard(titleTokens(a), titleTokens(b));
+  const e = entityOverlap(a, b);
+  if (j < 0.38 && e < 0.25) return false;
+  if (j < 0.42 && e < 0.15) return false;
   if (!publishedA || !publishedB) return true;
   const dayMs = 86_400_000;
   return Math.abs(publishedA - publishedB) <= dayMs;

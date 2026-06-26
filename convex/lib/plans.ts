@@ -2,11 +2,11 @@ export type PlanId = 'free' | 'plus' | 'pro';
 
 export const PLAN_LIMITS: Record<
   PlanId,
-  { verificationsPerMonth: number; customFeeds: number; blindspot: boolean }
+  { verificationsPerMonth: number; customFeeds: number; blindspot: boolean; biasCompare: boolean; feedFilters: boolean }
 > = {
-  free: { verificationsPerMonth: 5, customFeeds: 3, blindspot: false },
-  plus: { verificationsPerMonth: 50, customFeeds: 25, blindspot: true },
-  pro: { verificationsPerMonth: 500, customFeeds: 9999, blindspot: true },
+  free: { verificationsPerMonth: 5, customFeeds: 3, blindspot: false, biasCompare: false, feedFilters: false },
+  plus: { verificationsPerMonth: 50, customFeeds: 25, blindspot: true, biasCompare: true, feedFilters: true },
+  pro: { verificationsPerMonth: 500, customFeeds: 9999, blindspot: true, biasCompare: true, feedFilters: true },
 };
 
 export type PlanDisplay = {

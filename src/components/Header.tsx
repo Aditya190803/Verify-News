@@ -12,6 +12,7 @@ interface HeaderProps {
 
 const primaryNav = [
   { path: '/feed', label: 'Feed' },
+  { path: '/blindspot', label: 'Blindspot' },
   { path: '/following', label: 'Following' },
   { path: '/pricing', label: 'Pricing' },
 ] as const;

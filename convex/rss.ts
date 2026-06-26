@@ -4,6 +4,7 @@ import { internalAction } from './_generated/server';
 import { internal } from './_generated/api';
 import Parser from 'rss-parser';
 import { createHash } from 'crypto';
+import { cleanHeadline, isLikelyNewsHeadline } from './lib/headline';
 
 const parser = new Parser({
   timeout: 20_000,
@@ -23,9 +24,11 @@ export const pollAll = internalAction({
       try {
         const parsed = await parser.parseURL(feed.url);
         for (const item of parsed.items ?? []) {
-          const t = item.title?.trim();
+          const raw = item.title?.trim();
           const link = item.link?.trim();
-          if (!t || !link) continue;
+          if (!raw || !link) continue;
+          const t = cleanHeadline(raw);
+          if (!isLikelyNewsHeadline(t)) continue;
           const guid = String(item.guid || item.id || link);
           const pub = item.pubDate ? new Date(item.pubDate).getTime() : undefined;
           const res = await ctx.runMutation(internal.rssMutations.insertArticle, {
